@@ -1,0 +1,8 @@
+<resources>
+    <!-- Tema da janela: evita o "flash" branco antes do Compose desenhar -->
+    <style name="Theme.Pessoal" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/fundo</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

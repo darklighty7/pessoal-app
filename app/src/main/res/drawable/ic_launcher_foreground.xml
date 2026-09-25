@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Escudo neon centralizado na área segura do ícone adaptativo -->
+    <group android:translateX="30" android:translateY="30">
+        <path
+            android:pathData="M24 6l14 6v10c0 9 -6 16 -14 20c-8 -4 -14 -11 -14 -20V12l14 -6z"
+            android:strokeColor="@color/neon"
+            android:strokeWidth="3.5"
+            android:strokeLineJoin="round"
+            android:fillColor="#00000000" />
+        <path
+            android:pathData="M24 15v18M18 21h12"
+            android:strokeColor="@color/neon"
+            android:strokeWidth="3"
+            android:strokeLineCap="round" />
+    </group>
+</vector>
