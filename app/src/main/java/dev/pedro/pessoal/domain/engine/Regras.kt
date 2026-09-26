@@ -33,9 +33,11 @@ object Regras {
     const val MARGEM_CLASSE = 50              // 0,50 de diferença
     const val DIAS_PARA_TROCAR_CLASSE = 3
 
-    // Leitura da Bíblia (por tempo)
+    // Leitura da Bíblia (por tempo, dividida entre Espírito e Inteligência)
     const val META_LEITURA_MIN = 10
     const val XP_META_LEITURA = 10
-    const val ESPIRITO_META_LEITURA = 10
+    const val ESPIRITO_META_LEITURA = 10          // +0,10 ao atingir a meta
+    const val INTELIGENCIA_META_LEITURA = 5       // +0,05 exatamente nos 10 minutos
+    const val INTELIGENCIA_ACIMA_META_LEITURA = 10 // +0,10 a partir de 11 minutos
     const val XP_MAX_LEITURA_DIA = 30
 }

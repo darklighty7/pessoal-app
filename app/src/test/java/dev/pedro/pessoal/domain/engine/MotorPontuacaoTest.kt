@@ -81,6 +81,20 @@ class MotorPontuacaoTest {
     }
 
     @Test
+    fun `leitura de 10 minutos rende Espirito cheio e Inteligencia parcial`() {
+        val r = motor.recompensaLeitura(10)
+        assertEquals(10, r.ganhos[Atributo.ESPIRITO])
+        assertEquals(5, r.ganhos[Atributo.INTELIGENCIA])
+    }
+
+    @Test
+    fun `leitura de 11 minutos ou mais rende Espirito e Inteligencia cheios`() {
+        val r = motor.recompensaLeitura(11)
+        assertEquals(10, r.ganhos[Atributo.ESPIRITO])
+        assertEquals(10, r.ganhos[Atributo.INTELIGENCIA])
+    }
+
+    @Test
     fun `uma falha isolada nao tira atributo`() {
         val inicio = motor.ajustarAtributo(Status(), Atributo.FORCA, 100)
         val s = motor.fecharDia(inicio, listOf(ResultadoHabito(Atributo.FORCA, false, 1, 0)))
@@ -136,7 +150,7 @@ class MotorPontuacaoTest {
     }
 
     @Test
-    fun `cenario do Pedro - Biblia em dia e treino atrasado vira Sacerdote`() {
+    fun `cenario do Pedro - Biblia em dia e treino atrasado vira Teologo`() {
         var s = Status()
         var falhasTreino = 0
         for (dia in 1..6) {
@@ -151,7 +165,9 @@ class MotorPontuacaoTest {
                 ),
             )
         }
-        assertEquals(Classe.SACERDOTE, s.classe)
+        // Leitura agora também rende Inteligência, então Espírito e Inteligência
+        // ficam próximos e o resultado é a classe híbrida Teólogo, não mais Sacerdote puro.
+        assertEquals(Classe.TEOLOGO, s.classe)
     }
 
     @Test

@@ -27,7 +27,7 @@ import dev.pedro.pessoal.ui.theme.TextoSecundario
 fun GraficoRadar(atributos: Map<Atributo, Int>, modifier: Modifier = Modifier) {
     val ordem = listOf(Atributo.FORCA, Atributo.INTELIGENCIA, Atributo.DISCIPLINA, Atributo.ESPIRITO)
     // A escala acompanha o maior atributo, para o desenho não ficar minúsculo nem estourar
-    val escala = maxOf(100, ((atributos.values.maxOrNull() ?: 0) * 1.25f).toInt()).toFloat()
+    val escala = maxOf(500, ((atributos.values.maxOrNull() ?: 0) * 1.25f).toInt()).toFloat()
     val descricao = ordem.joinToString { "${it.nome} ${formatarAtributo(atributos.getValue(it))}" }
 
     Box(modifier.size(240.dp, 210.dp).semantics { contentDescription = descricao }) {

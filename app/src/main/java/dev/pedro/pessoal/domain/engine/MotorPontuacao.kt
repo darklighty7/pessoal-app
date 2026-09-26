@@ -33,18 +33,31 @@ object MotorPontuacao {
 
     fun aplicar(status: Status, recompensa: Recompensa): Status {
         var s = adicionarXp(status, recompensa.xp)
-        if (recompensa.atributo != null) s = ajustarAtributo(s, recompensa.atributo, recompensa.ganho)
+        for ((atributo, ganho) in recompensa.ganhos) s = ajustarAtributo(s, atributo, ganho)
         return s
     }
 
     /**
      * Leitura por tempo: abaixo da meta não rende; na meta rende o valor cheio e
      * +1 XP por minuto extra, até o teto diário. [minutos] é o total lido no dia.
+     * O ganho de Espírito é fixo ao atingir a meta; o de Inteligência começa menor
+     * exatamente nos 10 minutos e sobe a partir do 11º minuto.
      */
     fun recompensaLeitura(minutos: Int): Recompensa {
         if (minutos < Regras.META_LEITURA_MIN) return Recompensa(xp = 0)
         val xp = minOf(Regras.XP_MAX_LEITURA_DIA, Regras.XP_META_LEITURA + (minutos - Regras.META_LEITURA_MIN))
-        return Recompensa(xp = xp, atributo = Atributo.ESPIRITO, ganho = Regras.ESPIRITO_META_LEITURA)
+        val inteligencia = if (minutos > Regras.META_LEITURA_MIN) {
+            Regras.INTELIGENCIA_ACIMA_META_LEITURA
+        } else {
+            Regras.INTELIGENCIA_META_LEITURA
+        }
+        return Recompensa(
+            xp = xp,
+            ganhos = mapOf(
+                Atributo.ESPIRITO to Regras.ESPIRITO_META_LEITURA,
+                Atributo.INTELIGENCIA to inteligencia,
+            ),
+        )
     }
 
     /**

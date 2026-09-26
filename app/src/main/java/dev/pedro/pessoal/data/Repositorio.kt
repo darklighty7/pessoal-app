@@ -3,6 +3,7 @@ package dev.pedro.pessoal.data
 import dev.pedro.pessoal.domain.engine.MotorPontuacao
 import dev.pedro.pessoal.domain.engine.Regras
 import dev.pedro.pessoal.domain.model.Habito
+import dev.pedro.pessoal.domain.model.Recompensa
 import dev.pedro.pessoal.domain.model.ResultadoHabito
 import dev.pedro.pessoal.domain.model.Status
 import dev.pedro.pessoal.domain.model.Treino
@@ -48,7 +49,7 @@ class Repositorio(
             MotorPontuacao.aplicar(s, recompensa)
         } else {
             // Desmarcar devolve o que a marcação deu.
-            MotorPontuacao.aplicar(s, recompensa.copy(xp = -recompensa.xp, ganho = -recompensa.ganho))
+            MotorPontuacao.aplicar(s, recompensa.copy(xp = -recompensa.xp, ganhos = recompensa.ganhos.mapValues { -it.value }))
         }
         gravar(novo)
     }
@@ -67,7 +68,12 @@ class Repositorio(
 
         val pago = MotorPontuacao.recompensaLeitura(antes)
         val total = MotorPontuacao.recompensaLeitura(depois)
-        val diferenca = total.copy(xp = total.xp - pago.xp, ganho = total.ganho - pago.ganho)
+        val diferenca = Recompensa(
+            xp = total.xp - pago.xp,
+            ganhos = (total.ganhos.keys + pago.ganhos.keys)
+                .associateWith { (total.ganhos[it] ?: 0) - (pago.ganhos[it] ?: 0) }
+                .filterValues { it != 0 },
+        )
 
         registroDao.gravar(
             RegistroEntity(
@@ -77,7 +83,7 @@ class Repositorio(
                 minutosLeitura = depois,
             ),
         )
-        if (diferenca.xp != 0 || diferenca.ganho != 0) gravar(MotorPontuacao.aplicar(status(), diferenca))
+        if (diferenca.xp != 0 || diferenca.ganhos.isNotEmpty()) gravar(MotorPontuacao.aplicar(status(), diferenca))
     }
 
     /**
