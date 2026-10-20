@@ -2,7 +2,15 @@
 
 Melhorias futuras para o app Pessoal, sem compromisso de prazo.
 
+## Concluído
+
+- v1.2.0: redesign visual das telas (Status, Lembretes, Treinos, Leitura, seletor de livros e barra de navegação).
+
 ## Pendências conhecidas
+
+- Escolher o nome final do app e criar um ícone novo com símbolo próprio.
+- Otimizar o desempenho (o app trava em alguns momentos): reduzir as animações dos selos E, D e C (`SeloRank.kt`) usando `remember` para caminhos e gradientes, e revisar recomposições.
+- Testar o redesign v1.2.0 no celular e ajustar detalhes (o build não foi validado antes do pull request).
 
 - Corrigir o typo "foii" em Lucas 22:39: não foi encontrado no código-fonte, porque o
   texto da Bíblia não é versionado no repositório — é baixado em runtime a partir do

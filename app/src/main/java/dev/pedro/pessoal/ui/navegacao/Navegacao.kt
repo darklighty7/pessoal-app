@@ -1,11 +1,27 @@
 package dev.pedro.pessoal.ui.navegacao
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import dev.pedro.pessoal.ui.theme.Borda
+import dev.pedro.pessoal.ui.theme.Superficie
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,15 +47,14 @@ import dev.pedro.pessoal.ui.lembretes.LembretesTela
 import dev.pedro.pessoal.ui.status.StatusTela
 import dev.pedro.pessoal.ui.theme.Fundo
 import dev.pedro.pessoal.ui.theme.Neon
-import dev.pedro.pessoal.ui.theme.SuperficieBaixa
 import dev.pedro.pessoal.ui.theme.TextoSecundario
 import dev.pedro.pessoal.ui.treinos.ProgressoExercicio
 import dev.pedro.pessoal.ui.treinos.TreinosTela
 
 private enum class Aba(val rota: String, val rotulo: String, val icone: ImageVector) {
-    STATUS("status", "STATUS", Icones.Escudo),
-    LEMBRETES("lembretes", "LEMBRETES", Icones.Sino),
-    TREINOS("treinos", "TREINOS", Icones.Halter),
+    STATUS("status", "Status", Icones.Escudo),
+    LEMBRETES("lembretes", "Lembretes", Icones.Sino),
+    TREINOS("treinos", "Treinos", Icones.Halter),
 }
 
 private const val ROTA_BIBLIA = "biblia"
@@ -60,27 +75,11 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
         bottomBar = {
             // A tela da Bíblia ocupa tudo: sem barra embaixo.
             if (rotaAtual != ROTA_BIBLIA) {
-                NavigationBar(containerColor = SuperficieBaixa, tonalElevation = 0.dp) {
-                    Aba.entries.forEach { aba ->
-                        NavigationBarItem(
-                            selected = rotaAtual == aba.rota,
-                            onClick = {
-                                nav.navigate(aba.rota) {
-                                    popUpTo(nav.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = { Icon(aba.icone, contentDescription = null, modifier = Modifier.size(22.dp)) },
-                            label = { Text(aba.rotulo) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Neon,
-                                selectedTextColor = Neon,
-                                unselectedIconColor = TextoSecundario,
-                                unselectedTextColor = TextoSecundario,
-                                indicatorColor = Color.Transparent,
-                            ),
-                        )
+                BarraInferior(rotaAtual) { aba ->
+                    nav.navigate(aba.rota) {
+                        popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
                     }
                 }
             }
@@ -127,6 +126,46 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
                     aoVoltar = bibliaViewModel::capituloAnterior,
                     aoSair = bibliaViewModel::encerrarLeitura,
                 )
+            }
+        }
+    }
+}
+
+/** Barra inferior: três abas, o item ativo ganha um indicador fino no topo. */
+@Composable
+private fun BarraInferior(rotaAtual: String?, aoEscolher: (Aba) -> Unit) {
+    Column(Modifier.fillMaxWidth().background(Superficie)) {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(Borda))
+        Row(
+            Modifier.fillMaxWidth().navigationBarsPadding().height(72.dp).padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
+        ) {
+            Aba.entries.forEach { aba ->
+                val ativa = rotaAtual == aba.rota
+                val cor = if (ativa) Neon else TextoSecundario
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .selectable(selected = ativa, role = Role.Tab, onClick = { aoEscolher(aba) }),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        Modifier
+                            .width(28.dp)
+                            .height(3.dp)
+                            .background(if (ativa) Neon else Color.Transparent, RoundedCornerShape(bottomStart = 3.dp, bottomEnd = 3.dp)),
+                    )
+                    Spacer(Modifier.height(11.dp))
+                    Icon(aba.icone, contentDescription = null, tint = cor, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        aba.rotulo,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = if (ativa) FontWeight.SemiBold else FontWeight.Medium,
+                        color = cor,
+                    )
+                }
             }
         }
     }
