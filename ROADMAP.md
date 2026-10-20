@@ -4,13 +4,14 @@ Melhorias futuras para o app Pessoal, sem compromisso de prazo.
 
 ## Concluído
 
+- v1.3.0: grifos (marca-texto) nos versículos, com 5 cores e lista de grifos.
 - v1.2.0: redesign visual das telas (Status, Lembretes, Treinos, Leitura, seletor de livros e barra de navegação).
 
 ## Pendências conhecidas
 
 - Escolher o nome final do app e criar um ícone novo com símbolo próprio.
 - Otimizar o desempenho (o app trava em alguns momentos): reduzir as animações dos selos E, D e C (`SeloRank.kt`) usando `remember` para caminhos e gradientes, e revisar recomposições.
-- Testar o redesign v1.2.0 no celular e ajustar detalhes (o build não foi validado antes do pull request).
+- Testar o redesign v1.2.0 e os grifos da v1.3.0 no celular e ajustar detalhes (o build não foi validado antes do pull request).
 
 - Corrigir o typo "foii" em Lucas 22:39: não foi encontrado no código-fonte, porque o
   texto da Bíblia não é versionado no repositório — é baixado em runtime a partir do
@@ -20,6 +21,7 @@ Melhorias futuras para o app Pessoal, sem compromisso de prazo.
 
 ## Ideias futuras
 
+- Grifos: anotações curtas por versículo e exportar a lista de grifos.
 - Novos hábitos e tarefas além de oração, leitura e treino.
 - Mais classes híbridas conforme combinações de atributos forem surgindo no uso real.
 - Ajustar constantes de `Regras.kt` depois de algumas semanas de uso real.

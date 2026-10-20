@@ -28,6 +28,20 @@ class BibliaRepositorio(private val dao: BibliaDao) {
     suspend fun capitulo(livro: Int, capitulo: Int): List<VersiculoEntity> =
         withContext(Dispatchers.IO) { dao.capitulo(livro, capitulo) }
 
+    suspend fun grifos(livro: Int, capitulo: Int): Map<Int, Int> =
+        withContext(Dispatchers.IO) { dao.grifos(livro, capitulo).associate { it.numero to it.cor } }
+
+    suspend fun grifar(livro: Int, capitulo: Int, numeros: Collection<Int>, cor: Int) =
+        withContext(Dispatchers.IO) {
+            val agora = System.currentTimeMillis()
+            numeros.forEach { dao.salvarGrifo(GrifoEntity(livro, capitulo, it, cor, agora)) }
+        }
+
+    suspend fun removerGrifos(livro: Int, capitulo: Int, numeros: Collection<Int>) =
+        withContext(Dispatchers.IO) { numeros.forEach { dao.removerGrifo(livro, capitulo, it) } }
+
+    suspend fun todosGrifos(): List<GrifoListado> = withContext(Dispatchers.IO) { dao.todosGrifos() }
+
     /**
      * Baixa e importa. [aoProgredir] é chamado a cada etapa para a tela acompanhar.
      * Se já estiver importada, não faz nada.

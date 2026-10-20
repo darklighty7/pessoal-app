@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import dev.pedro.pessoal.data.BibliaRepositorio
+import dev.pedro.pessoal.data.GrifoListado
 import dev.pedro.pessoal.data.LivroEntity
 import dev.pedro.pessoal.data.VersiculoEntity
 import kotlinx.coroutines.Job
@@ -24,6 +25,12 @@ data class EstadoBiblia(
     /** Segundos já cronometrados nesta sessão de leitura. */
     val segundos: Int = 0,
     val cronometroLigado: Boolean = false,
+    /** Grifos do capítulo aberto: número do versículo para a posição da cor. */
+    val grifos: Map<Int, Int> = emptyMap(),
+    /** Versículos tocados, esperando uma cor (ou a remoção do grifo). */
+    val selecionados: Set<Int> = emptySet(),
+    /** Todos os grifos, preenchido quando a lista é aberta. */
+    val todosGrifos: List<GrifoListado> = emptyList(),
 )
 
 /**
@@ -59,7 +66,50 @@ class BibliaViewModel(
     fun abrir(livro: LivroEntity, capitulo: Int) {
         viewModelScope.launch {
             val versos = repositorio.capitulo(livro.numero, capitulo)
-            _estado.update { it.copy(livroAberto = livro, capitulo = capitulo, versiculos = versos) }
+            val grifos = repositorio.grifos(livro.numero, capitulo)
+            _estado.update {
+                it.copy(
+                    livroAberto = livro, capitulo = capitulo, versiculos = versos,
+                    grifos = grifos, selecionados = emptySet(),
+                )
+            }
+        }
+    }
+
+    fun alternarSelecao(numero: Int) {
+        _estado.update {
+            it.copy(selecionados = if (numero in it.selecionados) it.selecionados - numero else it.selecionados + numero)
+        }
+    }
+
+    fun limparSelecao() {
+        _estado.update { it.copy(selecionados = emptySet()) }
+    }
+
+    /** Aplica [cor] a todos os versículos selecionados e desfaz a seleção. */
+    fun grifarSelecionados(cor: Int) {
+        val e = _estado.value
+        val livro = e.livroAberto ?: return
+        val alvo = e.selecionados
+        if (alvo.isEmpty()) return
+        _estado.update { it.copy(grifos = it.grifos + alvo.associateWith { cor }, selecionados = emptySet()) }
+        viewModelScope.launch { repositorio.grifar(livro.numero, e.capitulo, alvo, cor) }
+    }
+
+    /** Tira o grifo dos versículos selecionados e desfaz a seleção. */
+    fun removerGrifosSelecionados() {
+        val e = _estado.value
+        val livro = e.livroAberto ?: return
+        val alvo = e.selecionados
+        if (alvo.isEmpty()) return
+        _estado.update { it.copy(grifos = it.grifos - alvo, selecionados = emptySet()) }
+        viewModelScope.launch { repositorio.removerGrifos(livro.numero, e.capitulo, alvo) }
+    }
+
+    fun carregarTodosGrifos() {
+        viewModelScope.launch {
+            val lista = repositorio.todosGrifos()
+            _estado.update { it.copy(todosGrifos = lista) }
         }
     }
 

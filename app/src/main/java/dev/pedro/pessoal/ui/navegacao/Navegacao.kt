@@ -125,6 +125,11 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
                     aoAvancar = bibliaViewModel::proximoCapitulo,
                     aoVoltar = bibliaViewModel::capituloAnterior,
                     aoSair = bibliaViewModel::encerrarLeitura,
+                    aoAlternarSelecao = bibliaViewModel::alternarSelecao,
+                    aoGrifar = bibliaViewModel::grifarSelecionados,
+                    aoRemoverGrifos = bibliaViewModel::removerGrifosSelecionados,
+                    aoLimparSelecao = bibliaViewModel::limparSelecao,
+                    aoAbrirGrifos = bibliaViewModel::carregarTodosGrifos,
                 )
             }
         }

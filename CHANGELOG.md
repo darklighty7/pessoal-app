@@ -2,6 +2,17 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.3.0] - 2026-10-20
+
+Grifos (marca-texto) na leitura da Bíblia.
+
+### Adicionado
+- Tocar em um ou mais versículos seleciona; uma barra inferior oferece 5 cores (amarelo, verde, azul, rosa e laranja), a borracha para remover o grifo e o botão para cancelar a seleção.
+- Versículos grifados ficam com fundo translúcido na cor escolhida; os grifos ficam salvos no celular.
+- Botão "Meus grifos" no cabeçalho da leitura: lista todos os versículos grifados (mais recentes primeiro), com filtro por cor; tocar em um leva ao capítulo.
+- Banco de dados na versão 2, com migração automática que só cria a tabela `grifo` (nenhum dado existente é alterado).
+- Teste que protege a ordem das cores (o banco guarda a posição da cor).
+
 ## [1.2.0] - 2026-10-20
 
 Redesign visual: telas mais limpas e minimalistas, sem alterar nenhuma regra do app.
