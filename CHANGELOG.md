@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.4.2] - 2026-10-20
+
+### Corrigido
+- Notificações: o ícone pequeno era o desenho do launcher (escudo minúsculo no meio de um quadro de 108dp) e aparecia como uma mancha branca. Agora há um ícone próprio, com o escudo ocupando o quadro, e um **ícone grande com fundo preto** e o escudo neon, nas notificações de lembrete e do versículo. O Android desenha o ícone pequeno da barra de status sempre como silhueta, então o fundo preto só vale no ícone grande.
+
 ## [1.4.1] - 2026-10-20
 
 Desempenho: ajustes depois de uma auditoria do "app travando e lento". Nada disso foi medido em aparelho; são correções de causas encontradas na leitura do código.

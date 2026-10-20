@@ -4,6 +4,7 @@ Melhorias futuras para o app Pessoal, sem compromisso de prazo.
 
 ## Concluído
 
+- v1.4.2: ícones das notificações (pequeno próprio e grande com fundo preto).
 - v1.4.1: ajustes de desempenho (transição entre abas, esmaecimento da lista) e variante de build `otimizado`.
 - v1.4.0: tamanho do texto e zoom por pinça na leitura da Bíblia.
 - v1.3.0: grifos (marca-texto) nos versículos, com 5 cores e lista de grifos.
