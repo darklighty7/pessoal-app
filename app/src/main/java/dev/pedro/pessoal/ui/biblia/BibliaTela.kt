@@ -2,11 +2,22 @@ package dev.pedro.pessoal.ui.biblia
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import dev.pedro.pessoal.data.GrifoListado
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,13 +47,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,6 +80,7 @@ import dev.pedro.pessoal.ui.theme.PessoalTema
 import dev.pedro.pessoal.ui.theme.Superficie
 import dev.pedro.pessoal.ui.theme.Texto
 import dev.pedro.pessoal.ui.theme.TextoSecundario
+import dev.pedro.pessoal.ui.theme.Trilho
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -81,12 +97,16 @@ fun BibliaTela(
     aoRemoverGrifos: () -> Unit = {},
     aoLimparSelecao: () -> Unit = {},
     aoAbrirGrifos: () -> Unit = {},
+    aoDefinirTamanho: (Float) -> Unit = {},
+    aoSalvarTamanho: () -> Unit = {},
+    aoZoom: (Float) -> Unit = {},
 ) {
     // Ao deixar a tela, fecha a leitura e entrega os minutos.
     DisposableEffect(Unit) { onDispose { aoSair() } }
 
     var mostrandoIndice by remember { mutableStateOf(false) }
     var mostrandoGrifos by remember { mutableStateOf(false) }
+    var mostrandoTamanho by remember { mutableStateOf(false) }
     val estadoFolha = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     when (val situacao = estado.download) {
@@ -118,8 +138,26 @@ fun BibliaTela(
             aoGrifar = aoGrifar,
             aoRemoverGrifos = aoRemoverGrifos,
             aoLimparSelecao = aoLimparSelecao,
+            aoAbrirTamanho = { mostrandoTamanho = true },
+            aoZoom = aoZoom,
+            aoSalvarTamanho = aoSalvarTamanho,
             modifier = modifier,
         )
+    }
+
+    if (mostrandoTamanho) {
+        ModalBottomSheet(
+            onDismissRequest = { mostrandoTamanho = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = Superficie,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        ) {
+            TamanhoTexto(
+                tamanho = estado.tamanhoFonte,
+                aoDefinir = aoDefinirTamanho,
+                aoSalvar = aoSalvarTamanho,
+            )
+        }
     }
 
     if (mostrandoGrifos) {
@@ -169,10 +207,28 @@ private fun Leitor(
     aoGrifar: (Int) -> Unit,
     aoRemoverGrifos: () -> Unit,
     aoLimparSelecao: () -> Unit,
+    aoAbrirTamanho: () -> Unit,
+    aoZoom: (Float) -> Unit,
+    aoSalvarTamanho: () -> Unit,
     modifier: Modifier,
 ) {
     val minutos = estado.segundos / 60
     val meta = Regras.META_LEITURA_MIN
+
+    val tamanho = estado.tamanhoFonte
+    val densidade = LocalDensity.current
+    val estiloBase = MaterialTheme.typography.bodyLarge
+    val digitos = remember(estado.versiculos) { (estado.versiculos.maxOfOrNull { it.numero } ?: 1).toString().length }
+    val medidas = remember(tamanho, digitos, estiloBase, densidade) {
+        val numero = TamanhoFonte.numero(tamanho)
+        MedidasVerso(
+            estilo = estiloBase.copy(fontSize = tamanho.sp, lineHeight = TamanhoFonte.entrelinha(tamanho).sp),
+            numero = numero.sp,
+            // 0,77 em por dígito dá os 20dp de sempre (13sp, 2 dígitos); com 3 dígitos (Salmo 119) a coluna cresce.
+            larguraNumero = with(densidade) { (numero.sp * 0.77f * digitos.coerceAtLeast(2).toFloat()).toDp() },
+            topoNumero = (6f * tamanho / TamanhoFonte.PADRAO).dp,
+        )
+    }
 
     Column(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 24.dp)) {
@@ -194,6 +250,7 @@ private fun Leitor(
                     )
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    BotaoIcone(Icones.Fonte, "Tamanho do texto", aoTocar = aoAbrirTamanho, cor = Neon)
                     BotaoIcone(Icones.Marcador, "Meus grifos", aoTocar = aoAbrirGrifos, cor = Neon)
                     BotaoIcone(
                         icone = if (estado.cronometroLigado) Icones.Pausar else Icones.Tocar,
@@ -231,7 +288,11 @@ private fun Leitor(
         }
 
         LazyColumn(
-            Modifier.weight(1f).padding(top = 12.dp).fadeBordas(topo = 0.05f, base = 0.08f),
+            Modifier
+                .weight(1f)
+                .padding(top = 12.dp)
+                .fadeBordas(topo = 0.05f, base = 0.08f)
+                .pinchParaZoom(aoZoom = aoZoom, aoTerminar = aoSalvarTamanho),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -240,6 +301,7 @@ private fun Leitor(
                     verso = verso,
                     cor = estado.grifos[verso.numero]?.let { CorGrifo.deIndice(it) },
                     selecionado = verso.numero in estado.selecionados,
+                    medidas = medidas,
                     aoTocar = { aoAlternarSelecao(verso.numero) },
                 )
             }
@@ -277,8 +339,23 @@ private fun Leitor(
     }
 }
 
+/** Medidas do texto dos versículos para o tamanho escolhido; calculadas uma vez por tamanho. */
+@Immutable
+private data class MedidasVerso(
+    val estilo: TextStyle,
+    val numero: TextUnit,
+    val larguraNumero: Dp,
+    val topoNumero: Dp,
+)
+
 @Composable
-private fun Versiculo(verso: VersiculoEntity, cor: CorGrifo?, selecionado: Boolean, aoTocar: () -> Unit) {
+private fun Versiculo(
+    verso: VersiculoEntity,
+    cor: CorGrifo?,
+    selecionado: Boolean,
+    medidas: MedidasVerso,
+    aoTocar: () -> Unit,
+) {
     val forma = RoundedCornerShape(12.dp)
     Row(
         Modifier
@@ -292,14 +369,152 @@ private fun Versiculo(verso: VersiculoEntity, cor: CorGrifo?, selecionado: Boole
     ) {
         Text(
             "${verso.numero}",
-            fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
+            fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = medidas.numero,
             color = Neon,
-            modifier = Modifier.width(20.dp).padding(top = 6.dp),
+            softWrap = false,
+            modifier = Modifier.width(medidas.larguraNumero).padding(top = medidas.topoNumero),
         )
         Text(
             verso.texto,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp, lineHeight = 29.sp),
+            style = medidas.estilo,
             color = Texto,
+        )
+    }
+}
+
+/**
+ * Zoom por pinça (dois dedos) sobre a leitura. Só reage quando há dois dedos na tela: com um
+ * dedo o toque passa direto, sem ser consumido, e a lista rola e os versículos selecionam como antes.
+ * [aoZoom] recebe o fator de cada passo (maior que 1 aproxima); [aoTerminar] roda ao soltar os dedos.
+ */
+@Composable
+private fun Modifier.pinchParaZoom(aoZoom: (Float) -> Unit, aoTerminar: () -> Unit): Modifier {
+    // rememberUpdatedState evita reiniciar o gesto (e perdê-lo) quando as lambdas mudam no meio da pinça.
+    val zoomAtual by rememberUpdatedState(aoZoom)
+    val terminarAtual by rememberUpdatedState(aoTerminar)
+    return pointerInput(Unit) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+            var deuZoom = false
+            do {
+                val evento = awaitPointerEvent(PointerEventPass.Initial)
+                if (evento.changes.count { it.pressed } >= 2) {
+                    val fator = evento.calculateZoom()
+                    if (fator != 1f) {
+                        zoomAtual(fator)
+                        deuZoom = true
+                    }
+                    // Consome o movimento dos dois dedos para a lista não rolar junto com a pinça.
+                    evento.changes.forEach { if (it.positionChanged()) it.consume() }
+                }
+            } while (evento.changes.any { it.pressed })
+            if (deuZoom) terminarAtual()
+        }
+    }
+}
+
+/** Folha do tamanho do texto: A−, controle deslizante, A+, prévia e volta ao padrão. */
+@Composable
+private fun TamanhoTexto(tamanho: Float, aoDefinir: (Float) -> Unit, aoSalvar: () -> Unit) {
+    val mudado = tamanho != TamanhoFonte.PADRAO
+
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                "TAMANHO DO TEXTO",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp),
+                color = TextoSecundario,
+            )
+            Text(
+                "${TamanhoFonte.percentual(tamanho)}%",
+                fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
+                color = Texto,
+            )
+        }
+
+        Cartao(Modifier.fillMaxWidth()) {
+            Text(
+                "No princípio Deus criou os céus e a terra.",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = tamanho.sp,
+                    lineHeight = TamanhoFonte.entrelinha(tamanho).sp,
+                ),
+                color = Texto,
+                modifier = Modifier.padding(16.dp),
+            )
+        }
+
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            BotaoLetra(14.sp, "Diminuir o texto", habilitado = tamanho > TamanhoFonte.MINIMO) {
+                aoDefinir(TamanhoFonte.diminuir(tamanho))
+                aoSalvar()
+            }
+            Slider(
+                value = tamanho,
+                onValueChange = aoDefinir,
+                valueRange = TamanhoFonte.MINIMO..TamanhoFonte.MAXIMO,
+                onValueChangeFinished = aoSalvar,
+                colors = SliderDefaults.colors(thumbColor = Neon, activeTrackColor = Neon, inactiveTrackColor = Trilho),
+                modifier = Modifier.weight(1f),
+            )
+            BotaoLetra(24.sp, "Aumentar o texto", habilitado = tamanho < TamanhoFonte.MAXIMO) {
+                aoDefinir(TamanhoFonte.aumentar(tamanho))
+                aoSalvar()
+            }
+        }
+
+        Text(
+            "Voltar ao padrão",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = if (mudado) Neon else TextoSecundario.copy(alpha = 0.5f),
+            modifier = Modifier
+                .heightIn(min = 44.dp)
+                .clickable(enabled = mudado, onClickLabel = "Voltar ao tamanho padrão") {
+                    aoDefinir(TamanhoFonte.PADRAO)
+                    aoSalvar()
+                }
+                .padding(horizontal = 4.dp)
+                .wrapContentHeight(Alignment.CenterVertically),
+        )
+
+        Text(
+            "Na leitura, aproxime ou afaste dois dedos sobre o texto para dar zoom.",
+            style = MaterialTheme.typography.bodySmall,
+            color = TextoSecundario,
+            modifier = Modifier.padding(horizontal = 4.dp),
+        )
+    }
+}
+
+/** Botão quadrado de 44dp com a letra A no tamanho de [tamanhoLetra]; apagado quando não pode mais mudar. */
+@Composable
+private fun BotaoLetra(tamanhoLetra: TextUnit, descricao: String, habilitado: Boolean, aoTocar: () -> Unit) {
+    val forma = RoundedCornerShape(14.dp)
+    Box(
+        Modifier
+            .size(44.dp)
+            .clip(forma)
+            .background(Trilho)
+            .border(1.dp, Borda, forma)
+            .clickable(enabled = habilitado, role = Role.Button, onClickLabel = descricao, onClick = aoTocar),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            "A",
+            fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = tamanhoLetra,
+            color = if (habilitado) Texto else TextoSecundario.copy(alpha = 0.4f),
         )
     }
 }

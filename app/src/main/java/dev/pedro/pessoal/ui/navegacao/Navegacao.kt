@@ -130,6 +130,9 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
                     aoRemoverGrifos = bibliaViewModel::removerGrifosSelecionados,
                     aoLimparSelecao = bibliaViewModel::limparSelecao,
                     aoAbrirGrifos = bibliaViewModel::carregarTodosGrifos,
+                    aoDefinirTamanho = bibliaViewModel::definirTamanhoFonte,
+                    aoSalvarTamanho = bibliaViewModel::salvarTamanhoFonte,
+                    aoZoom = bibliaViewModel::aplicarZoom,
                 )
             }
         }

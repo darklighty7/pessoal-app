@@ -2,6 +2,20 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.4.0] - 2026-10-20
+
+Tamanho do texto e zoom na leitura da Bíblia.
+
+### Adicionado
+- Botão "Aa" no cabeçalho da leitura abre a folha **Tamanho do texto**: botões A− e A+, controle deslizante, prévia ao vivo, o tamanho em porcentagem (100% = padrão) e "Voltar ao padrão".
+- **Zoom por pinça**: aproxime ou afaste dois dedos sobre o texto. Com um dedo, rolar e selecionar versículos continuam como antes.
+- O tamanho escolhido fica salvo no aparelho e vale na próxima vez que abrir a leitura (faixa de 14 a 34 sp, padrão 18 sp).
+- O número do versículo e a entrelinha acompanham o tamanho do texto.
+- Teste das regras do tamanho (faixa, passos, arredondamento).
+
+### Corrigido
+- Salmo 119: o número dos versículos com 3 dígitos (100 a 176) quebrava em duas linhas; a coluna do número agora se ajusta ao maior versículo do capítulo.
+
 ## [1.3.0] - 2026-10-20
 
 Grifos (marca-texto) na leitura da Bíblia.

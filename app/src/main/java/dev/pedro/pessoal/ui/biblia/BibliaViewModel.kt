@@ -6,7 +6,9 @@ import androidx.lifecycle.viewModelScope
 import dev.pedro.pessoal.data.BibliaRepositorio
 import dev.pedro.pessoal.data.GrifoListado
 import dev.pedro.pessoal.data.LivroEntity
+import dev.pedro.pessoal.data.PreferenciasLeitura
 import dev.pedro.pessoal.data.VersiculoEntity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Tudo que a tela da Bíblia mostra de uma vez. */
 data class EstadoBiblia(
@@ -31,6 +34,8 @@ data class EstadoBiblia(
     val selecionados: Set<Int> = emptySet(),
     /** Todos os grifos, preenchido quando a lista é aberta. */
     val todosGrifos: List<GrifoListado> = emptyList(),
+    /** Tamanho do texto dos versículos, em sp (ver [TamanhoFonte]). */
+    val tamanhoFonte: Float = TamanhoFonte.PADRAO,
 )
 
 /**
@@ -40,6 +45,7 @@ data class EstadoBiblia(
  */
 class BibliaViewModel(
     private val repositorio: BibliaRepositorio,
+    private val preferencias: PreferenciasLeitura,
     private val aoFecharLeitura: (minutos: Int) -> Unit,
 ) : ViewModel() {
 
@@ -49,6 +55,10 @@ class BibliaViewModel(
     private var contador: Job? = null
 
     init {
+        viewModelScope.launch {
+            val salvo = withContext(Dispatchers.IO) { preferencias.lerTamanhoFonte() }
+            if (salvo != null) _estado.update { it.copy(tamanhoFonte = TamanhoFonte.limitar(salvo)) }
+        }
         viewModelScope.launch {
             repositorio.baixarSeFaltar { situacao ->
                 _estado.update { it.copy(download = situacao) }
@@ -104,6 +114,23 @@ class BibliaViewModel(
         if (alvo.isEmpty()) return
         _estado.update { it.copy(grifos = it.grifos - alvo, selecionados = emptySet()) }
         viewModelScope.launch { repositorio.removerGrifos(livro.numero, e.capitulo, alvo) }
+    }
+
+    /** Muda o tamanho do texto na hora (controle deslizante); [salvarTamanhoFonte] grava. */
+    fun definirTamanhoFonte(tamanho: Float) {
+        _estado.update { it.copy(tamanhoFonte = TamanhoFonte.limitar(tamanho)) }
+    }
+
+    /** Zoom por pinça: [fator] maior que 1 aumenta o texto, menor que 1 diminui. */
+    fun aplicarZoom(fator: Float) {
+        _estado.update { it.copy(tamanhoFonte = TamanhoFonte.limitar(it.tamanhoFonte * fator)) }
+    }
+
+    /** Grava o tamanho atual no aparelho; chamado ao soltar o controle ou terminar a pinça. */
+    fun salvarTamanhoFonte() {
+        val tamanho = TamanhoFonte.arredondar(_estado.value.tamanhoFonte)
+        _estado.update { it.copy(tamanhoFonte = tamanho) }
+        viewModelScope.launch(Dispatchers.IO) { preferencias.salvarTamanhoFonte(tamanho) }
     }
 
     fun carregarTodosGrifos() {
@@ -169,11 +196,14 @@ class BibliaViewModel(
     }
 
     companion object {
-        fun fabrica(repositorio: BibliaRepositorio, aoFecharLeitura: (Int) -> Unit) =
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    BibliaViewModel(repositorio, aoFecharLeitura) as T
-            }
+        fun fabrica(
+            repositorio: BibliaRepositorio,
+            preferencias: PreferenciasLeitura,
+            aoFecharLeitura: (Int) -> Unit,
+        ) = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                BibliaViewModel(repositorio, preferencias, aoFecharLeitura) as T
+        }
     }
 }
