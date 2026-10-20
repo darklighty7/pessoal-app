@@ -2,6 +2,18 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.4.1] - 2026-10-20
+
+Desempenho: ajustes depois de uma auditoria do "app travando e lento". Nada disso foi medido em aparelho; são correções de causas encontradas na leitura do código.
+
+### Alterado
+- Trocar de aba ficou mais rápido: o padrão do `NavHost` é um fade de 700 ms com as duas telas desenhadas ao mesmo tempo; agora o fade dura 120 ms.
+- Leitura: o esmaecimento das pontas da lista deixou de ser invalidado a cada segundo do cronômetro, e o gradiente passou a ser criado uma vez por tamanho (o visual é o mesmo).
+- O botão "Ler" não abre a Bíblia duas vezes se for tocado em sequência.
+
+### Adicionado
+- Variante de build `otimizado` (R8 ligado, assinada com a chave de debug) para medir desempenho de verdade: `./gradlew installOtimizado`, ou escolher "otimizado" em *Build Variants*. O APK de debug roda o Compose bem mais devagar e não representa o app final. Faça um teste rápido das 3 abas, da Bíblia (ler e grifar) e dos lembretes nessa variante.
+
 ## [1.4.0] - 2026-10-20
 
 Tamanho do texto e zoom na leitura da Bíblia.

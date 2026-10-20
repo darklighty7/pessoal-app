@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.pedro.pessoal.ui.theme.Borda
@@ -66,20 +66,25 @@ fun BarraNeon(
     }
 }
 
-/** Esmaece as pontas de uma lista para o fundo, sem custo de animação. */
+/**
+ * Esmaece as pontas de uma lista para o fundo, sem custo de animação.
+ * O gradiente é criado uma vez por tamanho. Quem chama dentro de uma tela que recompõe com
+ * frequência deve guardar o resultado com remember { Modifier.fadeBordas(...) }: um modificador
+ * novo a cada recomposição invalida o desenho (e a camada offscreen) à toa.
+ */
 fun Modifier.fadeBordas(topo: Float = 0f, base: Float = 0.12f): Modifier = this
     .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-    .drawWithContent {
-        drawContent()
-        drawRect(
-            brush = Brush.verticalGradient(
-                0f to if (topo > 0f) Color.Transparent else Color.Black,
-                topo to Color.Black,
-                (1f - base) to Color.Black,
-                1f to Color.Transparent,
-            ),
-            blendMode = BlendMode.DstIn,
+    .drawWithCache {
+        val mascara = Brush.verticalGradient(
+            0f to if (topo > 0f) Color.Transparent else Color.Black,
+            topo to Color.Black,
+            (1f - base) to Color.Black,
+            1f to Color.Transparent,
         )
+        onDrawWithContent {
+            drawContent()
+            drawRect(brush = mascara, blendMode = BlendMode.DstIn)
+        }
     }
 
 fun Modifier.fadeInferior(fracao: Float = 0.12f): Modifier = fadeBordas(0f, fracao)

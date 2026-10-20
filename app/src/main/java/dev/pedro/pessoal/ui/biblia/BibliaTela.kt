@@ -225,6 +225,10 @@ private fun Leitor(
     val zoomAtual = rememberUpdatedState(aoZoom)
     val terminarAtual = rememberUpdatedState(aoSalvarTamanho)
 
+    // Esta tela recompõe a cada segundo (cronômetro): um modificador novo por recomposição
+    // invalidaria o desenho da lista inteira a cada tique.
+    val esmaecer = remember { Modifier.fadeBordas(topo = 0.05f, base = 0.08f) }
+
     val tamanho = estado.tamanhoFonte
     val densidade = LocalDensity.current
     val estiloBase = MaterialTheme.typography.bodyLarge
@@ -300,7 +304,7 @@ private fun Leitor(
             Modifier
                 .weight(1f)
                 .padding(top = 12.dp)
-                .fadeBordas(topo = 0.05f, base = 0.08f)
+                .then(esmaecer)
                 .pinchParaZoom(zoomAtual, terminarAtual),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),

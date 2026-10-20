@@ -21,6 +21,16 @@ android {
         release {
             isMinifyEnabled = false
         }
+        // Para medir desempenho de verdade e usar no celular pessoal: release com R8 ligado, assinado com a
+        // chave de debug só para poder instalar. O APK de debug roda o Compose bem mais devagar e não
+        // representa o app final. Instalar com: ./gradlew installOtimizado
+        create("otimizado") {
+            initWith(getByName("release"))
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            signingConfig = signingConfigs.getByName("debug")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

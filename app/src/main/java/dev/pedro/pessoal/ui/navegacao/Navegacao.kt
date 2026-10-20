@@ -1,5 +1,8 @@
 package dev.pedro.pessoal.ui.navegacao
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -59,6 +62,9 @@ private enum class Aba(val rota: String, val rotulo: String, val icone: ImageVec
 
 private const val ROTA_BIBLIA = "biblia"
 
+/** Duração do fade ao trocar de tela. */
+private const val TROCA_DE_TELA_MS = 120
+
 @Composable
 fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
     val nav = rememberNavController()
@@ -85,7 +91,17 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
             }
         },
     ) { margens ->
-        NavHost(nav, startDestination = Aba.STATUS.rota, modifier = Modifier.padding(margens)) {
+        // O padrão do NavHost é um fade de 700 ms com as duas telas desenhadas ao mesmo tempo;
+        // trocar de aba parecia lento. Aqui o fade é curto.
+        NavHost(
+            nav,
+            startDestination = Aba.STATUS.rota,
+            modifier = Modifier.padding(margens),
+            enterTransition = { fadeIn(tween(TROCA_DE_TELA_MS)) },
+            exitTransition = { fadeOut(tween(TROCA_DE_TELA_MS)) },
+            popEnterTransition = { fadeIn(tween(TROCA_DE_TELA_MS)) },
+            popExitTransition = { fadeOut(tween(TROCA_DE_TELA_MS)) },
+        ) {
             composable(Aba.STATUS.rota) { StatusTela(status) }
 
             composable(Aba.LEMBRETES.rota) {
@@ -101,7 +117,7 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
                         )
                     },
                     aoMarcar = appViewModel::marcar,
-                    aoAbrirBiblia = { nav.navigate(ROTA_BIBLIA) },
+                    aoAbrirBiblia = { nav.navigate(ROTA_BIBLIA) { launchSingleTop = true } },
                 )
             }
 
