@@ -16,6 +16,7 @@ class TamanhoFonteTest {
     @Test
     fun `valor invalido volta para o padrao`() {
         assertEquals(TamanhoFonte.PADRAO, TamanhoFonte.limitar(Float.NaN), 0f)
+        assertEquals(TamanhoFonte.PADRAO, TamanhoFonte.arredondar(Float.NaN), 0f)
     }
 
     @Test

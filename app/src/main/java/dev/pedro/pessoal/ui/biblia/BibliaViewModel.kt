@@ -128,9 +128,11 @@ class BibliaViewModel(
 
     /** Grava o tamanho atual no aparelho; chamado ao soltar o controle ou terminar a pinça. */
     fun salvarTamanhoFonte() {
-        val tamanho = TamanhoFonte.arredondar(_estado.value.tamanhoFonte)
-        _estado.update { it.copy(tamanhoFonte = tamanho) }
-        viewModelScope.launch(Dispatchers.IO) { preferencias.salvarTamanhoFonte(tamanho) }
+        _estado.update { it.copy(tamanhoFonte = TamanhoFonte.arredondar(it.tamanhoFonte)) }
+        viewModelScope.launch(Dispatchers.IO) {
+            // Lê o estado aqui dentro: se duas gravações correrem juntas, a que rodar por último grava o valor mais novo.
+            preferencias.salvarTamanhoFonte(_estado.value.tamanhoFonte)
+        }
     }
 
     fun carregarTodosGrifos() {

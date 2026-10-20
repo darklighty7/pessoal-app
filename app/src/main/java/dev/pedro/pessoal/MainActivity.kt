@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
         val banco = AppDatabase.obter(this)
         val repositorio = Repositorio(banco.statusDao(), banco.registroDao())
         val biblia = BibliaRepositorio(banco.bibliaDao())
-        val preferencias = PreferenciasLeitura(this)
+        val preferencias = PreferenciasLeitura(applicationContext)
 
         Notificacoes.criarCanais(this)
         pedirPermissaoDeNotificacao()

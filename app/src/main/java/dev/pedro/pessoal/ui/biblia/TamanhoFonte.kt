@@ -19,7 +19,8 @@ object TamanhoFonte {
     fun diminuir(atual: Float): Float = limitar(atual - PASSO)
 
     /** Arredonda para meio sp, para a pinça não deixar valores quebrados salvos. */
-    fun arredondar(valor: Float): Float = limitar((valor * 2f).roundToInt() / 2f)
+    fun arredondar(valor: Float): Float =
+        if (valor.isNaN()) PADRAO else limitar((valor * 2f).roundToInt() / 2f)
 
     /** Entrelinha proporcional ao texto: 29 sp para 18 sp, como era antes do zoom. */
     fun entrelinha(tamanho: Float): Float = tamanho * (29f / 18f)

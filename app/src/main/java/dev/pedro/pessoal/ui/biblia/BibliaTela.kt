@@ -5,6 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
@@ -14,6 +16,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -54,6 +59,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -215,6 +221,10 @@ private fun Leitor(
     val minutos = estado.segundos / 60
     val meta = Regras.META_LEITURA_MIN
 
+    // O gesto de pinça lê estas duas pelo State, para não reiniciar quando a tela recompõe no meio dele.
+    val zoomAtual = rememberUpdatedState(aoZoom)
+    val terminarAtual = rememberUpdatedState(aoSalvarTamanho)
+
     val tamanho = estado.tamanhoFonte
     val densidade = LocalDensity.current
     val estiloBase = MaterialTheme.typography.bodyLarge
@@ -250,7 +260,6 @@ private fun Leitor(
                     )
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    BotaoIcone(Icones.Fonte, "Tamanho do texto", aoTocar = aoAbrirTamanho, cor = Neon)
                     BotaoIcone(Icones.Marcador, "Meus grifos", aoTocar = aoAbrirGrifos, cor = Neon)
                     BotaoIcone(
                         icone = if (estado.cronometroLigado) Icones.Pausar else Icones.Tocar,
@@ -292,7 +301,7 @@ private fun Leitor(
                 .weight(1f)
                 .padding(top = 12.dp)
                 .fadeBordas(topo = 0.05f, base = 0.08f)
-                .pinchParaZoom(aoZoom = aoZoom, aoTerminar = aoSalvarTamanho),
+                .pinchParaZoom(zoomAtual, terminarAtual),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -321,16 +330,27 @@ private fun Leitor(
             Row(
                 Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 IconButton(onClick = aoVoltar, modifier = Modifier.size(48.dp)) {
                     Icon(Icones.Voltar, contentDescription = "Capítulo anterior", tint = Neon, modifier = Modifier.size(26.dp))
                 }
-                Text(
-                    BibliaRepositorio.NOME_VERSAO,
-                    style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 0.5.sp),
-                    color = TextoSecundario,
-                )
+                // O meio ocupa o que sobra (weight): as setas de 48dp nunca são espremidas, e o nome da versão
+                // encolhe com reticências se faltar espaço (telas estreitas ou fonte grande do sistema).
+                Row(
+                    Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        BibliaRepositorio.NOME_VERSAO,
+                        style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 0.5.sp),
+                        color = TextoSecundario,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    BotaoIcone(Icones.Fonte, "Tamanho do texto", aoTocar = aoAbrirTamanho, cor = Neon)
+                }
                 IconButton(onClick = aoAvancar, modifier = Modifier.size(48.dp)) {
                     Icon(Icones.Avancar, contentDescription = "Próximo capítulo", tint = Neon, modifier = Modifier.size(26.dp))
                 }
@@ -385,41 +405,42 @@ private fun Versiculo(
 /**
  * Zoom por pinça (dois dedos) sobre a leitura. Só reage quando há dois dedos na tela: com um
  * dedo o toque passa direto, sem ser consumido, e a lista rola e os versículos selecionam como antes.
- * [aoZoom] recebe o fator de cada passo (maior que 1 aproxima); [aoTerminar] roda ao soltar os dedos.
+ * [zoom] recebe o fator de cada passo (maior que 1 aproxima); [terminar] roda ao soltar os dedos.
+ * Os dois chegam como State (rememberUpdatedState) para o gesto não reiniciar quando a tela recompõe.
  */
-@Composable
-private fun Modifier.pinchParaZoom(aoZoom: (Float) -> Unit, aoTerminar: () -> Unit): Modifier {
-    // rememberUpdatedState evita reiniciar o gesto (e perdê-lo) quando as lambdas mudam no meio da pinça.
-    val zoomAtual by rememberUpdatedState(aoZoom)
-    val terminarAtual by rememberUpdatedState(aoTerminar)
-    return pointerInput(Unit) {
+private fun Modifier.pinchParaZoom(zoom: State<(Float) -> Unit>, terminar: State<() -> Unit>): Modifier =
+    pointerInput(Unit) {
         awaitEachGesture {
             awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
             var deuZoom = false
-            do {
-                val evento = awaitPointerEvent(PointerEventPass.Initial)
-                if (evento.changes.count { it.pressed } >= 2) {
-                    val fator = evento.calculateZoom()
-                    if (fator != 1f) {
-                        zoomAtual(fator)
-                        deuZoom = true
+            try {
+                do {
+                    val evento = awaitPointerEvent(PointerEventPass.Initial)
+                    if (evento.changes.count { it.pressed } >= 2) {
+                        val fator = evento.calculateZoom()
+                        if (fator != 1f) {
+                            zoom.value(fator)
+                            deuZoom = true
+                        }
+                        // Consome o movimento dos dois dedos para a lista não rolar junto com a pinça.
+                        evento.changes.forEach { if (it.positionChanged()) it.consume() }
                     }
-                    // Consome o movimento dos dois dedos para a lista não rolar junto com a pinça.
-                    evento.changes.forEach { if (it.positionChanged()) it.consume() }
-                }
-            } while (evento.changes.any { it.pressed })
-            if (deuZoom) terminarAtual()
+                } while (evento.changes.any { it.pressed })
+            } finally {
+                // Também roda se a tela sair no meio da pinça (o gesto é cancelado): grava o tamanho.
+                if (deuZoom) terminar.value()
+            }
         }
     }
-}
 
 /** Folha do tamanho do texto: A−, controle deslizante, A+, prévia e volta ao padrão. */
 @Composable
 private fun TamanhoTexto(tamanho: Float, aoDefinir: (Float) -> Unit, aoSalvar: () -> Unit) {
     val mudado = tamanho != TamanhoFonte.PADRAO
 
+    // Rola: em paisagem, ou com fonte grande no sistema, a folha pode ser mais alta que a tela.
     Column(
-        Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 24.dp),
+        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Row(
@@ -465,8 +486,15 @@ private fun TamanhoTexto(tamanho: Float, aoDefinir: (Float) -> Unit, aoSalvar: (
                 onValueChange = aoDefinir,
                 valueRange = TamanhoFonte.MINIMO..TamanhoFonte.MAXIMO,
                 onValueChangeFinished = aoSalvar,
-                colors = SliderDefaults.colors(thumbColor = Neon, activeTrackColor = Neon, inactiveTrackColor = Trilho),
-                modifier = Modifier.weight(1f),
+                colors = SliderDefaults.colors(
+                    thumbColor = Neon,
+                    activeTrackColor = Neon,
+                    inactiveTrackColor = TextoSecundario.copy(alpha = 0.3f),
+                ),
+                modifier = Modifier.weight(1f).semantics {
+                    contentDescription = "Tamanho do texto"
+                    stateDescription = "${TamanhoFonte.percentual(tamanho)}%"
+                },
             )
             BotaoLetra(24.sp, "Aumentar o texto", habilitado = tamanho < TamanhoFonte.MAXIMO) {
                 aoDefinir(TamanhoFonte.aumentar(tamanho))
@@ -508,13 +536,15 @@ private fun BotaoLetra(tamanhoLetra: TextUnit, descricao: String, habilitado: Bo
             .clip(forma)
             .background(Trilho)
             .border(1.dp, Borda, forma)
-            .clickable(enabled = habilitado, role = Role.Button, onClickLabel = descricao, onClick = aoTocar),
+            .clickable(enabled = habilitado, role = Role.Button, onClick = aoTocar),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             "A",
             fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = tamanhoLetra,
             color = if (habilitado) Texto else TextoSecundario.copy(alpha = 0.4f),
+            // O leitor de tela diz "Diminuir o texto" em vez de só "A".
+            modifier = Modifier.semantics { contentDescription = descricao },
         )
     }
 }

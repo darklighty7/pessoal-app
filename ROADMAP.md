@@ -12,7 +12,7 @@ Melhorias futuras para o app Pessoal, sem compromisso de prazo.
 
 - Escolher o nome final do app e criar um ícone novo com símbolo próprio.
 - Otimizar o desempenho (o app trava em alguns momentos): reduzir as animações dos selos E, D e C (`SeloRank.kt`) usando `remember` para caminhos e gradientes, e revisar recomposições.
-- Testar o redesign v1.2.0 e os grifos da v1.3.0 no celular e ajustar detalhes (o build não foi validado antes do pull request).
+- Compilar e testar no celular o redesign v1.2.0, os grifos v1.3.0 e o tamanho/zoom do texto v1.4.0 e ajustar detalhes (nada disso foi compilado nem testado antes do pull request).
 
 - Corrigir o typo "foii" em Lucas 22:39: não foi encontrado no código-fonte, porque o
   texto da Bíblia não é versionado no repositório — é baixado em runtime a partir do
