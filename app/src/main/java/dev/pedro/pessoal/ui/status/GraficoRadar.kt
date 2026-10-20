@@ -15,9 +15,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.pedro.pessoal.domain.model.Atributo
 import dev.pedro.pessoal.domain.model.formatarAtributo
-import dev.pedro.pessoal.ui.theme.ChakraPetch
 import dev.pedro.pessoal.ui.theme.GradeRadar
 import dev.pedro.pessoal.ui.theme.Neon
 import dev.pedro.pessoal.ui.theme.TextoSecundario
@@ -51,10 +51,10 @@ fun GraficoRadar(atributos: Map<Atributo, Int>, modifier: Modifier = Modifier) {
             drawLine(GradeRadar, ponto(3, 1f), ponto(1, 1f), 1.dp.toPx())
 
             val valores = losango(ordem.map { atributos.getValue(it) / escala })
-            drawPath(valores, Neon.copy(alpha = 0.28f))
+            drawPath(valores, Neon.copy(alpha = 0.25f))
             drawPath(valores, Neon, style = Stroke(2.dp.toPx(), join = StrokeJoin.Round))
         }
-        val rotulo = MaterialTheme.typography.labelSmall.copy(fontFamily = ChakraPetch, color = TextoSecundario)
+        val rotulo = MaterialTheme.typography.labelSmall.copy(color = TextoSecundario, letterSpacing = 1.sp)
         Text("FOR", style = rotulo, modifier = Modifier.align(Alignment.TopCenter))
         Text("INT", style = rotulo, modifier = Modifier.align(Alignment.CenterEnd))
         Text("DIS", style = rotulo, modifier = Modifier.align(Alignment.BottomCenter))

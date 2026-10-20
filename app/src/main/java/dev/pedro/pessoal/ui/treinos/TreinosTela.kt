@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,7 +29,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,7 +40,11 @@ import dev.pedro.pessoal.ui.componentes.BarraNeon
 import dev.pedro.pessoal.ui.componentes.Cartao
 import dev.pedro.pessoal.ui.componentes.Icones
 import dev.pedro.pessoal.ui.componentes.TelaEmConstrucao
-import dev.pedro.pessoal.ui.theme.Borda
+import dev.pedro.pessoal.ui.componentes.fadeInferior
+import dev.pedro.pessoal.ui.theme.BordaForte
+import dev.pedro.pessoal.ui.theme.ChakraPetch
+import dev.pedro.pessoal.ui.theme.SobreGanho
+import dev.pedro.pessoal.ui.theme.SobreNeon
 import dev.pedro.pessoal.ui.theme.Ganho
 import dev.pedro.pessoal.ui.theme.Neon
 import dev.pedro.pessoal.ui.theme.PessoalTema
@@ -60,7 +65,7 @@ fun TreinosTela(
 ) {
     if (treino == null) {
         TelaEmConstrucao(
-            "TREINOS",
+            "Treinos",
             Icones.Halter,
             "Hoje é dia de descanso. O próximo treino aparece aqui no dia certo.",
             modifier,
@@ -73,36 +78,32 @@ fun TreinosTela(
     val totalSeries = treino.exercicios.sumOf { it.series }
     val feitas by remember { derivedStateOf { marcadas.values.sumOf { it.size } } }
 
-    Column(modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 16.dp)) {
-        Text("TREINOS", style = MaterialTheme.typography.headlineMedium, color = Neon)
+    Column(modifier.fillMaxSize().padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp)) {
+        Text("Treinos", style = MaterialTheme.typography.headlineMedium, color = Texto)
         Text(
             treino.rotulo,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodyMedium,
             color = TextoSecundario,
-            modifier = Modifier.padding(top = 2.dp),
+            modifier = Modifier.padding(top = 4.dp),
         )
 
-        Cartao(Modifier.fillMaxWidth().padding(top = 16.dp)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Cartao(Modifier.fillMaxWidth().padding(top = 24.dp)) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        "SÉRIES",
-                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.sp),
-                        color = TextoSecundario,
-                    )
+                    Text("Séries", style = MaterialTheme.typography.labelMedium, color = TextoSecundario)
                     Text(
                         "$feitas / $totalSeries",
-                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
                         color = if (feitas == totalSeries) Ganho else Texto,
                     )
                 }
-                BarraNeon(feitas.toFloat() / totalSeries)
+                BarraNeon(feitas.toFloat() / totalSeries, cor = if (feitas == totalSeries) Ganho else Neon)
             }
         }
 
         LazyColumn(
-            Modifier.weight(1f).padding(top = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            Modifier.weight(1f).padding(top = 12.dp).fadeInferior(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(treino.exercicios, key = { it.nome }) { exercicio ->
                 CartaoExercicio(
@@ -117,26 +118,28 @@ fun TreinosTela(
             }
         }
 
+        Spacer(Modifier.height(12.dp))
         Button(
             onClick = aoConcluir,
             enabled = !concluido && feitas == totalSeries,
-            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Neon,
-                contentColor = Color(0xFF07101F),
+                contentColor = SobreNeon,
                 disabledContainerColor = Trilho,
                 disabledContentColor = TextoSecundario,
             ),
         ) {
             Text(
                 when {
-                    concluido -> "TREINO CONCLUÍDO HOJE"
-                    feitas == totalSeries -> "CONCLUIR TREINO"
-                    else -> "FALTAM ${totalSeries - feitas} SÉRIES"
+                    concluido -> "Treino concluído hoje"
+                    feitas == totalSeries -> "Concluir treino"
+                    else -> "Faltam ${totalSeries - feitas} séries"
                 },
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                letterSpacing = 0.6.sp,
             )
         }
     }
@@ -150,27 +153,27 @@ private fun CartaoExercicio(
     aoAlternar: (Int) -> Unit,
 ) {
     Cartao(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.padding(horizontal = 20.dp, vertical = 18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         "${exercicio.nome} ${exercicio.variacao(progresso.nivel)}",
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
                         fontWeight = FontWeight.SemiBold,
                         color = Texto,
                     )
                     Text(
                         "${exercicio.series} séries de ${exercicio.repeticoes}" +
                             if (exercicio.porTempo) " segundos" else " repetições",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = TextoSecundario,
                     )
                 }
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 repeat(exercicio.series) { i ->
-                    Botao(numero = i + 1, marcada = i in marcadas, aoTocar = { aoAlternar(i) })
+                    Botao(numero = i + 1, marcada = i in marcadas, aoTocar = { aoAlternar(i) }, modifier = Modifier.weight(1f))
                 }
             }
 
@@ -191,26 +194,26 @@ private fun CartaoExercicio(
 }
 
 @Composable
-private fun Botao(numero: Int, marcada: Boolean, aoTocar: () -> Unit) {
-    val forma = RoundedCornerShape(8.dp)
+private fun Botao(numero: Int, marcada: Boolean, aoTocar: () -> Unit, modifier: Modifier = Modifier) {
+    val forma = RoundedCornerShape(14.dp)
     Box(
-        Modifier
-            .size(40.dp)
+        modifier
+            .height(48.dp)
             .clip(forma)
-            .background(if (marcada) Ganho else Color.Transparent)
-            .border(1.dp, if (marcada) Ganho else Borda, forma)
+            .background(if (marcada) Ganho else Trilho)
+            .border(1.dp, if (marcada) Ganho else BordaForte, forma)
             .clickable(onClick = aoTocar),
         contentAlignment = Alignment.Center,
     ) {
         if (marcada) {
-            Icon(Icones.Confirmar, contentDescription = null, tint = Color(0xFF0A0F1C), modifier = Modifier.size(18.dp))
+            Icon(Icones.Confirmar, contentDescription = null, tint = SobreGanho, modifier = Modifier.size(20.dp))
         } else {
-            Text("$numero", style = MaterialTheme.typography.labelSmall, color = TextoSecundario)
+            Text("$numero", fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Texto)
         }
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A0F1C, widthDp = 390, heightDp = 844)
+@Preview(showBackground = true, backgroundColor = 0xFF0B0E14, widthDp = 390, heightDp = 844)
 @Composable
 private fun TreinosPreview() {
     PessoalTema {

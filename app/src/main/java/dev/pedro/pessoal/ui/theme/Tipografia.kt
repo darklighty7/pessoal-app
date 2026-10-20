@@ -8,7 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import dev.pedro.pessoal.R
 
-/** Fonte "gamer" para títulos e números. */
+/** Fonte de destaque para títulos e números. */
 val ChakraPetch = FontFamily(
     Font(R.font.chakra_petch_semibold, FontWeight.SemiBold),
     Font(R.font.chakra_petch_bold, FontWeight.Bold),
@@ -22,12 +22,13 @@ val IbmPlexSans = FontFamily(
 )
 
 val Tipografia = Typography(
-    headlineMedium = TextStyle(fontFamily = ChakraPetch, fontWeight = FontWeight.Bold, fontSize = 26.sp, letterSpacing = 4.sp),
-    titleLarge = TextStyle(fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 22.sp),
-    titleMedium = TextStyle(fontFamily = IbmPlexSans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp),
-    bodyLarge = TextStyle(fontFamily = IbmPlexSans, fontWeight = FontWeight.Normal, fontSize = 15.sp),
-    bodyMedium = TextStyle(fontFamily = IbmPlexSans, fontWeight = FontWeight.Normal, fontSize = 13.sp),
-    bodySmall = TextStyle(fontFamily = IbmPlexSans, fontWeight = FontWeight.Normal, fontSize = 12.sp),
-    labelSmall = TextStyle(fontFamily = IbmPlexSans, fontWeight = FontWeight.Medium, fontSize = 11.sp, letterSpacing = 1.sp),
-    labelMedium = TextStyle(fontFamily = IbmPlexSans, fontWeight = FontWeight.Medium, fontSize = 12.sp, letterSpacing = 1.sp),
+    // Título de tela: sem caixa alta e sem espaçamento largo entre as letras.
+    headlineMedium = TextStyle(fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 32.sp, letterSpacing = (-0.3).sp),
+    titleLarge = TextStyle(fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 24.sp),
+    titleMedium = TextStyle(fontFamily = IbmPlexSans, fontWeight = FontWeight.SemiBold, fontSize = 17.sp),
+    bodyLarge = TextStyle(fontFamily = IbmPlexSans, fontWeight = FontWeight.Normal, fontSize = 17.sp),
+    bodyMedium = TextStyle(fontFamily = IbmPlexSans, fontWeight = FontWeight.Normal, fontSize = 14.sp),
+    bodySmall = TextStyle(fontFamily = IbmPlexSans, fontWeight = FontWeight.Normal, fontSize = 13.sp),
+    labelSmall = TextStyle(fontFamily = IbmPlexSans, fontWeight = FontWeight.Medium, fontSize = 12.sp),
+    labelMedium = TextStyle(fontFamily = IbmPlexSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
 )

@@ -6,9 +6,12 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import dev.pedro.pessoal.MainActivity
 import dev.pedro.pessoal.R
 import dev.pedro.pessoal.domain.model.Habito
@@ -55,7 +58,9 @@ object Notificacoes {
     /** Lembrete de um ou mais hábitos, com um botão de concluir para cada um. */
     fun lembrete(contexto: Context, id: Int, titulo: String, texto: String, habitos: List<Habito>) {
         val construtor = NotificationCompat.Builder(contexto, Canais.LEMBRETES)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_notificacao)
+            .setColor(ContextCompat.getColor(contexto, R.color.neon))
+            .setLargeIcon(iconeGrande(contexto))
             .setContentTitle(titulo)
             .setContentText(texto)
             .setStyle(NotificationCompat.BigTextStyle().bigText(texto))
@@ -67,7 +72,7 @@ object Notificacoes {
 
         habitos.forEach { habito ->
             construtor.addAction(
-                R.drawable.ic_launcher_foreground,
+                R.drawable.ic_notificacao,
                 habito.rotulo,
                 marcarHabito(contexto, habito, id),
             )
@@ -78,7 +83,9 @@ object Notificacoes {
     /** Versículo fixo na tela de bloqueio: sem som e sem sumir ao arrastar. */
     fun versiculo(contexto: Context, texto: String, referencia: String) {
         val notificacao = NotificationCompat.Builder(contexto, Canais.VERSICULO)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_notificacao)
+            .setColor(ContextCompat.getColor(contexto, R.color.neon))
+            .setLargeIcon(iconeGrande(contexto))
             .setContentTitle(referencia)
             .setContentText(texto)
             .setStyle(NotificationCompat.BigTextStyle().bigText(texto))
@@ -89,6 +96,16 @@ object Notificacoes {
             .setContentIntent(abrirApp(contexto, ID_VERSICULO))
             .build()
         mostrar(contexto, ID_VERSICULO, notificacao)
+    }
+
+    /** Ícone grande da notificação: escudo neon sobre fundo preto (o ícone pequeno é só uma silhueta). */
+    private fun iconeGrande(contexto: Context): Bitmap? {
+        val desenho = ContextCompat.getDrawable(contexto, R.drawable.ic_notificacao_grande) ?: return null
+        val lado = 192
+        val bitmap = Bitmap.createBitmap(lado, lado, Bitmap.Config.ARGB_8888)
+        desenho.setBounds(0, 0, lado, lado)
+        desenho.draw(Canvas(bitmap))
+        return bitmap
     }
 
     fun fechar(contexto: Context, id: Int) {

@@ -2,14 +2,18 @@ package dev.pedro.pessoal.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Fundo = Color(0xFF0A0F1C)
-val Superficie = Color(0xFF101828)
-val SuperficieBaixa = Color(0xFF0D1424)
-val Trilho = Color(0xFF16203A)
-val Borda = Color(0xFF1E2A42)
-val GradeRadar = Color(0xFF24324F)
-val Texto = Color(0xFFE6EDF7)
-val TextoSecundario = Color(0xFF8A9BB8)
-val Neon = Color(0xFF3EA8FF)
-val Ganho = Color(0xFF39E58C)
+// Paleta v1.2.0: ardósia escura, bordas quase invisíveis, um único azul de destaque.
+val Fundo = Color(0xFF0B0E14)
+val Superficie = Color(0xFF131824)
+val SuperficieBaixa = Color(0xFF131824)
+val Trilho = Color(0xFF1A2131)
+val Borda = Color(0x0FFFFFFF)        // branco a 6%
+val BordaForte = Color(0x1AFFFFFF)   // branco a 10%
+val GradeRadar = Color(0x14FFFFFF)   // branco a 8%
+val Texto = Color(0xFFEEF1F7)
+val TextoSecundario = Color(0xFF93A0B8)
+val Neon = Color(0xFF5AA7FF)
+val Ganho = Color(0xFF3DDC97)
+val SobreGanho = Color(0xFF06231A)   // ícone sobre o verde
+val SobreNeon = Color(0xFF06121F)    // texto sobre o azul
 val Alerta = Color(0xFFFF9F43)

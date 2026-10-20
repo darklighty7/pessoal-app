@@ -47,4 +47,8 @@ object Icones {
     val Pausar = linha("pausar", "M9 5v14M15 5v14")
     val Voltar = linha("voltar", "M15 5l-7 7 7 7")
     val Avancar = linha("avancar", "M9 5l7 7-7 7")
+    val Fechar = linha("fechar", "M6 6l12 12M18 6L6 18")
+    val Marcador = linha("marcador", "M4 20h9", "M14.5 4.5l5 5L9 20l-5-5L14.5 4.5z")
+    val Borracha = linha("borracha", "M8 20h12", "M5 14l8-8 6 6-6 6H9l-4-4z")
+    val Fonte = linha("fonte", "M3 18l5-12 5 12M5 14h6", "M15 15.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0", "M20 13v5")
 }

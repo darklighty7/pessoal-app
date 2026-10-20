@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,7 +33,8 @@ import dev.pedro.pessoal.domain.model.Habito
 import dev.pedro.pessoal.ui.componentes.BarraNeon
 import dev.pedro.pessoal.ui.componentes.Cartao
 import dev.pedro.pessoal.ui.componentes.Icones
-import dev.pedro.pessoal.ui.theme.Borda
+import dev.pedro.pessoal.ui.theme.ChakraPetch
+import dev.pedro.pessoal.ui.theme.SobreGanho
 import dev.pedro.pessoal.ui.theme.Ganho
 import dev.pedro.pessoal.ui.theme.Neon
 import dev.pedro.pessoal.ui.theme.PessoalTema
@@ -61,35 +63,35 @@ fun LembretesTela(
     val obrigatorios = itens.filter { it.habito.obrigatorio }
     val feitos = obrigatorios.count { it.concluido }
 
-    Column(modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 16.dp)) {
-        Text("LEMBRETES", style = MaterialTheme.typography.headlineMedium, color = Neon)
+    Column(modifier.fillMaxSize().padding(start = 24.dp, end = 24.dp, top = 24.dp)) {
+        Text("Lembretes", style = MaterialTheme.typography.headlineMedium, color = Texto)
         Text(
             data.format(DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", Locale.forLanguageTag("pt-BR")))
                 .replaceFirstChar { it.uppercase() },
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodyMedium,
             color = TextoSecundario,
-            modifier = Modifier.padding(top = 2.dp),
+            modifier = Modifier.padding(top = 4.dp),
         )
 
-        Cartao(Modifier.fillMaxWidth().padding(top = 16.dp)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Cartao(Modifier.fillMaxWidth().padding(top = 24.dp)) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        "MISSÕES DO DIA",
-                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.sp),
-                        color = TextoSecundario,
-                    )
+                    Text("Missões do dia", style = MaterialTheme.typography.labelMedium, color = TextoSecundario)
                     Text(
                         "$feitos / ${obrigatorios.size}",
-                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
                         color = if (feitos == obrigatorios.size && obrigatorios.isNotEmpty()) Ganho else Texto,
                     )
                 }
-                BarraNeon(if (obrigatorios.isEmpty()) 0f else feitos.toFloat() / obrigatorios.size)
-                if (feitos == obrigatorios.size && obrigatorios.isNotEmpty()) {
+                val diaPerfeito = feitos == obrigatorios.size && obrigatorios.isNotEmpty()
+                BarraNeon(
+                    if (obrigatorios.isEmpty()) 0f else feitos.toFloat() / obrigatorios.size,
+                    cor = if (diaPerfeito) Ganho else Neon,
+                )
+                if (diaPerfeito) {
                     Text(
                         "Dia perfeito: +${Regras.BONUS_DIA_PERFEITO_XP} XP na virada da meia-noite",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                         color = Ganho,
                     )
                 }
@@ -97,8 +99,8 @@ fun LembretesTela(
         }
 
         LazyColumn(
-            Modifier.padding(top = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            Modifier.padding(top = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(itens, key = { it.habito.name }) { item ->
                 LinhaLembrete(
@@ -114,14 +116,11 @@ fun LembretesTela(
 @Composable
 private fun LinhaLembrete(item: ItemLembrete, aoMarcar: (Boolean) -> Unit, aoAbrirBiblia: () -> Unit) {
     val ehBiblia = item.habito == Habito.BIBLIA
-    Cartao(
-        Modifier.fillMaxWidth(),
-        corBorda = if (item.concluido) Ganho.copy(alpha = 0.5f) else Borda,
-    ) {
+    Cartao(Modifier.fillMaxWidth()) {
         Row(
-            Modifier.fillMaxWidth().padding(14.dp),
+            Modifier.fillMaxWidth().heightIn(min = 76.dp).padding(horizontal = 20.dp, vertical = 18.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Caixa(
                 marcada = item.concluido,
@@ -129,11 +128,11 @@ private fun LinhaLembrete(item: ItemLembrete, aoMarcar: (Boolean) -> Unit, aoAbr
                 habilitada = !ehBiblia,
                 aoMudar = aoMarcar,
             )
-            Column(Modifier.weight(1f)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     item.habito.rotulo,
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Medium,
                     color = if (item.concluido) TextoSecundario else Texto,
                     textDecoration = if (item.concluido) TextDecoration.LineThrough else null,
                 )
@@ -143,16 +142,18 @@ private fun LinhaLembrete(item: ItemLembrete, aoMarcar: (Boolean) -> Unit, aoAbr
                     } else {
                         item.habito.descricao
                     },
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = TextoSecundario,
                 )
             }
             if (ehBiblia) {
-                TextButton(onClick = aoAbrirBiblia) { Text("LER", color = Neon) }
+                TextButton(onClick = aoAbrirBiblia, modifier = Modifier.heightIn(min = 44.dp)) {
+                    Text("Ler", color = Neon, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                }
             } else {
                 Text(
                     item.habito.hora.toString(),
-                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = ChakraPetch, fontWeight = FontWeight.Medium, fontSize = 15.sp,
                     color = TextoSecundario,
                 )
             }
@@ -164,20 +165,20 @@ private fun LinhaLembrete(item: ItemLembrete, aoMarcar: (Boolean) -> Unit, aoAbr
 private fun Caixa(marcada: Boolean, habilitada: Boolean, aoMudar: (Boolean) -> Unit) {
     Box(
         Modifier
-            .size(24.dp)
+            .size(32.dp)
             .clip(CircleShape)
             .background(if (marcada) Ganho else Color.Transparent)
-            .border(1.5.dp, if (marcada) Ganho else Borda, CircleShape)
+            .border(2.dp, if (marcada) Ganho else TextoSecundario.copy(alpha = 0.4f), CircleShape)
             .then(if (habilitada) Modifier.clickable { aoMudar(!marcada) } else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         if (marcada) {
-            Icon(Icones.Confirmar, contentDescription = null, tint = Color(0xFF0A0F1C), modifier = Modifier.size(15.dp))
+            Icon(Icones.Confirmar, contentDescription = null, tint = SobreGanho, modifier = Modifier.size(18.dp))
         }
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A0F1C, widthDp = 390, heightDp = 844)
+@Preview(showBackground = true, backgroundColor = 0xFF0B0E14, widthDp = 390, heightDp = 844)
 @Composable
 private fun LembretesPreview() {
     val hoje = LocalDate.of(2026, 9, 22) // uma segunda-feira

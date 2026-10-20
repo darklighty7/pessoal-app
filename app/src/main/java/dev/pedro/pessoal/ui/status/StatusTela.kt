@@ -1,7 +1,6 @@
 package dev.pedro.pessoal.ui.status
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,15 +15,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,14 +34,14 @@ import dev.pedro.pessoal.domain.model.Classe
 import dev.pedro.pessoal.domain.model.Status
 import dev.pedro.pessoal.domain.model.formatarAtributo
 import dev.pedro.pessoal.ui.componentes.BarraNeon
+import dev.pedro.pessoal.ui.componentes.BotaoIcone
 import dev.pedro.pessoal.ui.componentes.Cartao
 import dev.pedro.pessoal.ui.componentes.Icones
 import dev.pedro.pessoal.ui.theme.Alerta
-import dev.pedro.pessoal.ui.theme.Borda
 import dev.pedro.pessoal.ui.theme.ChakraPetch
 import dev.pedro.pessoal.ui.theme.Neon
 import dev.pedro.pessoal.ui.theme.PessoalTema
-import dev.pedro.pessoal.ui.theme.SuperficieBaixa
+import dev.pedro.pessoal.ui.theme.Texto
 import dev.pedro.pessoal.ui.theme.TextoSecundario
 import dev.pedro.pessoal.ui.theme.Trilho
 
@@ -51,14 +51,14 @@ fun StatusTela(status: Status, modifier: Modifier = Modifier) {
         modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+            .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Cabecalho()
         CartaoPerfil(status)
         BarraExperiencia(status)
         GradeAtributos(status)
-        Cartao(Modifier.fillMaxWidth(), fundo = SuperficieBaixa, cantos = 14.dp) {
+        Cartao(Modifier.fillMaxWidth()) {
             GraficoRadar(status.atributos, Modifier.align(Alignment.Center).padding(vertical = 8.dp))
         }
         ProgressoClasse(status)
@@ -68,61 +68,60 @@ fun StatusTela(status: Status, modifier: Modifier = Modifier) {
 @Composable
 private fun Cabecalho() {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text("STATUS", style = MaterialTheme.typography.headlineMedium, color = Neon)
+        Text("Status", style = MaterialTheme.typography.headlineMedium, color = Texto)
         Spacer(Modifier.weight(1f))
-        IconButton(
-            onClick = { /* Configurações: próximas etapas */ },
-            modifier = Modifier.border(1.dp, Borda, RoundedCornerShape(10.dp)),
-        ) {
-            Icon(Icones.Ajustes, contentDescription = "Configurações", tint = TextoSecundario, modifier = Modifier.size(20.dp))
-        }
+        BotaoIcone(Icones.Ajustes, "Configurações", aoTocar = { /* Configurações: próximas etapas */ })
     }
 }
 
 @Composable
 private fun CartaoPerfil(status: Status) {
-    Cartao(Modifier.fillMaxWidth(), corBorda = Neon.copy(alpha = 0.35f), cantos = 14.dp) {
-        Row(Modifier.padding(horizontal = 18.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                LinhaPerfil("NOME", status.nome)
-                LinhaPerfil("NÍVEL", status.nivel.toString())
-                LinhaPerfil("CLASSE", status.classe.nome)
-                LinhaPerfil("TÍTULO", status.titulo.nome)
+    Cartao(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            SeloRank(status.rank, tamanho = 68.dp)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(status.nome, style = MaterialTheme.typography.titleLarge, color = Texto)
+                Text(
+                    "Nível ${status.nivel} · ${status.classe.nome}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextoSecundario,
+                )
+                Text(status.titulo.nome, style = MaterialTheme.typography.bodyMedium, color = TextoSecundario)
             }
-            SeloComRotulo(status.rank)
+            EtiquetaRank(status.rank, Modifier.align(Alignment.Top))
         }
     }
 }
 
+/** Etiqueta pequena com o material do rank (FERRO, BRONZE...). */
 @Composable
-private fun LinhaPerfil(rotulo: String, valor: String) {
-    Row {
-        Text(rotulo, style = MaterialTheme.typography.labelMedium, color = TextoSecundario, modifier = Modifier.width(80.dp))
-        Text(valor, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-    }
-}
-
-@Composable
-private fun SeloComRotulo(rank: dev.pedro.pessoal.domain.model.Rank) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        SeloRank(rank)
-        Text(
-            "RANK · ${nomeMaterial(rank).uppercase()}",
-            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.sp),
-            color = TextoSecundario,
-        )
-    }
+private fun EtiquetaRank(rank: dev.pedro.pessoal.domain.model.Rank, modifier: Modifier = Modifier) {
+    Text(
+        nomeMaterial(rank).uppercase(),
+        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.9.sp),
+        color = TextoSecundario,
+        modifier = modifier
+            .background(Trilho, RoundedCornerShape(50))
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+    )
 }
 
 @Composable
 private fun BarraExperiencia(status: Status) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(Modifier.fillMaxWidth()) {
-            Text("EXPERIÊNCIA", style = MaterialTheme.typography.labelMedium, color = TextoSecundario)
+    Column(Modifier.padding(horizontal = 2.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+            Text("Experiência", style = MaterialTheme.typography.labelMedium, color = TextoSecundario)
             Spacer(Modifier.weight(1f))
             Text(
-                "${status.xp} / ${status.xpNecessario} XP",
-                fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
+                buildAnnotatedString {
+                    withStyle(SpanStyle(color = Texto)) { append("${status.xp} ") }
+                    withStyle(SpanStyle(color = TextoSecundario, fontWeight = FontWeight.Medium)) { append("/ ${status.xpNecessario} XP") }
+                },
+                fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
             )
         }
         BarraNeon(status.xp.toFloat() / status.xpNecessario)
@@ -137,20 +136,25 @@ private fun GradeAtributos(status: Status) {
         Atributo.DISCIPLINA to Icones.Alvo,
         Atributo.ESPIRITO to Icones.Cruz,
     )
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Atributo.entries.chunked(2).forEach { linha ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 linha.forEach { atributo ->
                     Cartao(Modifier.weight(1f)) {
-                        Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(icones.getValue(atributo), contentDescription = null, tint = Neon, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text(atributo.nome.uppercase(), style = MaterialTheme.typography.labelMedium, color = TextoSecundario)
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Box(
+                                    Modifier.size(32.dp).background(Neon.copy(alpha = 0.12f), RoundedCornerShape(10.dp)),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(icones.getValue(atributo), contentDescription = null, tint = Neon, modifier = Modifier.size(18.dp))
+                                }
+                                Text(atributo.nome, style = MaterialTheme.typography.labelMedium, color = TextoSecundario)
                             }
                             Text(
                                 formatarAtributo(status.valor(atributo)),
-                                fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 22.sp,
+                                fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 30.sp,
+                                color = Texto,
                             )
                         }
                     }
@@ -164,7 +168,7 @@ private fun GradeAtributos(status: Status) {
 private fun ProgressoClasse(status: Status) {
     val candidata = status.classeCandidata
     Cartao(Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.size(36.dp).background(Trilho, RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center,
@@ -191,13 +195,13 @@ private fun ProgressoClasse(status: Status) {
     }
 }
 
-@Preview(name = "Início", showBackground = true, backgroundColor = 0xFF0A0F1C, widthDp = 390, heightDp = 844)
+@Preview(name = "Início", showBackground = true, backgroundColor = 0xFF0B0E14, widthDp = 390, heightDp = 844)
 @Composable
 private fun StatusInicioPreview() {
     PessoalTema { StatusTela(Status()) }
 }
 
-@Preview(name = "Após 4 dias (simulado)", showBackground = true, backgroundColor = 0xFF0A0F1C, widthDp = 390, heightDp = 844)
+@Preview(name = "Após 4 dias (simulado)", showBackground = true, backgroundColor = 0xFF0B0E14, widthDp = 390, heightDp = 844)
 @Composable
 private fun StatusSimuladoPreview() {
     PessoalTema { StatusTela(StatusExemplo.gerar()) }

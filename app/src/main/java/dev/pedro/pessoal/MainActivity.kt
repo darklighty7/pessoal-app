@@ -16,6 +16,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.pedro.pessoal.data.AppDatabase
 import dev.pedro.pessoal.data.BibliaRepositorio
+import dev.pedro.pessoal.data.PreferenciasLeitura
 import dev.pedro.pessoal.data.Repositorio
 import dev.pedro.pessoal.notificacoes.Agendador
 import dev.pedro.pessoal.notificacoes.Notificacoes
@@ -40,6 +41,7 @@ class MainActivity : ComponentActivity() {
         val banco = AppDatabase.obter(this)
         val repositorio = Repositorio(banco.statusDao(), banco.registroDao())
         val biblia = BibliaRepositorio(banco.bibliaDao())
+        val preferencias = PreferenciasLeitura(applicationContext)
 
         Notificacoes.criarCanais(this)
         pedirPermissaoDeNotificacao()
@@ -49,7 +51,7 @@ class MainActivity : ComponentActivity() {
             PessoalTema {
                 val app: AppViewModel = viewModel(factory = AppViewModel.fabrica(repositorio))
                 val leitor: BibliaViewModel = viewModel(
-                    factory = BibliaViewModel.fabrica(biblia, app::registrarLeitura),
+                    factory = BibliaViewModel.fabrica(biblia, preferencias, app::registrarLeitura),
                 )
                 // Se o app ficou aberto durante a virada da meia-noite, o dia troca aqui.
                 LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { app.revisarData() }
