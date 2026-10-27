@@ -23,6 +23,25 @@ enum class Classe(val nome: String) {
     MESTRE("Mestre");
 
     companion object {
+        /**
+         * Os atributos que cada classe representa — o caminho inverso de [pura] e
+         * [hibrida]. Aprendiz não aponta para nenhum, de propósito: é a escolha de
+         * quem prefere não se inclinar.
+         */
+        fun atributosDe(classe: Classe): Set<Atributo> = when (classe) {
+            APRENDIZ -> emptySet()
+            GUERREIRO -> setOf(FORCA)
+            SACERDOTE -> setOf(ESPIRITO)
+            SABIO -> setOf(INTELIGENCIA)
+            SENTINELA -> setOf(DISCIPLINA)
+            PALADINO -> setOf(FORCA, ESPIRITO)
+            SAMURAI -> setOf(FORCA, DISCIPLINA)
+            ESTRATEGISTA -> setOf(FORCA, INTELIGENCIA)
+            MONGE -> setOf(ESPIRITO, DISCIPLINA)
+            TEOLOGO -> setOf(ESPIRITO, INTELIGENCIA)
+            MESTRE -> setOf(INTELIGENCIA, DISCIPLINA)
+        }
+
         fun pura(atributo: Atributo): Classe = when (atributo) {
             FORCA -> GUERREIRO
             ESPIRITO -> SACERDOTE

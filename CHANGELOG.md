@@ -2,6 +2,39 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.10.0] - 2026-10-27
+
+A classe escolhida na criação passa a render pontos de verdade, em vez de ser um caso
+especial dentro do motor.
+
+### Adicionado
+- **Bônus de classe inicial** (`Regras.BONUS_CLASSE_INICIAL`, +0,60). Escolher Guerreiro na
+  criação começa o personagem com 0,60 de Força; Sacerdote, de Espírito, e assim por diante.
+- `MotorPontuacao.atributosIniciais(classe)` decide a distribuição, e
+  `Classe.atributosDe(classe)` dá o caminho inverso de `pura` e `hibrida`.
+- Cada cartão da tela de criação mostra o que a escolha rende, lido do próprio motor — o
+  texto não tem como descolar da regra se o número mudar.
+- `BonusClasseInicialTest` cobre os quatro casos puros, o Aprendiz, a igualdade dos totais
+  e a relação entre o bônus e a margem.
+
+### Por quê
+- O valor precisa ser maior que `MARGEM_CLASSE` (0,50), senão o motor continuaria lendo
+  Aprendiz no primeiro dia e a escolha não apareceria. 0,60 é o menor número redondo acima
+  disso: três dias de Espírito ou quatro treinos de Força, que o uso de verdade ultrapassa
+  em cerca de duas semanas.
+- **Aprendiz recebe o mesmo total**, espalhado em +0,15 por atributo. Escolher "sem
+  inclinação" não pode custar pontos, senão vira a opção de quem não prestou atenção. Como
+  a diferença entre o maior e o menor continua zero, o motor segue lendo Aprendiz.
+- As híbridas levam o bônus cheio nos dois atributos, e não metade em cada: com metade, a
+  diferença ficaria dentro da margem e o motor leria Aprendiz. Elas não aparecem na criação,
+  mas a conta precisa fechar se um dia aparecerem.
+
+### Cuidado tomado
+- O bônus só vale para um personagem no estado inicial — nível 1, zero de XP e os quatro
+  atributos no valor de partida. Antes do login o app era de um usuário só, então pode
+  existir um personagem com progresso de verdade passando pela tela de criação, e os
+  atributos dele são dele.
+
 ## [1.9.1] - 2026-10-27
 
 A marca da 1.9.0 foi refeita antes de chegar a qualquer aparelho. O "F" deixou de ser um

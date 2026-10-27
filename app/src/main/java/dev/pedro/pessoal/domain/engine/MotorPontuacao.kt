@@ -102,6 +102,29 @@ object MotorPontuacao {
         return atualizarClasse(s)
     }
 
+    /**
+     * Com que atributos um personagem recém-criado começa, conforme a classe escolhida.
+     *
+     * O total é o mesmo para qualquer escolha das que a tela de criação oferece: muda só
+     * como ele se distribui. Aprendiz espalha pelos quatro — escolher "sem inclinação"
+     * não pode custar pontos, senão vira a opção dos distraídos.
+     *
+     * As híbridas recebem o bônus cheio em cada um dos dois atributos, e não metade em
+     * cada: pela regra de [calcularClasse], meio bônus deixaria a diferença dentro da
+     * margem e o motor leria Aprendiz. Elas não aparecem na criação — só se chega nelas
+     * jogando —, mas a conta precisa fechar se um dia aparecerem.
+     */
+    fun atributosIniciais(escolhida: Classe): Map<Atributo, Int> {
+        val alvos = Classe.atributosDe(escolhida)
+        if (alvos.isEmpty()) {
+            val fatia = Regras.BONUS_CLASSE_INICIAL / Atributo.entries.size
+            return Atributo.entries.associateWith { Regras.VALOR_INICIAL_ATRIBUTO + fatia }
+        }
+        return Atributo.entries.associateWith { atributo ->
+            Regras.VALOR_INICIAL_ATRIBUTO + if (atributo in alvos) Regras.BONUS_CLASSE_INICIAL else 0
+        }
+    }
+
     /** Classe que os atributos indicam hoje, sem considerar a espera de 3 dias. */
     fun calcularClasse(atributos: Map<Atributo, Int>): Classe {
         val ordenados = atributos.entries.sortedByDescending { it.value }

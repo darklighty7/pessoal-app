@@ -36,6 +36,13 @@ class Repositorio(
      */
     suspend fun definirPersonagem(nome: String, classe: Classe) {
         val atual = status()
+        // O bônus da classe só vale para quem está começando do zero. Antes do login o app
+        // era de um usuário só, então pode existir um personagem com progresso de verdade
+        // passando por esta tela — e aí os atributos dele são dele, não um ponto de partida.
+        val intocado = atual.nivel == 1 &&
+            atual.xp == 0 &&
+            atual.atributos.values.all { it == Regras.VALOR_INICIAL_ATRIBUTO }
+
         gravar(
             atual.copy(
                 nome = nome.trim(),
@@ -43,6 +50,7 @@ class Repositorio(
                 classeEscolhida = classe,
                 classeCandidata = null,
                 diasCandidata = 0,
+                atributos = if (intocado) MotorPontuacao.atributosIniciais(classe) else atual.atributos,
             ),
         )
     }

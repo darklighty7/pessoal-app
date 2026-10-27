@@ -36,13 +36,16 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.pedro.pessoal.domain.engine.MotorPontuacao
 import dev.pedro.pessoal.domain.model.Classe
+import dev.pedro.pessoal.domain.model.formatarVariacao
 import dev.pedro.pessoal.ui.componentes.Cartao
 import dev.pedro.pessoal.ui.componentes.CampoTexto
 import dev.pedro.pessoal.ui.componentes.Icones
 import dev.pedro.pessoal.ui.componentes.MarcaForja
 import dev.pedro.pessoal.ui.theme.Borda
 import dev.pedro.pessoal.ui.theme.Fundo
+import dev.pedro.pessoal.ui.theme.Ganho
 import dev.pedro.pessoal.ui.theme.Neon
 import dev.pedro.pessoal.ui.theme.SobreNeon
 import dev.pedro.pessoal.ui.theme.Texto
@@ -53,6 +56,20 @@ import dev.pedro.pessoal.ui.theme.TextoSecundario
  * continuam sendo conquistadas pelo motor, conforme os atributos crescem.
  */
 private data class OpcaoClasse(val classe: Classe, val icone: ImageVector, val descricao: String)
+
+/**
+ * O que a escolha rende de saída, lido do próprio motor em vez de escrito à mão — assim o
+ * texto do cartão nunca descola da regra se o bônus mudar.
+ */
+private fun bonusDe(classe: Classe): String {
+    val alvos = Classe.atributosDe(classe)
+    val iniciais = MotorPontuacao.atributosIniciais(classe)
+    return if (alvos.isEmpty()) {
+        formatarVariacao(iniciais.values.first()) + " em cada atributo"
+    } else {
+        alvos.joinToString(" e ") { formatarVariacao(iniciais.getValue(it)) + " de " + it.nome }
+    }
+}
 
 private val OPCOES = listOf(
     OpcaoClasse(Classe.APRENDIZ, Icones.Alvo, "Sem inclinação. Deixa os atributos decidirem o caminho."),
@@ -101,7 +118,8 @@ fun CriarPersonagemTela(
         Text("CLASSE INICIAL", color = Texto, style = MaterialTheme.typography.labelLarge, letterSpacing = 2.sp)
         Spacer(Modifier.height(4.dp))
         Text(
-            "A escolha vale como ponto de partida. Conforme os atributos crescerem, a classe pode mudar sozinha.",
+            "A escolha rende um bônus nos atributos da classe e vale como ponto de partida. " +
+                "Conforme os atributos crescerem, a classe pode mudar sozinha.",
             color = TextoSecundario,
             style = MaterialTheme.typography.bodySmall,
         )
@@ -137,6 +155,8 @@ fun CriarPersonagemTela(
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(opcao.descricao, color = TextoSecundario, style = MaterialTheme.typography.bodySmall)
+                        Spacer(Modifier.height(4.dp))
+                        Text(bonusDe(opcao.classe), color = Ganho, style = MaterialTheme.typography.labelSmall)
                     }
                     if (ativa) {
                         Icon(Icones.Confirmar, contentDescription = "Selecionada", tint = Neon, modifier = Modifier.size(20.dp))

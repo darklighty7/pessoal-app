@@ -32,6 +32,13 @@ object Regras {
     // Classes
     const val MARGEM_CLASSE = 50              // 0,50 de diferença
     const val DIAS_PARA_TROCAR_CLASSE = 3
+    /**
+     * O que a classe escolhida na criação rende de saída. Precisa ser maior que
+     * [MARGEM_CLASSE], senão o motor continuaria lendo Aprendiz no primeiro dia.
+     * Em dias de treino, 0,60 equivale a umas quatro sessões — vantagem de meia semana,
+     * que o uso de verdade passa por cima em duas.
+     */
+    const val BONUS_CLASSE_INICIAL = 60       // +0,60
 
     // Leitura da Bíblia (por tempo, dividida entre Espírito e Inteligência)
     const val META_LEITURA_MIN = 10
