@@ -9,6 +9,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.input.ImeAction
 import dev.pedro.pessoal.ui.theme.Fundo
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -121,6 +123,8 @@ fun BibliaTela(
     DisposableEffect(Unit) { onDispose { aoSair() } }
 
     var mostrandoIndice by remember { mutableStateOf(false) }
+    // Quando o índice é aberto pela lupa, o campo de busca já nasce com o foco e o teclado.
+    var focarBusca by remember { mutableStateOf(false) }
     var mostrandoGrifos by remember { mutableStateOf(false) }
     var mostrandoTamanho by remember { mutableStateOf(false) }
     val estadoFolha = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -145,7 +149,14 @@ fun BibliaTela(
             aoAlternarCronometro = aoAlternarCronometro,
             aoAvancar = aoAvancar,
             aoVoltar = aoVoltar,
-            aoAbrirIndice = { mostrandoIndice = true },
+            aoAbrirIndice = {
+                focarBusca = false
+                mostrandoIndice = true
+            },
+            aoBuscar = {
+                focarBusca = true
+                mostrandoIndice = true
+            },
             aoAbrirGrifos = {
                 aoAbrirGrifos()
                 mostrandoGrifos = true
@@ -203,6 +214,7 @@ fun BibliaTela(
         ) {
             Indice(
                 livros = estado.livros,
+                focarBusca = focarBusca,
                 aoEscolher = { livro, capitulo, versiculo ->
                     aoAbrir(livro, capitulo, versiculo)
                     mostrandoIndice = false
@@ -219,6 +231,7 @@ private fun Leitor(
     aoAvancar: () -> Unit,
     aoVoltar: () -> Unit,
     aoAbrirIndice: () -> Unit,
+    aoBuscar: () -> Unit,
     aoAbrirGrifos: () -> Unit,
     aoAlternarSelecao: (Int) -> Unit,
     aoGrifar: (Int) -> Unit,
@@ -280,6 +293,10 @@ private fun Leitor(
                         "${estado.livroAberto?.nome ?: ""} ${estado.capitulo}",
                         style = MaterialTheme.typography.headlineMedium,
                         color = Texto,
+                        // Com três botões ao lado, sobra menos largura: "Cântico dos Cânticos 8"
+                        // ocupa duas linhas. O limite evita o cabeçalho empurrar o texto para baixo.
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         "Toque para escolher outro capítulo",
@@ -288,6 +305,7 @@ private fun Leitor(
                     )
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    BotaoIcone(Icones.Lupa, "Buscar passagem", aoTocar = aoBuscar, cor = Neon)
                     BotaoIcone(Icones.Marcador, "Meus grifos", aoTocar = aoAbrirGrifos, cor = Neon)
                     BotaoIcone(
                         icone = if (estado.cronometroLigado) Icones.Pausar else Icones.Tocar,
@@ -699,7 +717,11 @@ private fun ListaGrifos(grifos: List<GrifoListado>, aoEscolher: (GrifoListado) -
 }
 
 @Composable
-private fun Indice(livros: List<LivroEntity>, aoEscolher: (LivroEntity, Int, Int?) -> Unit) {
+private fun Indice(
+    livros: List<LivroEntity>,
+    focarBusca: Boolean,
+    aoEscolher: (LivroEntity, Int, Int?) -> Unit,
+) {
     var escolhido by remember { mutableStateOf<LivroEntity?>(null) }
     var busca by remember { mutableStateOf("") }
     val livro = escolhido
@@ -718,7 +740,7 @@ private fun Indice(livros: List<LivroEntity>, aoEscolher: (LivroEntity, Int, Int
             .padding(bottom = 24.dp),
     ) {
         if (livro == null) {
-            CampoBusca(busca, aoMudar = { busca = it })
+            CampoBusca(busca, aoMudar = { busca = it }, focar = focarBusca)
             Spacer(Modifier.height(14.dp))
         }
 
@@ -792,7 +814,15 @@ private fun Indice(livros: List<LivroEntity>, aoEscolher: (LivroEntity, Int, Int
 /** Campo de busca do índice: aceita "1João", "jo 3" ou "Jo 3:16". */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-private fun CampoBusca(valor: String, aoMudar: (String) -> Unit) {
+private fun CampoBusca(valor: String, aoMudar: (String) -> Unit, focar: Boolean) {
+    val foco = remember { FocusRequester() }
+
+    // Aberto pela lupa, o campo já pede o foco (e com ele o teclado). Pedir o foco enquanto a
+    // folha ainda está entrando pode falhar, e não é motivo para derrubar a tela.
+    LaunchedEffect(focar) {
+        if (focar) runCatching { foco.requestFocus() }
+    }
+
     OutlinedTextField(
         value = valor,
         onValueChange = aoMudar,
@@ -807,7 +837,7 @@ private fun CampoBusca(valor: String, aoMudar: (String) -> Unit) {
             }
         },
         shape = RoundedCornerShape(14.dp),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().focusRequester(foco),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = Texto,

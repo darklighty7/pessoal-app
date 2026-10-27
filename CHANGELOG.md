@@ -15,7 +15,9 @@ Busca de passagem na Bíblia e retomada da leitura de onde parou.
   pela grade de capítulos. Com versículo ("Jo 3:16"), a lista ainda rola até ele.
 - **Retoma de onde parou**: o livro e o capítulo abertos ficam guardados no aparelho, e a
   Bíblia reabre naquele ponto em vez de Gênesis 1. Na primeira vez continua em Gênesis 1.
-- Ícone de lupa em `Icones`.
+- **Botão de lupa** no cabeçalho da leitura, à esquerda do botão de grifos: abre o índice já
+  com o campo de busca focado e o teclado aberto. O título do capítulo continua abrindo o
+  índice sem focar o campo.
 - Testes da busca em `BuscaLivroTest`: normalização de acentos, leitura da referência e
   ordem dos resultados.
 
@@ -23,6 +25,8 @@ Busca de passagem na Bíblia e retomada da leitura de onde parou.
 - O cabeçalho "CAPÍTULO DE ..." agora volta para a lista de livros quando tocado. Antes, depois
   de escolher um livro só dava para voltar fechando a folha.
 - A busca só procura nomes de livros, não palavras dentro dos versículos.
+- O nome do capítulo no cabeçalho passou a ter no máximo duas linhas. Com três botões ao lado
+  sobra menos largura, e "Cântico dos Cânticos 8" empurraria o texto da leitura para baixo.
 
 ### Desempenho
 - Os nomes dos 66 livros são normalizados uma vez, quando a lista carrega, e não 132 vezes a
