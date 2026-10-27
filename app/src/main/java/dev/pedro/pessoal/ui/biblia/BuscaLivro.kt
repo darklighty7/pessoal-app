@@ -53,29 +53,41 @@ object BuscaLivro {
     }
 
     /**
+     * Um livro com o nome e a abreviação já normalizados.
+     *
+     * Normalizar custa (NFD, duas expressões regulares e duas cópias da string por campo), e
+     * os nomes dos livros nunca mudam. Isto é feito uma vez, quando a lista carrega, em vez
+     * de 132 vezes a cada tecla digitada.
+     */
+    data class LivroIndexado(
+        val livro: LivroEntity,
+        val nome: String,
+        val abreviacao: String,
+    )
+
+    fun indexar(livros: List<LivroEntity>): List<LivroIndexado> =
+        livros.map { LivroIndexado(it, normalizar(it.nome), normalizar(it.abreviacao)) }
+
+    /**
      * Os livros que combinam com o que foi digitado, dos mais parecidos para os menos:
      * nome ou abreviação iguais, depois os que começam igual, depois os que contêm o termo.
      * Com o campo vazio, devolve a lista inteira na ordem da Bíblia.
      */
-    fun filtrar(livros: List<LivroEntity>, entrada: String): List<LivroEntity> {
+    fun filtrar(indice: List<LivroIndexado>, entrada: String): List<LivroEntity> {
         val termo = interpretar(entrada).termo
-        if (termo.isEmpty()) return livros
-        return livros
-            .mapNotNull { livro -> pontuar(livro, termo)?.let { livro to it } }
-            .sortedWith(compareBy({ it.second }, { it.first.numero }))
-            .map { it.first }
+        if (termo.isEmpty()) return indice.map { it.livro }
+        return indice
+            .mapNotNull { item -> pontuar(item, termo)?.let { item to it } }
+            .sortedWith(compareBy({ it.second }, { it.first.livro.numero }))
+            .map { it.first.livro }
     }
 
     /** Menor é mais parecido; null quando o livro não combina. */
-    private fun pontuar(livro: LivroEntity, termo: String): Int? {
-        val nome = normalizar(livro.nome)
-        val abreviacao = normalizar(livro.abreviacao)
-        return when {
-            nome == termo || abreviacao == termo -> 0
-            nome.startsWith(termo) -> 1
-            abreviacao.startsWith(termo) -> 2
-            nome.contains(termo) -> 3
-            else -> null
-        }
+    private fun pontuar(item: LivroIndexado, termo: String): Int? = when {
+        item.nome == termo || item.abreviacao == termo -> 0
+        item.nome.startsWith(termo) -> 1
+        item.abreviacao.startsWith(termo) -> 2
+        item.nome.contains(termo) -> 3
+        else -> null
     }
 }

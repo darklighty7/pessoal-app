@@ -243,10 +243,13 @@ private fun Leitor(
 
     // A busca pode pedir um versículo ("Jo 3:16"): a lista rola até ele quando o capítulo abre.
     val lista = rememberLazyListState()
-    LaunchedEffect(estado.versiculoAlvo, estado.versiculos) {
+    // A chave é só o alvo: os versículos já vêm na mesma atualização de estado, e comparar
+    // a lista inteira a cada tique do cronômetro seria trabalho à toa.
+    LaunchedEffect(estado.versiculoAlvo) {
         val alvo = estado.versiculoAlvo ?: return@LaunchedEffect
-        val indice = estado.versiculos.indexOfFirst { it.numero == alvo }
-        if (indice >= 0) lista.animateScrollToItem(indice)
+        val posicao = estado.versiculos.indexOfFirst { it.numero == alvo }
+        // Salto direto, não animado: em Salmo 119 a animação percorreria 176 versículos.
+        if (posicao >= 0) lista.scrollToItem(posicao)
         aoAlvoAtingido()
     }
 
@@ -703,7 +706,9 @@ private fun Indice(livros: List<LivroEntity>, aoEscolher: (LivroEntity, Int, Int
 
     // "1João 3:16" vira livro + capítulo + versículo; só o nome também serve.
     val referencia = remember(busca) { BuscaLivro.interpretar(busca) }
-    val encontrados = remember(busca, livros) { BuscaLivro.filtrar(livros, busca) }
+    // Normalizar os 66 nomes é feito uma vez; a cada tecla só roda a comparação.
+    val indice = remember(livros) { BuscaLivro.indexar(livros) }
+    val encontrados = remember(busca, indice) { BuscaLivro.filtrar(indice, busca) }
 
     Column(
         Modifier

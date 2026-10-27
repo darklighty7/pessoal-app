@@ -19,7 +19,9 @@ class BuscaLivroTest {
         LivroEntity(64, "3jo", "3 João", 1),
     )
 
-    private fun nomes(entrada: String) = BuscaLivro.filtrar(livros, entrada).map { it.nome }
+    private val indice = BuscaLivro.indexar(livros)
+
+    private fun nomes(entrada: String) = BuscaLivro.filtrar(indice, entrada).map { it.nome }
 
     // ----- normalizar -----
 

@@ -24,6 +24,15 @@ Busca de passagem na Bíblia e retomada da leitura de onde parou.
   de escolher um livro só dava para voltar fechando a folha.
 - A busca só procura nomes de livros, não palavras dentro dos versículos.
 
+### Desempenho
+- Os nomes dos 66 livros são normalizados uma vez, quando a lista carrega, e não 132 vezes a
+  cada tecla digitada: filtrar ficou ~25x mais barato (0,44 ms → 0,02 ms por palavra digitada,
+  medido fora do aparelho). Nunca chegaria a travar, mas era trabalho jogado fora a cada tecla.
+- O salto até o versículo da busca é direto, não animado: em Salmo 119 a animação percorreria
+  os 176 versículos até chegar lá.
+- A rolagem observa só o versículo alvo. Antes observava a lista inteira de versículos, que a
+  tela compara a cada tique do cronômetro.
+
 ## [1.5.0] - 2026-10-27
 
 Login por e-mail e senha, e personagem com nome e classe. Primeira parte da virada do app
