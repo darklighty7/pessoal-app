@@ -35,12 +35,16 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.pedro.pessoal.domain.engine.MotorPontuacao
 import dev.pedro.pessoal.domain.model.Classe
+import dev.pedro.pessoal.domain.model.PerfilUsuario
+import dev.pedro.pessoal.domain.model.formatarVariacao
 import dev.pedro.pessoal.ui.componentes.Cartao
-import dev.pedro.pessoal.ui.componentes.CampoTexto
 import dev.pedro.pessoal.ui.componentes.Icones
+import dev.pedro.pessoal.ui.componentes.MarcaForja
 import dev.pedro.pessoal.ui.theme.Borda
 import dev.pedro.pessoal.ui.theme.Fundo
+import dev.pedro.pessoal.ui.theme.Ganho
 import dev.pedro.pessoal.ui.theme.Neon
 import dev.pedro.pessoal.ui.theme.SobreNeon
 import dev.pedro.pessoal.ui.theme.Texto
@@ -52,6 +56,20 @@ import dev.pedro.pessoal.ui.theme.TextoSecundario
  */
 private data class OpcaoClasse(val classe: Classe, val icone: ImageVector, val descricao: String)
 
+/**
+ * O que a escolha rende de saída, lido do próprio motor em vez de escrito à mão — assim o
+ * texto do cartão nunca descola da regra se o bônus mudar.
+ */
+private fun bonusDe(classe: Classe): String {
+    val alvos = Classe.atributosDe(classe)
+    val iniciais = MotorPontuacao.atributosIniciais(classe)
+    return if (alvos.isEmpty()) {
+        formatarVariacao(iniciais.values.first()) + " em cada atributo"
+    } else {
+        alvos.joinToString(" e ") { formatarVariacao(iniciais.getValue(it)) + " de " + it.nome }
+    }
+}
+
 private val OPCOES = listOf(
     OpcaoClasse(Classe.APRENDIZ, Icones.Alvo, "Sem inclinação. Deixa os atributos decidirem o caminho."),
     OpcaoClasse(Classe.GUERREIRO, Icones.Halter, "Caminho da Força: treino e constância no corpo."),
@@ -60,16 +78,19 @@ private val OPCOES = listOf(
     OpcaoClasse(Classe.SENTINELA, Icones.Escudo, "Caminho da Disciplina: nunca quebrar a sequência."),
 )
 
-/** Primeiro acesso: nome do personagem e classe inicial. */
+/**
+ * Último passo da entrada: por onde começar.
+ *
+ * Vem depois da abertura de propósito. Escolher um caminho antes de ouvir qual é a missão
+ * seria responder a uma pergunta que ninguém fez — aqui a pessoa já sabe para quê.
+ */
 @Composable
-fun CriarPersonagemTela(
-    email: String,
-    aoConfirmar: (String, Classe) -> Unit,
+fun ClasseTela(
+    perfil: PerfilUsuario,
+    aoConfirmar: (Classe) -> Unit,
     aoSair: () -> Unit,
 ) {
-    var nome by remember { mutableStateOf("") }
     var escolhida by remember { mutableStateOf(Classe.APRENDIZ) }
-    val nomeValido = nome.trim().length >= 2
 
     Column(
         Modifier
@@ -81,22 +102,34 @@ fun CriarPersonagemTela(
             .padding(horizontal = 24.dp),
     ) {
         Spacer(Modifier.height(32.dp))
-        Text("SEU PERSONAGEM", color = Neon, fontSize = 22.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
-        Spacer(Modifier.height(6.dp))
+        MarcaForja(altura = 24.dp)
+
+        // Quem a abertura acabou de anunciar. Sem isto, a tela pareceria um formulário
+        // solto; com isto, é a continuação da conversa que o sistema começou.
+        Spacer(Modifier.height(24.dp))
         Text(
-            "Conta de $email",
-            color = TextoSecundario,
-            style = MaterialTheme.typography.bodySmall,
+            perfil.nomePersonagem.uppercase(),
+            color = Texto,
+            fontSize = 26.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp,
         )
+        if (perfil.numeroJogador > 0) {
+            Spacer(Modifier.height(2.dp))
+            Text(
+                "JOGADOR N° " + perfil.numeroJogador.toString().padStart(3, '0'),
+                color = Neon,
+                style = MaterialTheme.typography.labelMedium,
+                letterSpacing = 2.sp,
+            )
+        }
 
-        Spacer(Modifier.height(28.dp))
-        CampoTexto(valor = nome, aoMudar = { nome = it }, rotulo = "Nome do personagem", ultimo = true)
-
-        Spacer(Modifier.height(28.dp))
-        Text("CLASSE INICIAL", color = Texto, style = MaterialTheme.typography.labelLarge, letterSpacing = 2.sp)
+        Spacer(Modifier.height(26.dp))
+        Text("ESCOLHA O SEU CAMINHO", color = Texto, style = MaterialTheme.typography.labelLarge, letterSpacing = 2.sp)
         Spacer(Modifier.height(4.dp))
         Text(
-            "A escolha vale como ponto de partida. Conforme os atributos crescerem, a classe pode mudar sozinha.",
+            "A escolha rende um bônus nos atributos da classe e vale como ponto de partida. " +
+                "Conforme os atributos crescerem, a classe pode mudar sozinha.",
             color = TextoSecundario,
             style = MaterialTheme.typography.bodySmall,
         )
@@ -132,6 +165,8 @@ fun CriarPersonagemTela(
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(opcao.descricao, color = TextoSecundario, style = MaterialTheme.typography.bodySmall)
+                        Spacer(Modifier.height(4.dp))
+                        Text(bonusDe(opcao.classe), color = Ganho, style = MaterialTheme.typography.labelSmall)
                     }
                     if (ativa) {
                         Icon(Icones.Confirmar, contentDescription = "Selecionada", tint = Neon, modifier = Modifier.size(20.dp))
@@ -144,8 +179,7 @@ fun CriarPersonagemTela(
 
         Spacer(Modifier.height(18.dp))
         Button(
-            onClick = { aoConfirmar(nome.trim(), escolhida) },
-            enabled = nomeValido,
+            onClick = { aoConfirmar(escolhida) },
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Neon, contentColor = SobreNeon),
             modifier = Modifier.fillMaxWidth().height(52.dp),

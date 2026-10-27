@@ -36,6 +36,11 @@ data class EstadoBiblia(
     val todosGrifos: List<GrifoListado> = emptyList(),
     /** Tamanho do texto dos versículos, em sp (ver [TamanhoFonte]). */
     val tamanhoFonte: Float = TamanhoFonte.PADRAO,
+    /**
+     * Versículo até onde a lista deve rolar, quando a busca traz uma referência
+     * como "Jo 3:16". A tela zera isto assim que rola.
+     */
+    val versiculoAlvo: Int? = null,
 )
 
 /**
@@ -70,10 +75,21 @@ class BibliaViewModel(
     private suspend fun carregarLivros() {
         val livros = repositorio.livros()
         _estado.update { it.copy(livros = livros) }
-        if (livros.isNotEmpty()) abrir(livros.first(), capitulo = 1)
+        if (livros.isEmpty()) return
+
+        // Volta para onde a leitura parou. Na primeira vez não há nada guardado, e aí
+        // começa em Gênesis 1 como antes.
+        val salva = withContext(Dispatchers.IO) { preferencias.lerUltimaPosicao() }
+        val livroSalvo = livros.firstOrNull { it.numero == salva?.livro }
+        if (salva != null && livroSalvo != null) {
+            abrir(livroSalvo, salva.capitulo.coerceIn(1, livroSalvo.capitulos))
+        } else {
+            abrir(livros.first(), capitulo = 1)
+        }
     }
 
-    fun abrir(livro: LivroEntity, capitulo: Int) {
+    /** Abre um capítulo. [versiculo] faz a tela rolar até ele, quando veio de uma busca. */
+    fun abrir(livro: LivroEntity, capitulo: Int, versiculo: Int? = null) {
         viewModelScope.launch {
             val versos = repositorio.capitulo(livro.numero, capitulo)
             val grifos = repositorio.grifos(livro.numero, capitulo)
@@ -81,9 +97,16 @@ class BibliaViewModel(
                 it.copy(
                     livroAberto = livro, capitulo = capitulo, versiculos = versos,
                     grifos = grifos, selecionados = emptySet(),
+                    versiculoAlvo = versiculo?.takeIf { alvo -> versos.any { v -> v.numero == alvo } },
                 )
             }
+            withContext(Dispatchers.IO) { preferencias.salvarUltimaPosicao(livro.numero, capitulo) }
         }
+    }
+
+    /** A tela avisa que já rolou até o versículo da busca. */
+    fun alvoAtingido() {
+        if (_estado.value.versiculoAlvo != null) _estado.update { it.copy(versiculoAlvo = null) }
     }
 
     fun alternarSelecao(numero: Int) {

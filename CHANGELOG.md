@@ -2,6 +2,222 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.11.0] - 2026-10-27
+
+A entrada virou três passos, e a abertura entrou no meio deles.
+
+### Alterado
+- **Nova ordem: login → nome → abertura → classe → app.** Antes, nome e classe estavam na
+  mesma tela e a abertura vinha depois das duas. O problema era de sentido: a pessoa
+  escolhia um caminho antes de o sistema dizer qual é a missão. Agora ela dá o nome, ouve o
+  compromisso, e só então decide por onde começar — a escolha passa a ser resposta a algo.
+- **`NomeTela`** (nova) pede só o nome, centrada como a de login para as duas parecerem a
+  mesma sala. **`ClasseTela`** (saiu de `CriarPersonagemTela`) traz só as classes, com o
+  nome e o número do jogador no topo — quem a abertura acabou de anunciar.
+- **O contador de jogadores passou a rodar ao gravar o nome**, não ao criar o personagem
+  inteiro. É quando o jogador nasce, e é o que permite à abertura dizer nome e número.
+- `PerfilUsuario.classeInicial` nasce vazia em vez de `"APRENDIZ"`. Aprendiz é uma escolha
+  legítima, e com o padrão antigo não dava para distinguir de quem ainda não escolheu.
+  Entraram `temNome`, `temClasse` e `completo`, que é a conjunção das duas.
+- `PerfilRepositorio` e `Repositorio` ganharam um método por passo: `salvarNome`/`definirNome`
+  e `salvarClasse`/`definirClasse`, no lugar do antigo `definirPersonagem`.
+- `EstadoSessao` agora é `SemNome` → `BoasVindas` → `SemClasse` → `Pronto`.
+
+### Notas
+- A marca de abertura pendente vive só na memória, de propósito: se o app morrer no meio da
+  cutscene, a pessoa cai direto na escolha da classe em vez de ficar presa numa abertura
+  que não termina. Ela não volta a rodar, e isso é aceitável — o personagem já existe.
+- O bônus da classe continua só para quem está no estado inicial, agora conferido dentro
+  de `definirClasse`.
+
+## [1.10.0] - 2026-10-27
+
+A classe escolhida na criação passa a render pontos de verdade, em vez de ser um caso
+especial dentro do motor.
+
+### Adicionado
+- **Bônus de classe inicial** (`Regras.BONUS_CLASSE_INICIAL`, +0,60). Escolher Guerreiro na
+  criação começa o personagem com 0,60 de Força; Sacerdote, de Espírito, e assim por diante.
+- `MotorPontuacao.atributosIniciais(classe)` decide a distribuição, e
+  `Classe.atributosDe(classe)` dá o caminho inverso de `pura` e `hibrida`.
+- Cada cartão da tela de criação mostra o que a escolha rende, lido do próprio motor — o
+  texto não tem como descolar da regra se o número mudar.
+- `BonusClasseInicialTest` cobre os quatro casos puros, o Aprendiz, a igualdade dos totais
+  e a relação entre o bônus e a margem.
+
+### Por quê
+- O valor precisa ser maior que `MARGEM_CLASSE` (0,50), senão o motor continuaria lendo
+  Aprendiz no primeiro dia e a escolha não apareceria. 0,60 é o menor número redondo acima
+  disso: três dias de Espírito ou quatro treinos de Força, que o uso de verdade ultrapassa
+  em cerca de duas semanas.
+- **Aprendiz recebe o mesmo total**, espalhado em +0,15 por atributo. Escolher "sem
+  inclinação" não pode custar pontos, senão vira a opção de quem não prestou atenção. Como
+  a diferença entre o maior e o menor continua zero, o motor segue lendo Aprendiz.
+- As híbridas levam o bônus cheio nos dois atributos, e não metade em cada: com metade, a
+  diferença ficaria dentro da margem e o motor leria Aprendiz. Elas não aparecem na criação,
+  mas a conta precisa fechar se um dia aparecerem.
+
+### Cuidado tomado
+- O bônus só vale para um personagem no estado inicial — nível 1, zero de XP e os quatro
+  atributos no valor de partida. Antes do login o app era de um usuário só, então pode
+  existir um personagem com progresso de verdade passando pela tela de criação, e os
+  atributos dele são dele.
+
+## [1.9.1] - 2026-10-27
+
+A marca da 1.9.0 foi refeita antes de chegar a qualquer aparelho. O "F" deixou de ser um
+traço e virou área cheia, inclinada 12°, em degradê do verde ao azul, com a fagulha adiante
+da barra do meio.
+
+### Alterado
+- **Ícone do app** (`ic_launcher_foreground.xml`): F cheio com degradê `#39E58C` → `#3EA8FF`
+  e fagulha verde. A inclinação está assada nas coordenadas do caminho, porque um grupo de
+  VectorDrawable faz escala, rotação e translação, mas não cisalhamento.
+- **Tamanho dentro do ícone**: a marca ocupa 51,8 dos 108 do quadro (48%), proporção normal
+  de ícone do Android. O ponto mais distante do centro fica a 35,2, e o recorte redondo só
+  começa a cortar aos 36 — nada é perdido em nenhum formato de máscara.
+- **Monocromático e notificação** são o mesmo desenho sem degradê. Não é escolha: no Android
+  13+ com ícones temáticos o sistema repinta tudo com a cor do papel de parede, e o ícone
+  pequeno é só silhueta. A marca passa a ter duas formas oficiais, a colorida e a chapada.
+- **A letra cheia aguenta os 24dp.** Era o que o traço fino não fazia: na barra de status
+  virava um risco. Agora o F continua F e a fagulha continua um losango ao lado dele.
+- **O letreiro deixou de ser desenho.** Saiu `forja_wordmark.xml`; entraram
+  `ic_marca_forja.xml` (só o F) e `ui/componentes/MarcaForja.kt`, que põe a palavra "forja"
+  em Chakra Petch ao lado dele. O texto acompanha qualquer altura sem um vetor por tamanho,
+  e o tamanho sai da densidade e não em `sp`, para o logotipo não crescer com o ajuste de
+  fonte do sistema e passar por cima do F.
+- Login usa a marca a 40dp; criação do personagem, a 24dp.
+
+### Notas
+- O degradê no ícone exige API 24; o mínimo do app é 26.
+- A tela de abertura reaproveita o `ic_launcher_foreground`, e a API SplashScreen mostra os
+  dois terços centrais. Com a marca a 48%, ela aparece inteira — só um pouco pequena. Se
+  ficar discreta demais no aparelho, dá para dar um drawable próprio à abertura.
+
+## [1.9.0] - 2026-10-27
+
+O app agora se chama **Forja**. O símbolo é um losango verde — a brasa — que aparece em três
+lugares: termina a barra do "f" no ícone, é o pingo do "j" no letreiro e marca a ponta da
+barra de XP.
+
+### Adicionado
+- Ícone adaptativo novo: o "f" de traço arredondado com a brasa na ponta da barra, sobre
+  `#111A2B`. Camada monocromática própria (`ic_launcher_monochrome.xml`), porque o Android 13+
+  tinge tudo numa cor só e a brasa precisa virar parte da silhueta em vez de sumir.
+- `forja_wordmark.xml`, o letreiro desenhado à mão, no login e na criação do personagem.
+- `ui/componentes/Brasa.kt`: o losango reutilizável, aceso (verde cheio) ou apagado (só
+  contorno). Sem animação, com o `Path` guardado em `remember`.
+- `BarraNeon` ganhou o parâmetro `brasa`, que põe o losango na ponta do preenchimento. Usado
+  só na barra de XP da tela de Status.
+- Tela de abertura pela API SplashScreen (`androidx.core:core-splashscreen:1.0.1`), sem
+  atraso de propósito.
+
+### Alterado
+- `app_name` passou de "Pessoal" para "Forja"; o tema virou `Theme.Forja`.
+- Paleta com os valores da marca, mantendo os nomes que já existiam no código: `Fundo`
+  `#0A0F1C`, `Superficie` `#111A2B`, `Trilho` `#1C2638`, `Texto` `#E8EEF7`, `Neon` `#3EA8FF`,
+  `Ganho` `#39E58C`. Trocar os valores em vez de acrescentar cores novas evita ficar com dois
+  azuis e dois verdes disputando o mesmo papel. De novo mesmo, só `BrasaApagada` `#3A4659`.
+- Ícones de notificação redesenhados com a marca; a cor de destaque passou de azul para a brasa.
+- A tela de login troca o escudo e a palavra "PESSOAL" pelo letreiro, com o lema
+  "Forje-se todo dia" no lugar da frase que repetia o que o botão já dizia.
+- No letreiro, as letras depois do "f" andaram 5 unidades para a direita: o vão entre "f" e "o"
+  era 4 e os outros 9.
+
+### Não mudou
+- `applicationId` e `namespace` continuam `dev.pedro.pessoal`. Mudar faria o Android instalar
+  como outro app, perdendo os dados locais, e invalidaria o `google-services.json`.
+- O check dos hábitos continua sendo um certinho. Trocar por losango é mudança de interface,
+  não de marca, e fica para depois de ver no aparelho.
+- Nenhuma regra de XP, atributo ou rank foi tocada. Os selos de rank continuam como estavam.
+
+## [1.8.0] - 2026-10-27
+
+A abertura de quem acabou de criar o personagem. Começa como terminal — o sistema ligando e
+reconhecendo quem chegou — e termina em caixa de diálogo de RPG, onde a missão é anunciada.
+
+### Adicionado
+- **Abertura de boas-vindas** (`ui/boasvindas/BoasVindasTela.kt`). O terminal escreve letra por
+  letra, identifica o jogador pelo número de chegada e pelo nome, e dá lugar a uma caixa de
+  diálogo com a mensagem da missão em quatro páginas. Um toque pula a digitação; a última página
+  só sai pelo botão "Aceitar a missão", porque é o aceite.
+- **Número do jogador** (`data/nuvem/ContadorRepositorio.kt`). Vem de uma transação em
+  `contadores/jogadores`, não de uma contagem da coleção `usuarios` — contar documentos exigiria
+  ler a coleção inteira, e cada pessoa só enxerga o próprio perfil. Gravado em
+  `usuarios/{uid}.numeroJogador`.
+- Regra nova no `firestore.rules` para `contadores/jogadores`: quem está logado pode ler e somar
+  um, mas não escolher o valor, não diminuir e não acrescentar outros campos.
+- Indicador de espera no botão "Começar" da criação do personagem, que agora aguarda o contador.
+
+### Notas
+- A abertura roda uma vez, na sessão em que o personagem é criado. Quem entra noutro aparelho vai
+  direto para o app; se o aplicativo for fechado no meio da abertura, ela não volta.
+- Sem internet a transação falha, o jogador fica sem número e a abertura mostra só o nome. A
+  espera é limitada a 8 segundos para a tela não travar.
+- `versionCode` e `versionName` do `build.gradle.kts` estavam parados em 1 e "0.1"; agora
+  acompanham a versão (8 e "1.8.0").
+
+## [1.7.0] - 2026-10-27
+
+Leitura mais limpa. A tela da Bíblia tinha cerca de 270dp de moldura — mais de um terço do
+aparelho — antes do primeiro versículo.
+
+### Alterado
+- **O topo recolhe ao descer.** Rolando para baixo, o cabeçalho vira uma linha de 48dp com a
+  abreviação do livro, a barra, o tempo e o play. Ao subir, ou no começo do capítulo, ele volta
+  inteiro. A lupa e o marcador são navegação e anotação: não precisam ficar à mão enquanto se lê.
+- **Quatro linhas no topo viraram duas.** Saiu o subtítulo "Toque para escolher outro capítulo"
+  (a lupa já diz que dá para buscar) e o rótulo "LENDO/PARADO" (o botão já mostra o estado pela
+  cor). O tempo e a meta viraram uma coisa só ao lado da barra: `3:05 / 10 min`. Cumprida a meta,
+  a barra fica verde e o texto passa a `12:30 · +1 XP/min`, que é o que ainda se ganha lendo mais.
+- **Rodapé com os três controles iguais.** Antes eram três tratamentos lado a lado: setas soltas,
+  um quadrado com borda e um texto. Agora os três são o mesmo círculo de 40dp (`BotaoRedondo`).
+  A linha dura de 1dp saiu — a lista já esmaece no fim. Altura: 64dp → 52dp.
+- O título do capítulo continua abrindo o índice; a abreviação do cabeçalho fino também.
+
+### Adicionado
+- `BotaoRedondo` em `componentes`, o círculo usado no rodapé e no play do cabeçalho fino.
+
+### Notas
+- Somando o topo e o rodapé, sobram cerca de 120dp — umas quatro linhas de versículo a mais.
+- A rolagem é observada por `snapshotFlow`, não por recomposição a cada pixel, e movimentos
+  menores que 24px são ignorados para o cabeçalho não piscar com o dedo parado.
+
+## [1.6.0] - 2026-10-27
+
+Busca de passagem na Bíblia e retomada da leitura de onde parou.
+
+### Adicionado
+- **Busca no índice da Bíblia**: um campo no topo da folha filtra os livros enquanto você
+  digita. Aceita o jeito que a gente escreve de verdade — "1joao", "1 João", "1João 3",
+  "Jo 3:16", "SALMO 119" — sem depender de acento, de maiúscula ou de espaço depois do
+  número do livro.
+- Quando a busca já traz o capítulo ("1João 3"), tocar no livro abre direto nele, sem passar
+  pela grade de capítulos. Com versículo ("Jo 3:16"), a lista ainda rola até ele.
+- **Retoma de onde parou**: o livro e o capítulo abertos ficam guardados no aparelho, e a
+  Bíblia reabre naquele ponto em vez de Gênesis 1. Na primeira vez continua em Gênesis 1.
+- **Botão de lupa** no cabeçalho da leitura, à esquerda do botão de grifos: abre o índice já
+  com o campo de busca focado e o teclado aberto. O título do capítulo continua abrindo o
+  índice sem focar o campo.
+- Testes da busca em `BuscaLivroTest`: normalização de acentos, leitura da referência e
+  ordem dos resultados.
+
+### Alterado
+- O cabeçalho "CAPÍTULO DE ..." agora volta para a lista de livros quando tocado. Antes, depois
+  de escolher um livro só dava para voltar fechando a folha.
+- A busca só procura nomes de livros, não palavras dentro dos versículos.
+- O nome do capítulo no cabeçalho passou a ter no máximo duas linhas. Com três botões ao lado
+  sobra menos largura, e "Cântico dos Cânticos 8" empurraria o texto da leitura para baixo.
+
+### Desempenho
+- Os nomes dos 66 livros são normalizados uma vez, quando a lista carrega, e não 132 vezes a
+  cada tecla digitada: filtrar ficou ~25x mais barato (0,44 ms → 0,02 ms por palavra digitada,
+  medido fora do aparelho). Nunca chegaria a travar, mas era trabalho jogado fora a cada tecla.
+- O salto até o versículo da busca é direto, não animado: em Salmo 119 a animação percorreria
+  os 176 versículos até chegar lá.
+- A rolagem observa só o versículo alvo. Antes observava a lista inteira de versículos, que a
+  tela compara a cada tique do cronômetro.
+
 ## [1.5.0] - 2026-10-27
 
 Login por e-mail e senha, e personagem com nome e classe. Primeira parte da virada do app

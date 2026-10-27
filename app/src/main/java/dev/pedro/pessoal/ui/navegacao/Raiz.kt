@@ -12,11 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.pedro.pessoal.ui.AppViewModel
-import dev.pedro.pessoal.ui.auth.CriarPersonagemTela
+import dev.pedro.pessoal.ui.auth.ClasseTela
 import dev.pedro.pessoal.ui.auth.EstadoSessao
 import dev.pedro.pessoal.ui.auth.LoginTela
+import dev.pedro.pessoal.ui.auth.NomeTela
 import dev.pedro.pessoal.ui.auth.SessaoViewModel
 import dev.pedro.pessoal.ui.biblia.BibliaViewModel
+import dev.pedro.pessoal.ui.boasvindas.BoasVindasTela
 import dev.pedro.pessoal.ui.theme.Fundo
 import dev.pedro.pessoal.ui.theme.Neon
 
@@ -47,9 +49,25 @@ fun Raiz(
             )
         }
 
-        is EstadoSessao.SemPersonagem -> CriarPersonagemTela(
-            email = atual.email,
-            aoConfirmar = { nome, classe -> sessao.criarPersonagem(atual.uid, atual.email, nome, classe) },
+        is EstadoSessao.SemNome -> {
+            val salvando by sessao.salvandoNome.collectAsStateWithLifecycle()
+            NomeTela(
+                email = atual.email,
+                ocupado = salvando,
+                aoConfirmar = { nome -> sessao.definirNome(atual.uid, atual.email, nome) },
+                aoSair = sessao::sair,
+            )
+        }
+
+        is EstadoSessao.BoasVindas -> BoasVindasTela(
+            nomeJogador = atual.perfil.nomePersonagem,
+            numeroJogador = atual.perfil.numeroJogador,
+            aoTerminar = sessao::concluirAbertura,
+        )
+
+        is EstadoSessao.SemClasse -> ClasseTela(
+            perfil = atual.perfil,
+            aoConfirmar = { classe -> sessao.definirClasse(atual.perfil.uid, classe) },
             aoSair = sessao::sair,
         )
 

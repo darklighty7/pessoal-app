@@ -1,20 +1,38 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Escudo neon centralizado na área segura do ícone adaptativo -->
-    <group android:translateX="30" android:translateY="30">
+    <!--
+      O "F" da Forja: área cheia, inclinada 12°, com a fagulha adiante da barra do meio.
+      A inclinação está assada nas coordenadas porque um grupo de VectorDrawable faz
+      escala, rotação e translação, mas não cisalhamento.
+
+      O grupo deixa a marca com 51,8 de altura nos 108 do quadro (48%). O ponto mais
+      distante do centro fica a 35,2, e o recorte redondo só começa a cortar aos 36.
+    -->
+    <group
+        android:scaleX="0.7"
+        android:scaleY="0.7"
+        android:translateX="16.69"
+        android:translateY="18.3">
+        <path android:pathData="M35.02,14 L81.02,14 L76.77,34 L50.77,34 L48.22,46 L64.22,46 L60.4,64 L44.4,64 L39.3,88 L19.3,88 Z">
+            <aapt:attr name="android:fillColor">
+                <!-- Verde no pé, azul no alto: as duas cores do app numa só peça. -->
+                <gradient
+                    android:type="linear"
+                    android:startX="19.3"
+                    android:startY="88"
+                    android:endX="87.31"
+                    android:endY="14">
+                    <item android:offset="0" android:color="#39E58C" />
+                    <item android:offset="1" android:color="#3EA8FF" />
+                </gradient>
+            </aapt:attr>
+        </path>
         <path
-            android:pathData="M24 6l14 6v10c0 9 -6 16 -14 20c-8 -4 -14 -11 -14 -20V12l14 -6z"
-            android:strokeColor="@color/neon"
-            android:strokeWidth="3.5"
-            android:strokeLineJoin="round"
-            android:fillColor="#00000000" />
-        <path
-            android:pathData="M24 15v18M18 21h12"
-            android:strokeColor="@color/neon"
-            android:strokeWidth="3"
-            android:strokeLineCap="round" />
+            android:pathData="M78.65,44 L87.31,55 L73.97,66 L65.31,55 Z"
+            android:fillColor="#39E58C" />
     </group>
 </vector>

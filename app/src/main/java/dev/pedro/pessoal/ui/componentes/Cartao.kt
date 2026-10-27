@@ -4,10 +4,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.BlendMode
@@ -48,21 +51,42 @@ fun BarraNeon(
     modifier: Modifier = Modifier,
     altura: Dp = 8.dp,
     cor: Color = Neon,
+    brasa: Boolean = false,
 ) {
+    val fracao = progresso.coerceIn(0f, 1f)
+    val tamanhoBrasa = altura + 6.dp
+
     Box(
-        modifier
-            .fillMaxWidth()
-            .height(altura)
-            .clip(RoundedCornerShape(50))
-            .background(Trilho),
+        modifier.fillMaxWidth().height(if (brasa) tamanhoBrasa else altura),
+        contentAlignment = Alignment.CenterStart,
     ) {
         Box(
             Modifier
-                .fillMaxWidth(progresso.coerceIn(0f, 1f))
+                .fillMaxWidth()
                 .height(altura)
                 .clip(RoundedCornerShape(50))
-                .background(cor),
-        )
+                .background(Trilho),
+        ) {
+            Box(
+                Modifier
+                    .fillMaxWidth(fracao)
+                    .height(altura)
+                    .clip(RoundedCornerShape(50))
+                    .background(cor),
+            )
+        }
+
+        // A brasa marca a ponta do preenchimento, inteira dentro da barra — assim nunca
+        // é cortada por um recorte de quem desenha a barra. O widthIn garante que ela
+        // não encolha junto com o preenchimento quando o progresso é quase zero.
+        if (brasa) {
+            Box(
+                Modifier.fillMaxWidth(fracao).widthIn(min = tamanhoBrasa).fillMaxHeight(),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                Brasa(tamanho = tamanhoBrasa)
+            }
+        }
     }
 }
 

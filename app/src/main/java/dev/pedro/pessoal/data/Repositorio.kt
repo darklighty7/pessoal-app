@@ -29,20 +29,31 @@ class Repositorio(
 
     private suspend fun gravar(status: Status) = statusDao.gravar(StatusEntity.de(status))
 
+    /** Primeiro passo da entrada: só o nome. */
+    suspend fun definirNome(nome: String) {
+        gravar(status().copy(nome = nome.trim()))
+    }
+
     /**
-     * Grava o personagem recém-criado: nome e classe escolhida. A classe entra também
-     * como [Status.classeEscolhida] para o motor saber que ela é um ponto de partida,
-     * e não um resultado dos atributos.
+     * Último passo: a classe escolhida, que entra também como [Status.classeEscolhida] para
+     * o motor saber que ela é um ponto de partida e não um resultado dos atributos.
      */
-    suspend fun definirPersonagem(nome: String, classe: Classe) {
+    suspend fun definirClasse(classe: Classe) {
         val atual = status()
+        // O bônus da classe só vale para quem está começando do zero. Antes do login o app
+        // era de um usuário só, então pode existir um personagem com progresso de verdade
+        // passando por esta tela — e aí os atributos dele são dele, não um ponto de partida.
+        val intocado = atual.nivel == 1 &&
+            atual.xp == 0 &&
+            atual.atributos.values.all { it == Regras.VALOR_INICIAL_ATRIBUTO }
+
         gravar(
             atual.copy(
-                nome = nome.trim(),
                 classe = classe,
                 classeEscolhida = classe,
                 classeCandidata = null,
                 diasCandidata = 0,
+                atributos = if (intocado) MotorPontuacao.atributosIniciais(classe) else atual.atributos,
             ),
         )
     }

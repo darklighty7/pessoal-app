@@ -11,6 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -19,6 +20,7 @@ import dev.pedro.pessoal.data.BibliaRepositorio
 import dev.pedro.pessoal.data.PreferenciasLeitura
 import dev.pedro.pessoal.data.Repositorio
 import dev.pedro.pessoal.data.auth.AutenticacaoRepositorio
+import dev.pedro.pessoal.data.nuvem.ContadorRepositorio
 import dev.pedro.pessoal.data.nuvem.PerfilRepositorio
 import dev.pedro.pessoal.notificacoes.Agendador
 import dev.pedro.pessoal.notificacoes.Notificacoes
@@ -35,6 +37,9 @@ class MainActivity : ComponentActivity() {
     ) { /* Se recusar, o app continua funcionando, só sem os avisos. */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Precisa vir antes do super: é o que troca o tema de abertura pelo do app.
+        // Sem atraso de propósito — a marca fica no ar só enquanto o app carrega.
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
@@ -47,6 +52,7 @@ class MainActivity : ComponentActivity() {
         val preferencias = PreferenciasLeitura(applicationContext)
         val autenticacao = AutenticacaoRepositorio()
         val perfis = PerfilRepositorio()
+        val contadores = ContadorRepositorio()
 
         Notificacoes.criarCanais(this)
         pedirPermissaoDeNotificacao()
@@ -59,7 +65,13 @@ class MainActivity : ComponentActivity() {
                     factory = BibliaViewModel.fabrica(biblia, preferencias, app::registrarLeitura),
                 )
                 val sessao: SessaoViewModel = viewModel(
-                    factory = SessaoViewModel.fabrica(autenticacao, perfis, repositorio::definirPersonagem),
+                    factory = SessaoViewModel.fabrica(
+                        autenticacao,
+                        perfis,
+                        contadores,
+                        repositorio::definirNome,
+                        repositorio::definirClasse,
+                    ),
                 )
                 // Se o app ficou aberto durante a virada da meia-noite, o dia troca aqui.
                 LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { app.revisarData() }

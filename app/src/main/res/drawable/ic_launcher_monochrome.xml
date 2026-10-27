@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!--
+      Mesma geometria do colorido, de uma cor só: no Android 13+ com ícones temáticos o
+      sistema repinta tudo com a cor do papel de parede, então degradê e fagulha viram a
+      mesma tinta. A fagulha continua separada do F pelo vão, que é o que a mantém legível.
+    -->
+    <group
+        android:scaleX="0.7"
+        android:scaleY="0.7"
+        android:translateX="16.69"
+        android:translateY="18.3">
+        <path
+            android:pathData="M35.02,14 L81.02,14 L76.77,34 L50.77,34 L48.22,46 L64.22,46 L60.4,64 L44.4,64 L39.3,88 L19.3,88 Z"
+            android:fillColor="#FFFFFF" />
+        <path
+            android:pathData="M78.65,44 L87.31,55 L73.97,66 L65.31,55 Z"
+            android:fillColor="#FFFFFF" />
+    </group>
+</vector>

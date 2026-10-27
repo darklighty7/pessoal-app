@@ -59,7 +59,7 @@ object Notificacoes {
     fun lembrete(contexto: Context, id: Int, titulo: String, texto: String, habitos: List<Habito>) {
         val construtor = NotificationCompat.Builder(contexto, Canais.LEMBRETES)
             .setSmallIcon(R.drawable.ic_notificacao)
-            .setColor(ContextCompat.getColor(contexto, R.color.neon))
+            .setColor(ContextCompat.getColor(contexto, R.color.brasa))
             .setLargeIcon(iconeGrande(contexto))
             .setContentTitle(titulo)
             .setContentText(texto)
@@ -84,7 +84,7 @@ object Notificacoes {
     fun versiculo(contexto: Context, texto: String, referencia: String) {
         val notificacao = NotificationCompat.Builder(contexto, Canais.VERSICULO)
             .setSmallIcon(R.drawable.ic_notificacao)
-            .setColor(ContextCompat.getColor(contexto, R.color.neon))
+            .setColor(ContextCompat.getColor(contexto, R.color.brasa))
             .setLargeIcon(iconeGrande(contexto))
             .setContentTitle(referencia)
             .setContentText(texto)

@@ -136,7 +136,7 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
                 val estadoBiblia by bibliaViewModel.estado.collectAsStateWithLifecycle()
                 BibliaTela(
                     estado = estadoBiblia,
-                    aoAbrir = bibliaViewModel::abrir,
+                    aoAbrir = { livro, capitulo, versiculo -> bibliaViewModel.abrir(livro, capitulo, versiculo) },
                     aoAlternarCronometro = bibliaViewModel::alternarCronometro,
                     aoAvancar = bibliaViewModel::proximoCapitulo,
                     aoVoltar = bibliaViewModel::capituloAnterior,
@@ -149,6 +149,7 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
                     aoDefinirTamanho = bibliaViewModel::definirTamanhoFonte,
                     aoSalvarTamanho = bibliaViewModel::salvarTamanhoFonte,
                     aoZoom = bibliaViewModel::aplicarZoom,
+                    aoAlvoAtingido = bibliaViewModel::alvoAtingido,
                 )
             }
         }

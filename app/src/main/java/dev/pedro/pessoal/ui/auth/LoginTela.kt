@@ -16,7 +16,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,7 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.pedro.pessoal.ui.componentes.CampoTexto
-import dev.pedro.pessoal.ui.componentes.Icones
+import dev.pedro.pessoal.ui.componentes.MarcaForja
 import dev.pedro.pessoal.ui.theme.Alerta
 import dev.pedro.pessoal.ui.theme.Fundo
 import dev.pedro.pessoal.ui.theme.Neon
@@ -58,24 +57,13 @@ fun LoginTela(
         verticalArrangement = Arrangement.Center,
     ) {
         Spacer(Modifier.height(72.dp))
-        Icon(Icones.Escudo, contentDescription = null, tint = Neon, modifier = Modifier.size(56.dp))
-        Spacer(Modifier.height(20.dp))
+        MarcaForja(altura = 40.dp)
+        Spacer(Modifier.height(14.dp))
         Text(
-            "PESSOAL",
-            color = Neon,
-            fontSize = 30.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 6.sp,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            if (formulario.criandoConta) {
-                "Crie a sua conta para começar a evoluir"
-            } else {
-                "Entre para continuar a sua evolução"
-            },
+            "FORJE-SE TODO DIA",
             color = TextoSecundario,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.labelSmall,
+            letterSpacing = 3.sp,
             textAlign = TextAlign.Center,
         )
 

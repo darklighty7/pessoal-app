@@ -1,12 +1,22 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
-    <!-- Ícone pequeno da notificação: o Android usa só o formato (silhueta), então o escudo
-         ocupa o quadro todo e a cruz é um recorte. -->
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:fillType="evenOdd"
-        android:pathData="M12 1.5l8.5 3.2v6.3c0 5.2 -3.6 9.3 -8.5 11.5c-4.9 -2.2 -8.5 -6.3 -8.5 -11.5V4.7L12 1.5z M11 7h2v3.5h3.5v2H13V18h-2v-5.5H7.5v-2H11z" />
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!--
+      Ícone pequeno: o Android usa só a silhueta e pinta com a cor do setColor, que é a
+      brasa. Aqui a marca preenche o quadro, porque 24dp não perdoa margem.
+    -->
+    <group
+        android:scaleX="1.243"
+        android:scaleY="1.243"
+        android:translateX="-16.27"
+        android:translateY="-13.41">
+        <path
+            android:pathData="M35.02,14 L81.02,14 L76.77,34 L50.77,34 L48.22,46 L64.22,46 L60.4,64 L44.4,64 L39.3,88 L19.3,88 Z"
+            android:fillColor="#FFFFFF" />
+        <path
+            android:pathData="M78.65,44 L87.31,55 L73.97,66 L65.31,55 Z"
+            android:fillColor="#FFFFFF" />
+    </group>
 </vector>
