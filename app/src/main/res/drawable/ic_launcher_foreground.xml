@@ -1,24 +1,38 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- O "f" da Forja: traço arredondado e a barra terminando na brasa.
-         O grupo encolhe o desenho para dentro da área segura do ícone adaptativo. -->
+    <!--
+      O "F" da Forja: área cheia, inclinada 12°, com a fagulha adiante da barra do meio.
+      A inclinação está assada nas coordenadas porque um grupo de VectorDrawable faz
+      escala, rotação e translação, mas não cisalhamento.
+
+      O grupo deixa a marca com 51,8 de altura nos 108 do quadro (48%). O ponto mais
+      distante do centro fica a 35,2, e o recorte redondo só começa a cortar aos 36.
+    -->
     <group
-        android:scaleX="0.6"
-        android:scaleY="0.6"
-        android:translateX="25.4"
-        android:translateY="24.6">
+        android:scaleX="0.7"
+        android:scaleY="0.7"
+        android:translateX="16.69"
+        android:translateY="18.3">
+        <path android:pathData="M35.02,14 L81.02,14 L76.77,34 L50.77,34 L48.22,46 L64.22,46 L60.4,64 L44.4,64 L39.3,88 L19.3,88 Z">
+            <aapt:attr name="android:fillColor">
+                <!-- Verde no pé, azul no alto: as duas cores do app numa só peça. -->
+                <gradient
+                    android:type="linear"
+                    android:startX="19.3"
+                    android:startY="88"
+                    android:endX="87.31"
+                    android:endY="14">
+                    <item android:offset="0" android:color="#39E58C" />
+                    <item android:offset="1" android:color="#3EA8FF" />
+                </gradient>
+            </aapt:attr>
+        </path>
         <path
-            android:pathData="M40,80 L40,34 C40,22 48,16 60,18 M26,44 L52,44"
-            android:fillColor="#00000000"
-            android:strokeColor="#E8EEF7"
-            android:strokeWidth="11"
-            android:strokeLineCap="round"
-            android:strokeLineJoin="round" />
-        <path
-            android:pathData="M66,35 L75,44 L66,53 L57,44 Z"
+            android:pathData="M78.65,44 L87.31,55 L73.97,66 L65.31,55 Z"
             android:fillColor="#39E58C" />
     </group>
 </vector>

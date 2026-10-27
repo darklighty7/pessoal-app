@@ -2,6 +2,37 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.9.1] - 2026-10-27
+
+A marca da 1.9.0 foi refeita antes de chegar a qualquer aparelho. O "F" deixou de ser um
+traço e virou área cheia, inclinada 12°, em degradê do verde ao azul, com a fagulha adiante
+da barra do meio.
+
+### Alterado
+- **Ícone do app** (`ic_launcher_foreground.xml`): F cheio com degradê `#39E58C` → `#3EA8FF`
+  e fagulha verde. A inclinação está assada nas coordenadas do caminho, porque um grupo de
+  VectorDrawable faz escala, rotação e translação, mas não cisalhamento.
+- **Tamanho dentro do ícone**: a marca ocupa 51,8 dos 108 do quadro (48%), proporção normal
+  de ícone do Android. O ponto mais distante do centro fica a 35,2, e o recorte redondo só
+  começa a cortar aos 36 — nada é perdido em nenhum formato de máscara.
+- **Monocromático e notificação** são o mesmo desenho sem degradê. Não é escolha: no Android
+  13+ com ícones temáticos o sistema repinta tudo com a cor do papel de parede, e o ícone
+  pequeno é só silhueta. A marca passa a ter duas formas oficiais, a colorida e a chapada.
+- **A letra cheia aguenta os 24dp.** Era o que o traço fino não fazia: na barra de status
+  virava um risco. Agora o F continua F e a fagulha continua um losango ao lado dele.
+- **O letreiro deixou de ser desenho.** Saiu `forja_wordmark.xml`; entraram
+  `ic_marca_forja.xml` (só o F) e `ui/componentes/MarcaForja.kt`, que põe a palavra "forja"
+  em Chakra Petch ao lado dele. O texto acompanha qualquer altura sem um vetor por tamanho,
+  e o tamanho sai da densidade e não em `sp`, para o logotipo não crescer com o ajuste de
+  fonte do sistema e passar por cima do F.
+- Login usa a marca a 40dp; criação do personagem, a 24dp.
+
+### Notas
+- O degradê no ícone exige API 24; o mínimo do app é 26.
+- A tela de abertura reaproveita o `ic_launcher_foreground`, e a API SplashScreen mostra os
+  dois terços centrais. Com a marca a 48%, ela aparece inteira — só um pouco pequena. Se
+  ficar discreta demais no aparelho, dá para dar um drawable próprio à abertura.
+
 ## [1.9.0] - 2026-10-27
 
 O app agora se chama **Forja**. O símbolo é um losango verde — a brasa — que aparece em três

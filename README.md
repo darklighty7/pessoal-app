@@ -2,9 +2,11 @@
 
 App Android pessoal de melhoria de hábitos, estilo RPG. Kotlin + Jetpack Compose.
 
-O símbolo da marca é um losango verde — a brasa. Ele termina a barra do "f" no ícone, é o
-pingo do "j" no letreiro e marca a ponta da barra de XP. O `applicationId` continua
-`dev.pedro.pessoal`: mudar isso faria o Android tratar como outro app.
+A marca é um "F" cheio e inclinado, em degradê do verde ao azul, com uma fagulha — o
+losango verde — adiante da barra do meio. O mesmo losango marca a ponta da barra de XP.
+A palavra "forja" é texto em Chakra Petch, não desenho: veja `ui/componentes/MarcaForja.kt`.
+O `applicationId` continua `dev.pedro.pessoal`: mudar isso faria o Android tratar como
+outro app.
 
 ## Estrutura
 
@@ -13,6 +15,7 @@ pingo do "j" no letreiro e marca a ponta da barra de XP. O `applicationId` conti
 - `domain/engine/MotorPontuacao.kt` — regras de evolução (funções puras, testáveis)
 - `ui/theme` — paleta da marca, fontes Chakra Petch e IBM Plex Sans
 - `ui/componentes/Brasa.kt` — o losango da marca, aceso ou apagado
+- `ui/componentes/MarcaForja.kt` — o F mais a palavra, para as telas de entrada
 - `ui/status` — tela de Status e gráfico em losango
 - `ui/navegacao` — `Raiz` (login, criação do personagem ou app) e a barra inferior
 - `ui/auth` — telas de login e de criação do personagem

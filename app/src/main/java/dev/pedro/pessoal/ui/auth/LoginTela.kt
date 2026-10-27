@@ -3,7 +3,6 @@ package dev.pedro.pessoal.ui.auth
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,20 +22,18 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.pedro.pessoal.R
 import dev.pedro.pessoal.ui.componentes.CampoTexto
+import dev.pedro.pessoal.ui.componentes.MarcaForja
 import dev.pedro.pessoal.ui.theme.Alerta
 import dev.pedro.pessoal.ui.theme.Fundo
 import dev.pedro.pessoal.ui.theme.Neon
 import dev.pedro.pessoal.ui.theme.SobreNeon
 import dev.pedro.pessoal.ui.theme.Texto
 import dev.pedro.pessoal.ui.theme.TextoSecundario
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 
 /** Entrada do app: o mesmo formulário serve para entrar e para criar conta. */
@@ -60,13 +57,8 @@ fun LoginTela(
         verticalArrangement = Arrangement.Center,
     ) {
         Spacer(Modifier.height(72.dp))
-        // O letreiro é um desenho, não um texto: a largura vem da proporção do vetor.
-        Image(
-            painter = painterResource(R.drawable.forja_wordmark),
-            contentDescription = "Forja",
-            modifier = Modifier.height(44.dp).aspectRatio(214f / 100f),
-        )
-        Spacer(Modifier.height(12.dp))
+        MarcaForja(altura = 40.dp)
+        Spacer(Modifier.height(14.dp))
         Text(
             "FORJE-SE TODO DIA",
             color = TextoSecundario,

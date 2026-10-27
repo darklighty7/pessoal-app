@@ -1,20 +1,33 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="96dp"
     android:height="96dp"
     android:viewportWidth="100"
     android:viewportHeight="100">
-    <!-- Ícone grande: aqui a cor vale, então é a marca inteira sobre o fundo do ícone. -->
+    <!-- Ícone grande: aqui a cor vale, então entra a marca colorida sobre o fundo do ícone. -->
     <path
         android:pathData="M0,0h100v100h-100z"
         android:fillColor="@color/fundo_icone" />
-    <path
-        android:pathData="M40,80 L40,34 C40,22 48,16 60,18 M26,44 L52,44"
-        android:fillColor="#00000000"
-        android:strokeColor="#E8EEF7"
-        android:strokeWidth="11"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
-    <path
-        android:pathData="M66,35 L75,44 L66,53 L57,44 Z"
-        android:fillColor="@color/brasa" />
+    <group
+        android:scaleX="0.78"
+        android:scaleY="0.78"
+        android:translateX="8.4"
+        android:translateY="10.2">
+        <path android:pathData="M35.02,14 L81.02,14 L76.77,34 L50.77,34 L48.22,46 L64.22,46 L60.4,64 L44.4,64 L39.3,88 L19.3,88 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="19.3"
+                    android:startY="88"
+                    android:endX="87.31"
+                    android:endY="14">
+                    <item android:offset="0" android:color="#39E58C" />
+                    <item android:offset="1" android:color="#3EA8FF" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M78.65,44 L87.31,55 L73.97,66 L65.31,55 Z"
+            android:fillColor="#39E58C" />
+    </group>
 </vector>

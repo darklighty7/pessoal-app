@@ -3,16 +3,20 @@
     android:height="24dp"
     android:viewportWidth="100"
     android:viewportHeight="100">
-    <!-- Ícone pequeno: o Android usa só a silhueta e descarta a cor, por isso tudo é
-         branco e a brasa some como elemento à parte. O verde volta pelo setColor. -->
-    <path
-        android:pathData="M40,80 L40,34 C40,22 48,16 60,18 M26,44 L52,44"
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="13"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
-    <path
-        android:pathData="M66,34 L76,44 L66,54 L56,44 Z"
-        android:fillColor="#FFFFFF" />
+    <!--
+      Ícone pequeno: o Android usa só a silhueta e pinta com a cor do setColor, que é a
+      brasa. Aqui a marca preenche o quadro, porque 24dp não perdoa margem.
+    -->
+    <group
+        android:scaleX="1.243"
+        android:scaleY="1.243"
+        android:translateX="-16.27"
+        android:translateY="-13.41">
+        <path
+            android:pathData="M35.02,14 L81.02,14 L76.77,34 L50.77,34 L48.22,46 L64.22,46 L60.4,64 L44.4,64 L39.3,88 L19.3,88 Z"
+            android:fillColor="#FFFFFF" />
+        <path
+            android:pathData="M78.65,44 L87.31,55 L73.97,66 L65.31,55 Z"
+            android:fillColor="#FFFFFF" />
+    </group>
 </vector>

@@ -1,0 +1,28 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="34dp"
+    android:height="37dp"
+    android:viewportWidth="68.01"
+    android:viewportHeight="74">
+    <!--
+      A marca sozinha, sem margem, para andar ao lado da palavra "forja" nas telas.
+      O quadro é a própria caixa do desenho: quem usa define a altura e a largura sai
+      da proporção.
+    -->
+    <path android:pathData="M15.72,0 L61.72,0 L57.47,20 L31.47,20 L28.92,32 L44.92,32 L41.1,50 L25.1,50 L20,74 L0,74 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="74"
+                android:endX="68.01"
+                android:endY="0">
+                <item android:offset="0" android:color="#39E58C" />
+                <item android:offset="1" android:color="#3EA8FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:pathData="M59.35,30 L68.01,41 L54.67,52 L46.01,41 Z"
+        android:fillColor="#39E58C" />
+</vector>

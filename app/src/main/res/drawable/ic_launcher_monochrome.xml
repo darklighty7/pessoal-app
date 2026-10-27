@@ -3,22 +3,21 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Versão de uma cor só: o Android 13+ tinge tudo no tema do sistema, então a
-         brasa não pode ser verde aqui — ela vira parte da silhueta. -->
+    <!--
+      Mesma geometria do colorido, de uma cor só: no Android 13+ com ícones temáticos o
+      sistema repinta tudo com a cor do papel de parede, então degradê e fagulha viram a
+      mesma tinta. A fagulha continua separada do F pelo vão, que é o que a mantém legível.
+    -->
     <group
-        android:scaleX="0.6"
-        android:scaleY="0.6"
-        android:translateX="25.4"
-        android:translateY="24.6">
+        android:scaleX="0.7"
+        android:scaleY="0.7"
+        android:translateX="16.69"
+        android:translateY="18.3">
         <path
-            android:pathData="M40,80 L40,34 C40,22 48,16 60,18 M26,44 L52,44"
-            android:fillColor="#00000000"
-            android:strokeColor="#FFFFFF"
-            android:strokeWidth="11"
-            android:strokeLineCap="round"
-            android:strokeLineJoin="round" />
+            android:pathData="M35.02,14 L81.02,14 L76.77,34 L50.77,34 L48.22,46 L64.22,46 L60.4,64 L44.4,64 L39.3,88 L19.3,88 Z"
+            android:fillColor="#FFFFFF" />
         <path
-            android:pathData="M66,35 L75,44 L66,53 L57,44 Z"
+            android:pathData="M78.65,44 L87.31,55 L73.97,66 L65.31,55 Z"
             android:fillColor="#FFFFFF" />
     </group>
 </vector>

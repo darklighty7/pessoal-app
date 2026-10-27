@@ -1,13 +1,11 @@
 package dev.pedro.pessoal.ui.auth
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,17 +31,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.pedro.pessoal.R
 import dev.pedro.pessoal.domain.model.Classe
 import dev.pedro.pessoal.ui.componentes.Cartao
 import dev.pedro.pessoal.ui.componentes.CampoTexto
 import dev.pedro.pessoal.ui.componentes.Icones
+import dev.pedro.pessoal.ui.componentes.MarcaForja
 import dev.pedro.pessoal.ui.theme.Borda
 import dev.pedro.pessoal.ui.theme.Fundo
 import dev.pedro.pessoal.ui.theme.Neon
@@ -87,11 +84,7 @@ fun CriarPersonagemTela(
             .padding(horizontal = 24.dp),
     ) {
         Spacer(Modifier.height(32.dp))
-        Image(
-            painter = painterResource(R.drawable.forja_wordmark),
-            contentDescription = "Forja",
-            modifier = Modifier.height(26.dp).aspectRatio(214f / 100f),
-        )
+        MarcaForja(altura = 24.dp)
         Spacer(Modifier.height(22.dp))
         Text("SEU PERSONAGEM", color = Neon, fontSize = 22.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
         Spacer(Modifier.height(6.dp))
