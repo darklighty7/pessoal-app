@@ -1,13 +1,18 @@
-# Pessoal
+# Forja
 
 App Android pessoal de melhoria de hábitos, estilo RPG. Kotlin + Jetpack Compose.
+
+O símbolo da marca é um losango verde — a brasa. Ele termina a barra do "f" no ícone, é o
+pingo do "j" no letreiro e marca a ponta da barra de XP. O `applicationId` continua
+`dev.pedro.pessoal`: mudar isso faria o Android tratar como outro app.
 
 ## Estrutura
 
 - `domain/model` — Atributo, Classe, Rank, Título, Status, tarefas
 - `domain/engine/Regras.kt` — todos os números do sistema (XP, ganhos, perdas, bônus)
 - `domain/engine/MotorPontuacao.kt` — regras de evolução (funções puras, testáveis)
-- `ui/theme` — cores neon, fontes Chakra Petch e IBM Plex Sans
+- `ui/theme` — paleta da marca, fontes Chakra Petch e IBM Plex Sans
+- `ui/componentes/Brasa.kt` — o losango da marca, aceso ou apagado
 - `ui/status` — tela de Status e gráfico em losango
 - `ui/navegacao` — `Raiz` (login, criação do personagem ou app) e a barra inferior
 - `ui/auth` — telas de login e de criação do personagem

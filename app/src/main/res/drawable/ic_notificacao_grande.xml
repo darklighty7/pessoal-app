@@ -1,23 +1,20 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="96dp"
     android:height="96dp"
-    android:viewportWidth="96"
-    android:viewportHeight="96">
-    <!-- Ícone grande da notificação: fundo preto e o escudo neon do app ocupando a maior parte do quadro. -->
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- Ícone grande: aqui a cor vale, então é a marca inteira sobre o fundo do ícone. -->
     <path
-        android:fillColor="#FF000000"
-        android:pathData="M0 0h96v96H0z" />
-    <group android:translateX="4.8" android:translateY="4.8" android:scaleX="1.8" android:scaleY="1.8">
-        <path
-            android:pathData="M24 6l14 6v10c0 9 -6 16 -14 20c-8 -4 -14 -11 -14 -20V12l14 -6z"
-            android:strokeColor="@color/neon"
-            android:strokeWidth="3.5"
-            android:strokeLineJoin="round"
-            android:fillColor="#00000000" />
-        <path
-            android:pathData="M24 15v18M18 21h12"
-            android:strokeColor="@color/neon"
-            android:strokeWidth="3"
-            android:strokeLineCap="round" />
-    </group>
+        android:pathData="M0,0h100v100h-100z"
+        android:fillColor="@color/fundo_icone" />
+    <path
+        android:pathData="M40,80 L40,34 C40,22 48,16 60,18 M26,44 L52,44"
+        android:fillColor="#00000000"
+        android:strokeColor="#E8EEF7"
+        android:strokeWidth="11"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M66,35 L75,44 L66,53 L57,44 Z"
+        android:fillColor="@color/brasa" />
 </vector>

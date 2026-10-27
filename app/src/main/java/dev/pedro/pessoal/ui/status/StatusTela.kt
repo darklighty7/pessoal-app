@@ -124,7 +124,7 @@ private fun BarraExperiencia(status: Status) {
                 fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
             )
         }
-        BarraNeon(status.xp.toFloat() / status.xpNecessario)
+        BarraNeon(status.xp.toFloat() / status.xpNecessario, brasa = true)
     }
 }
 

@@ -1,4 +1,7 @@
 <resources>
-    <color name="fundo">#FF0B0E14</color>
-    <color name="neon">#FF5AA7FF</color>
+    <!-- Espelha dev.pedro.pessoal.ui.theme.Cores: muda aqui, muda lá. -->
+    <color name="fundo">#FF0A0F1C</color>
+    <color name="fundo_icone">#FF111A2B</color>
+    <color name="neon">#FF3EA8FF</color>
+    <color name="brasa">#FF39E58C</color>
 </resources>

@@ -11,6 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,6 +37,9 @@ class MainActivity : ComponentActivity() {
     ) { /* Se recusar, o app continua funcionando, só sem os avisos. */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Precisa vir antes do super: é o que troca o tema de abertura pelo do app.
+        // Sem atraso de propósito — a marca fica no ar só enquanto o app carrega.
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),

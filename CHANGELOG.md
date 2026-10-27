@@ -2,6 +2,43 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.9.0] - 2026-10-27
+
+O app agora se chama **Forja**. O símbolo é um losango verde — a brasa — que aparece em três
+lugares: termina a barra do "f" no ícone, é o pingo do "j" no letreiro e marca a ponta da
+barra de XP.
+
+### Adicionado
+- Ícone adaptativo novo: o "f" de traço arredondado com a brasa na ponta da barra, sobre
+  `#111A2B`. Camada monocromática própria (`ic_launcher_monochrome.xml`), porque o Android 13+
+  tinge tudo numa cor só e a brasa precisa virar parte da silhueta em vez de sumir.
+- `forja_wordmark.xml`, o letreiro desenhado à mão, no login e na criação do personagem.
+- `ui/componentes/Brasa.kt`: o losango reutilizável, aceso (verde cheio) ou apagado (só
+  contorno). Sem animação, com o `Path` guardado em `remember`.
+- `BarraNeon` ganhou o parâmetro `brasa`, que põe o losango na ponta do preenchimento. Usado
+  só na barra de XP da tela de Status.
+- Tela de abertura pela API SplashScreen (`androidx.core:core-splashscreen:1.0.1`), sem
+  atraso de propósito.
+
+### Alterado
+- `app_name` passou de "Pessoal" para "Forja"; o tema virou `Theme.Forja`.
+- Paleta com os valores da marca, mantendo os nomes que já existiam no código: `Fundo`
+  `#0A0F1C`, `Superficie` `#111A2B`, `Trilho` `#1C2638`, `Texto` `#E8EEF7`, `Neon` `#3EA8FF`,
+  `Ganho` `#39E58C`. Trocar os valores em vez de acrescentar cores novas evita ficar com dois
+  azuis e dois verdes disputando o mesmo papel. De novo mesmo, só `BrasaApagada` `#3A4659`.
+- Ícones de notificação redesenhados com a marca; a cor de destaque passou de azul para a brasa.
+- A tela de login troca o escudo e a palavra "PESSOAL" pelo letreiro, com o lema
+  "Forje-se todo dia" no lugar da frase que repetia o que o botão já dizia.
+- No letreiro, as letras depois do "f" andaram 5 unidades para a direita: o vão entre "f" e "o"
+  era 4 e os outros 9.
+
+### Não mudou
+- `applicationId` e `namespace` continuam `dev.pedro.pessoal`. Mudar faria o Android instalar
+  como outro app, perdendo os dados locais, e invalidaria o `google-services.json`.
+- O check dos hábitos continua sendo um certinho. Trocar por losango é mudança de interface,
+  não de marca, e fica para depois de ver no aparelho.
+- Nenhuma regra de XP, atributo ou rank foi tocada. Os selos de rank continuam como estavam.
+
 ## [1.8.0] - 2026-10-27
 
 A abertura de quem acabou de criar o personagem. Começa como terminal — o sistema ligando e

@@ -1,8 +1,16 @@
 <resources>
     <!-- Tema da janela: evita o "flash" branco antes do Compose desenhar -->
-    <style name="Theme.Pessoal" parent="android:Theme.Material.NoActionBar">
+    <style name="Theme.Forja" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/fundo</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <!-- Abertura do sistema: a marca aparece enquanto o app carrega, sem atraso de propósito.
+         O parent explícito vence a herança por ponto, então este tema NÃO estende Theme.Forja. -->
+    <style name="Theme.Forja.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/fundo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Forja</item>
     </style>
 </resources>

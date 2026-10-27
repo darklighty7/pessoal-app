@@ -1,9 +1,10 @@
 # Roadmap
 
-Melhorias futuras para o app Pessoal, sem compromisso de prazo.
+Melhorias futuras para o app Forja, sem compromisso de prazo.
 
 ## Concluído
 
+- v1.9.0: nome final (Forja), ícone, letreiro, brasa e splash.
 - v1.4.2: ícones das notificações (pequeno próprio e grande com fundo preto).
 - v1.4.1: ajustes de desempenho (transição entre abas, esmaecimento da lista) e variante de build `otimizado`.
 - v1.4.0: tamanho do texto e zoom por pinça na leitura da Bíblia.
@@ -12,7 +13,6 @@ Melhorias futuras para o app Pessoal, sem compromisso de prazo.
 
 ## Pendências conhecidas
 
-- Escolher o nome final do app e criar um ícone novo com símbolo próprio.
 - Desempenho: a auditoria da v1.4.1 não achou trabalho pesado na thread principal. O maior fator provável é rodar o APK de debug; medir de novo com a variante `otimizado`. Ficaram de fora, por impacto baixo ou sem medição:
   - `SeloRank.kt` refaz caminhos e gradientes a cada frame (hoistar os `Path` com `drawWithCache`; as seis animações infinitas rodam mesmo nos ranks que usam só duas).
   - O cronômetro da leitura emite um `EstadoBiblia` novo a cada segundo (tirar `segundos` do estado e coletar em um painel próprio).

@@ -1,0 +1,19 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="214dp"
+    android:height="100dp"
+    android:viewportWidth="214"
+    android:viewportHeight="100">
+    <!-- O letreiro é desenhado, não escrito: traço único arredondado, e o pingo do "j"
+         é a brasa. As letras depois do "f" andaram 5 para a direita, para o vão entre
+         "f" e "o" ficar igual aos outros (eram 4; agora são 9 em todos). -->
+    <path
+        android:pathData="M20,70 L20,26 C20,16 26,11 36,12 M9,31 L33,31 M51,50 A20,20 0 1,1 91,50 A20,20 0 1,1 51,50 M109,70 L109,30 M109,46 C109,36 117,30 129,30 M149,30 L149,80 C149,90 141,94 131,92 M167,50 A20,20 0 1,1 207,50 A20,20 0 1,1 167,50 M207,30 L207,70"
+        android:fillColor="#00000000"
+        android:strokeColor="#E8EEF7"
+        android:strokeWidth="9"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M149,5 L157,13 L149,21 L141,13 Z"
+        android:fillColor="#39E58C" />
+</vector>
