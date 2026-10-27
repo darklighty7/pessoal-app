@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import dev.pedro.pessoal.data.auth.AutenticacaoRepositorio
 import dev.pedro.pessoal.data.auth.ResultadoAuth
+import dev.pedro.pessoal.data.nuvem.ContadorRepositorio
 import dev.pedro.pessoal.data.nuvem.PerfilRepositorio
 import dev.pedro.pessoal.domain.model.Classe
 import dev.pedro.pessoal.domain.model.PerfilUsuario
@@ -14,11 +15,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** Em que ponto da entrada o app está. */
 sealed interface EstadoSessao {
@@ -27,6 +29,8 @@ sealed interface EstadoSessao {
     data object Deslogado : EstadoSessao
     /** Logado, mas o personagem ainda não foi criado. */
     data class SemPersonagem(val uid: String, val email: String) : EstadoSessao
+    /** Personagem recém-criado: roda a abertura antes de entrar no app. */
+    data class BoasVindas(val perfil: PerfilUsuario) : EstadoSessao
     data class Pronto(val perfil: PerfilUsuario) : EstadoSessao
 }
 
@@ -51,22 +55,38 @@ data class FormularioLogin(
 class SessaoViewModel(
     private val auth: AutenticacaoRepositorio,
     private val perfis: PerfilRepositorio,
+    private val contadores: ContadorRepositorio,
     private val gravarPersonagemLocal: suspend (String, Classe) -> Unit,
 ) : ViewModel() {
 
     private val _formulario = MutableStateFlow(FormularioLogin())
     val formulario: StateFlow<FormularioLogin> = _formulario.asStateFlow()
 
+    /** Enquanto o contador de jogadores não responde, a tela de criação fica travada. */
+    private val _criandoPersonagem = MutableStateFlow(false)
+    val criandoPersonagem: StateFlow<Boolean> = _criandoPersonagem.asStateFlow()
+
+    /**
+     * O uid de quem acabou de criar o personagem nesta sessão. Só ele vê a abertura —
+     * quem já tem conta e entra noutro aparelho vai direto para o app.
+     */
+    private val aberturaPendente = MutableStateFlow<String?>(null)
+
     val estado: StateFlow<EstadoSessao> = auth.observar()
         .flatMapLatest { usuario ->
             if (usuario == null) {
+                aberturaPendente.value = null
                 flowOf<EstadoSessao>(EstadoSessao.Deslogado)
             } else {
                 val semPersonagem = EstadoSessao.SemPersonagem(usuario.uid, usuario.email.orEmpty())
-                perfis.observar(usuario.uid)
-                    .map<PerfilUsuario?, EstadoSessao> { perfil ->
-                        if (perfil != null && perfil.completo) EstadoSessao.Pronto(perfil) else semPersonagem
+                combine(perfis.observar(usuario.uid), aberturaPendente) { perfil, pendente ->
+                    val proximo: EstadoSessao = when {
+                        perfil == null || !perfil.completo -> semPersonagem
+                        pendente == usuario.uid -> EstadoSessao.BoasVindas(perfil)
+                        else -> EstadoSessao.Pronto(perfil)
                     }
+                    proximo
+                }
                     // Sem internet e sem cópia local do perfil, o jeito é pedir o personagem
                     // de novo; o merge na gravação não apaga nada do que já existe lá.
                     .catch { emit(semPersonagem) }
@@ -108,13 +128,27 @@ class SessaoViewModel(
     }
 
     fun criarPersonagem(uid: String, email: String, nome: String, classe: Classe) {
+        if (_criandoPersonagem.value) return
+        _criandoPersonagem.value = true
+        // Marcado antes de qualquer gravação: assim o perfil não chega ao app sem passar
+        // pela abertura, por mais rápido que o Firestore responda.
+        aberturaPendente.value = uid
         viewModelScope.launch {
             gravarPersonagemLocal(nome, classe)
-            runCatching { perfis.salvarPersonagem(uid, email, nome, classe) }
+            // A transação do contador exige servidor. Sem rede ela falha, e aí o jogador
+            // fica sem número — a abertura mostra só o nome, em vez de travar na espera.
+            val numero = withTimeoutOrNull(ESPERA_CONTADOR_MS) {
+                runCatching { contadores.proximoNumero() }.getOrNull()
+            } ?: ContadorRepositorio.SEM_NUMERO
+            _criandoPersonagem.value = false
+            runCatching { perfis.salvarPersonagem(uid, email, nome, classe, numero) }
             // Se o Firestore estiver fora do ar, o personagem já está gravado no aparelho
             // e o envio fica na fila do próprio Firestore.
         }
     }
+
+    /** Chamado quando a abertura termina: daqui em diante é o app normal. */
+    fun concluirAbertura() { aberturaPendente.value = null }
 
     fun sair() = auth.sair()
 
@@ -126,14 +160,17 @@ class SessaoViewModel(
     }
 
     companion object {
+        private const val ESPERA_CONTADOR_MS = 8_000L
+
         fun fabrica(
             auth: AutenticacaoRepositorio,
             perfis: PerfilRepositorio,
+            contadores: ContadorRepositorio,
             gravarPersonagemLocal: suspend (String, Classe) -> Unit,
         ) = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                SessaoViewModel(auth, perfis, gravarPersonagemLocal) as T
+                SessaoViewModel(auth, perfis, contadores, gravarPersonagemLocal) as T
         }
     }
 }

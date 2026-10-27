@@ -26,5 +26,22 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == uid;
       }
     }
+
+    // Quantas contas já foram criadas, para dar o número do jogador na abertura.
+    // Qualquer pessoa logada pode ler e somar um; não pode escolher o valor,
+    // não pode diminuir e não pode acrescentar outros campos.
+    match /contadores/jogadores {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+                    && request.resource.data.keys().hasOnly(['total'])
+                    && request.resource.data.total == 1;
+
+      allow update: if request.auth != null
+                    && request.resource.data.keys().hasOnly(['total'])
+                    && request.resource.data.total == resource.data.total + 1;
+
+      allow delete: if false;
+    }
   }
 }

@@ -10,6 +10,9 @@ package dev.pedro.pessoal.domain.model
  * [admin] libera os hábitos fixos do dono do app (Bíblia, oração, karatê, treino e
  * mobilidade). Um usuário comum recebe só a Bíblia como fixo e cria o resto.
  * Este campo nunca é escrito pelo app: só pelo console do Firebase.
+ *
+ * [numeroJogador] é a ordem de chegada, usada na abertura. Zero quer dizer que o
+ * contador não pôde ser lido na hora de criar a conta.
  */
 data class PerfilUsuario(
     val uid: String = "",
@@ -17,6 +20,7 @@ data class PerfilUsuario(
     val nomePersonagem: String = "",
     val classeInicial: String = Classe.APRENDIZ.name,
     val admin: Boolean = false,
+    val numeroJogador: Int = 0,
     val criadoEm: Long = 0L,
 ) {
     val classe: Classe

@@ -2,6 +2,32 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.8.0] - 2026-10-27
+
+A abertura de quem acabou de criar o personagem. Começa como terminal — o sistema ligando e
+reconhecendo quem chegou — e termina em caixa de diálogo de RPG, onde a missão é anunciada.
+
+### Adicionado
+- **Abertura de boas-vindas** (`ui/boasvindas/BoasVindasTela.kt`). O terminal escreve letra por
+  letra, identifica o jogador pelo número de chegada e pelo nome, e dá lugar a uma caixa de
+  diálogo com a mensagem da missão em quatro páginas. Um toque pula a digitação; a última página
+  só sai pelo botão "Aceitar a missão", porque é o aceite.
+- **Número do jogador** (`data/nuvem/ContadorRepositorio.kt`). Vem de uma transação em
+  `contadores/jogadores`, não de uma contagem da coleção `usuarios` — contar documentos exigiria
+  ler a coleção inteira, e cada pessoa só enxerga o próprio perfil. Gravado em
+  `usuarios/{uid}.numeroJogador`.
+- Regra nova no `firestore.rules` para `contadores/jogadores`: quem está logado pode ler e somar
+  um, mas não escolher o valor, não diminuir e não acrescentar outros campos.
+- Indicador de espera no botão "Começar" da criação do personagem, que agora aguarda o contador.
+
+### Notas
+- A abertura roda uma vez, na sessão em que o personagem é criado. Quem entra noutro aparelho vai
+  direto para o app; se o aplicativo for fechado no meio da abertura, ela não volta.
+- Sem internet a transação falha, o jogador fica sem número e a abertura mostra só o nome. A
+  espera é limitada a 8 segundos para a tela não travar.
+- `versionCode` e `versionName` do `build.gradle.kts` estavam parados em 1 e "0.1"; agora
+  acompanham a versão (8 e "1.8.0").
+
 ## [1.7.0] - 2026-10-27
 
 Leitura mais limpa. A tela da Bíblia tinha cerca de 270dp de moldura — mais de um terço do

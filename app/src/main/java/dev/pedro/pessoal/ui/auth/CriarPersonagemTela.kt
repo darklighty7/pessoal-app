@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -64,6 +65,7 @@ private val OPCOES = listOf(
 @Composable
 fun CriarPersonagemTela(
     email: String,
+    ocupado: Boolean,
     aoConfirmar: (String, Classe) -> Unit,
     aoSair: () -> Unit,
 ) {
@@ -145,15 +147,19 @@ fun CriarPersonagemTela(
         Spacer(Modifier.height(18.dp))
         Button(
             onClick = { aoConfirmar(nome.trim(), escolhida) },
-            enabled = nomeValido,
+            enabled = nomeValido && !ocupado,
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Neon, contentColor = SobreNeon),
             modifier = Modifier.fillMaxWidth().height(52.dp),
         ) {
-            Text("Começar", fontWeight = FontWeight.SemiBold)
+            if (ocupado) {
+                CircularProgressIndicator(color = SobreNeon, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+            } else {
+                Text("Começar", fontWeight = FontWeight.SemiBold)
+            }
         }
 
-        TextButton(onClick = aoSair, modifier = Modifier.fillMaxWidth()) {
+        TextButton(onClick = aoSair, enabled = !ocupado, modifier = Modifier.fillMaxWidth()) {
             Text("Sair desta conta", color = TextoSecundario, style = MaterialTheme.typography.bodySmall)
         }
         Spacer(Modifier.height(32.dp))

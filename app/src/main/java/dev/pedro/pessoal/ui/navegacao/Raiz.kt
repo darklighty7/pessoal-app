@@ -17,6 +17,7 @@ import dev.pedro.pessoal.ui.auth.EstadoSessao
 import dev.pedro.pessoal.ui.auth.LoginTela
 import dev.pedro.pessoal.ui.auth.SessaoViewModel
 import dev.pedro.pessoal.ui.biblia.BibliaViewModel
+import dev.pedro.pessoal.ui.boasvindas.BoasVindasTela
 import dev.pedro.pessoal.ui.theme.Fundo
 import dev.pedro.pessoal.ui.theme.Neon
 
@@ -47,10 +48,20 @@ fun Raiz(
             )
         }
 
-        is EstadoSessao.SemPersonagem -> CriarPersonagemTela(
-            email = atual.email,
-            aoConfirmar = { nome, classe -> sessao.criarPersonagem(atual.uid, atual.email, nome, classe) },
-            aoSair = sessao::sair,
+        is EstadoSessao.SemPersonagem -> {
+            val criando by sessao.criandoPersonagem.collectAsStateWithLifecycle()
+            CriarPersonagemTela(
+                email = atual.email,
+                ocupado = criando,
+                aoConfirmar = { nome, classe -> sessao.criarPersonagem(atual.uid, atual.email, nome, classe) },
+                aoSair = sessao::sair,
+            )
+        }
+
+        is EstadoSessao.BoasVindas -> BoasVindasTela(
+            nomeJogador = atual.perfil.nomePersonagem,
+            numeroJogador = atual.perfil.numeroJogador,
+            aoTerminar = sessao::concluirAbertura,
         )
 
         is EstadoSessao.Pronto -> AppNavegacao(appViewModel, bibliaViewModel)

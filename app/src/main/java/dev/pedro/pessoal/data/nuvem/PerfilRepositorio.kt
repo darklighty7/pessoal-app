@@ -39,14 +39,23 @@ class PerfilRepositorio(
      * Grava o personagem criado. Não mexe em `admin`: esse campo é dado pelo console do
      * Firebase, e um `set` com merge preserva o que já estiver lá.
      */
-    suspend fun salvarPersonagem(uid: String, email: String, nome: String, classe: Classe) {
-        val dados = mapOf(
-            "uid" to uid,
-            "email" to email,
-            "nomePersonagem" to nome.trim(),
-            "classeInicial" to classe.name,
-            "criadoEm" to System.currentTimeMillis(),
-        )
+    suspend fun salvarPersonagem(
+        uid: String,
+        email: String,
+        nome: String,
+        classe: Classe,
+        numeroJogador: Int = ContadorRepositorio.SEM_NUMERO,
+    ) {
+        val dados = buildMap {
+            put("uid", uid)
+            put("email", email)
+            put("nomePersonagem", nome.trim())
+            put("classeInicial", classe.name)
+            put("criadoEm", System.currentTimeMillis())
+            // Sem número, é melhor não gravar nada: o merge preservaria um número
+            // que já estivesse lá, e um zero por cima apagaria a ordem de chegada.
+            if (numeroJogador != ContadorRepositorio.SEM_NUMERO) put("numeroJogador", numeroJogador)
+        }
         documento(uid).set(dados, SetOptions.merge()).await()
     }
 
