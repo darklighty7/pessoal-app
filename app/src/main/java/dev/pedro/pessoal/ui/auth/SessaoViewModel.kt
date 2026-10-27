@@ -96,9 +96,9 @@ class SessaoViewModel(
                     }
                     proximo
                 }
-                    // Sem internet e sem cópia local do perfil, o jeito é pedir o personagem
-                    // de novo; o merge na gravação não apaga nada do que já existe lá.
-                    .catch { emit(semPersonagem) }
+                    // Sem internet e sem cópia local do perfil, o jeito é começar a
+                    // entrada de novo; o merge na gravação não apaga nada do que já existe lá.
+                    .catch { emit(semNome) }
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), EstadoSessao.Carregando)

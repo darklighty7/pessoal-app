@@ -2,6 +2,16 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.11.1] - 2026-10-27
+
+Primeira compilação do projeto desde a v1.5.0. Um erro só apareceu.
+
+### Corrigido
+- `SessaoViewModel`: o `catch` do fluxo de perfil ainda emitia `semPersonagem`, nome que
+  deixou de existir quando a entrada virou três passos na 1.11.0. Passou a emitir `semNome`.
+  O renomear anterior pegou as outras ocorrências e deixou esta porque ela está dentro de
+  uma lambda, longe do bloco que mudou.
+
 ## [1.11.0] - 2026-10-27
 
 A entrada virou três passos, e a abertura entrou no meio deles.
