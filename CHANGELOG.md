@@ -2,6 +2,32 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.7.0] - 2026-10-27
+
+Leitura mais limpa. A tela da Bíblia tinha cerca de 270dp de moldura — mais de um terço do
+aparelho — antes do primeiro versículo.
+
+### Alterado
+- **O topo recolhe ao descer.** Rolando para baixo, o cabeçalho vira uma linha de 48dp com a
+  abreviação do livro, a barra, o tempo e o play. Ao subir, ou no começo do capítulo, ele volta
+  inteiro. A lupa e o marcador são navegação e anotação: não precisam ficar à mão enquanto se lê.
+- **Quatro linhas no topo viraram duas.** Saiu o subtítulo "Toque para escolher outro capítulo"
+  (a lupa já diz que dá para buscar) e o rótulo "LENDO/PARADO" (o botão já mostra o estado pela
+  cor). O tempo e a meta viraram uma coisa só ao lado da barra: `3:05 / 10 min`. Cumprida a meta,
+  a barra fica verde e o texto passa a `12:30 · +1 XP/min`, que é o que ainda se ganha lendo mais.
+- **Rodapé com os três controles iguais.** Antes eram três tratamentos lado a lado: setas soltas,
+  um quadrado com borda e um texto. Agora os três são o mesmo círculo de 40dp (`BotaoRedondo`).
+  A linha dura de 1dp saiu — a lista já esmaece no fim. Altura: 64dp → 52dp.
+- O título do capítulo continua abrindo o índice; a abreviação do cabeçalho fino também.
+
+### Adicionado
+- `BotaoRedondo` em `componentes`, o círculo usado no rodapé e no play do cabeçalho fino.
+
+### Notas
+- Somando o topo e o rodapé, sobram cerca de 120dp — umas quatro linhas de versículo a mais.
+- A rolagem é observada por `snapshotFlow`, não por recomposição a cada pixel, e movimentos
+  menores que 24px são ignorados para o cabeçalho não piscar com o dedo parado.
+
 ## [1.6.0] - 2026-10-27
 
 Busca de passagem na Bíblia e retomada da leitura de onde parou.

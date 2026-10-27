@@ -9,6 +9,19 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.input.ImeAction
 import dev.pedro.pessoal.ui.theme.Fundo
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntSize
+import dev.pedro.pessoal.ui.componentes.BotaoRedondo
+import kotlin.math.abs
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.clickable
@@ -72,14 +85,12 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -98,6 +109,12 @@ import dev.pedro.pessoal.ui.theme.Superficie
 import dev.pedro.pessoal.ui.theme.Texto
 import dev.pedro.pessoal.ui.theme.TextoSecundario
 import dev.pedro.pessoal.ui.theme.Trilho
+
+/** Quanto tempo o cabeçalho leva para recolher ou voltar. */
+private const val TROCA_DE_CABECALHO_MS = 140
+
+/** Rolagem menor que isto é tremida de dedo parado, não intenção de descer. */
+private const val LIMIAR_ROLAGEM_PX = 24
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -282,64 +299,33 @@ private fun Leitor(
     }
 
     Column(modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 24.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column(Modifier.weight(1f).clickable(onClick = aoAbrirIndice), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        "${estado.livroAberto?.nome ?: ""} ${estado.capitulo}",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Texto,
-                        // Com três botões ao lado, sobra menos largura: "Cântico dos Cânticos 8"
-                        // ocupa duas linhas. O limite evita o cabeçalho empurrar o texto para baixo.
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        "Toque para escolher outro capítulo",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextoSecundario,
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    BotaoIcone(Icones.Lupa, "Buscar passagem", aoTocar = aoBuscar, cor = Neon)
-                    BotaoIcone(Icones.Marcador, "Meus grifos", aoTocar = aoAbrirGrifos, cor = Neon)
-                    BotaoIcone(
-                        icone = if (estado.cronometroLigado) Icones.Pausar else Icones.Tocar,
-                        descricao = if (estado.cronometroLigado) "Pausar leitura" else "Começar leitura",
-                        aoTocar = aoAlternarCronometro,
-                        cor = if (estado.cronometroLigado) Ganho else Neon,
-                    )
-                }
-            }
+        // Lendo, o topo inteiro é moldura: ao descer, sobra só a linha do cronômetro, e
+        // ela volta assim que a rolagem inverte. A troca é curta, no mesmo tempo das abas.
+        val recolhido by lista.rolandoParaBaixo()
+        val animacao = tween<IntSize>(TROCA_DE_CABECALHO_MS)
+        val aparecer = fadeIn(tween(TROCA_DE_CABECALHO_MS)) + expandVertically(animacao)
+        val sumir = fadeOut(tween(TROCA_DE_CABECALHO_MS)) + shrinkVertically(animacao)
 
-            Column(Modifier.padding(top = 20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Text(
-                        if (estado.cronometroLigado) "LENDO" else "PARADO",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp),
-                        color = if (estado.cronometroLigado) Ganho else TextoSecundario,
-                    )
-                    BarraNeon((minutos.toFloat() / meta).coerceAtMost(1f), Modifier.weight(1f), altura = 6.dp)
-                    Text(
-                        "%d:%02d".format(minutos, estado.segundos % 60),
-                        fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
-                        color = Texto,
-                    )
-                }
-                Text(
-                    if (minutos >= meta) {
-                        "Meta do dia alcançada. Cada minuto a mais ainda rende 1 XP."
-                    } else {
-                        "Meta: $meta minutos de leitura"
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (minutos >= meta) Ganho else TextoSecundario,
-                )
-            }
+        AnimatedVisibility(visible = !recolhido, enter = aparecer, exit = sumir) {
+            CabecalhoAberto(
+                estado = estado,
+                minutos = minutos,
+                meta = meta,
+                aoAbrirIndice = aoAbrirIndice,
+                aoBuscar = aoBuscar,
+                aoAbrirGrifos = aoAbrirGrifos,
+                aoAlternarCronometro = aoAlternarCronometro,
+            )
+        }
+
+        AnimatedVisibility(visible = recolhido, enter = aparecer, exit = sumir) {
+            CabecalhoFino(
+                estado = estado,
+                minutos = minutos,
+                meta = meta,
+                aoAbrirIndice = aoAbrirIndice,
+                aoAlternarCronometro = aoAlternarCronometro,
+            )
         }
 
         LazyColumn(
@@ -372,36 +358,28 @@ private fun Leitor(
             )
         }
 
-        Column(Modifier.fillMaxWidth()) {
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Borda))
-            Row(
-                Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(onClick = aoVoltar, modifier = Modifier.size(48.dp)) {
-                    Icon(Icones.Voltar, contentDescription = "Capítulo anterior", tint = Neon, modifier = Modifier.size(26.dp))
-                }
-                // O meio ocupa o que sobra (weight): as setas de 48dp nunca são espremidas, e o nome da versão
-                // encolhe com reticências se faltar espaço (telas estreitas ou fonte grande do sistema).
-                Row(
-                    Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        BibliaRepositorio.NOME_VERSAO,
-                        style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 0.5.sp),
-                        color = TextoSecundario,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false),
-                    )
-                    BotaoIcone(Icones.Fonte, "Tamanho do texto", aoTocar = aoAbrirTamanho, cor = Neon)
-                }
-                IconButton(onClick = aoAvancar, modifier = Modifier.size(48.dp)) {
-                    Icon(Icones.Avancar, contentDescription = "Próximo capítulo", tint = Neon, modifier = Modifier.size(26.dp))
-                }
-            }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            BotaoRedondo(Icones.Voltar, "Capítulo anterior", aoTocar = aoVoltar, cor = Neon)
+            // O nome da versão encolhe com reticências se faltar espaço (telas estreitas
+            // ou fonte grande do sistema); os círculos nunca são espremidos.
+            Text(
+                BibliaRepositorio.NOME_VERSAO.uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, letterSpacing = 0.6.sp),
+                color = TextoSecundario,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f),
+            )
+            BotaoRedondo(Icones.Fonte, "Tamanho do texto", aoTocar = aoAbrirTamanho, cor = Neon)
+            BotaoRedondo(Icones.Avancar, "Próximo capítulo", aoTocar = aoAvancar, cor = Neon)
         }
     }
 }
@@ -414,6 +392,161 @@ private data class MedidasVerso(
     val larguraNumero: Dp,
     val topoNumero: Dp,
 )
+
+/**
+ * Cabeçalho aberto: o nome do capítulo (toque abre o índice), os três botões, e uma linha
+ * só com a barra e o tempo. Antes eram quatro linhas: título, "toque para escolher outro
+ * capítulo", "LENDO/PARADO + barra + tempo" e a meta. O botão de play já mostra o estado
+ * pela cor, e a barra já mostra o quanto falta.
+ */
+@Composable
+private fun CabecalhoAberto(
+    estado: EstadoBiblia,
+    minutos: Int,
+    meta: Int,
+    aoAbrirIndice: () -> Unit,
+    aoBuscar: () -> Unit,
+    aoAbrirGrifos: () -> Unit,
+    aoAlternarCronometro: () -> Unit,
+) {
+    val cumpriu = minutos >= meta
+    Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 24.dp)) {
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                "${estado.livroAberto?.nome ?: ""} ${estado.capitulo}",
+                style = MaterialTheme.typography.headlineMedium,
+                color = Texto,
+                // Com três botões ao lado sobra menos largura: "Cântico dos Cânticos 8"
+                // ocupa duas linhas. O limite evita o cabeçalho empurrar o texto para baixo.
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(onClickLabel = "Escolher outro capítulo", onClick = aoAbrirIndice),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BotaoIcone(Icones.Lupa, "Buscar passagem", aoTocar = aoBuscar, cor = Neon)
+                BotaoIcone(Icones.Marcador, "Meus grifos", aoTocar = aoAbrirGrifos, cor = Neon)
+                BotaoIcone(
+                    icone = if (estado.cronometroLigado) Icones.Pausar else Icones.Tocar,
+                    descricao = if (estado.cronometroLigado) "Pausar leitura" else "Começar leitura",
+                    aoTocar = aoAlternarCronometro,
+                    cor = if (estado.cronometroLigado) Ganho else Neon,
+                )
+            }
+        }
+
+        Row(
+            Modifier.fillMaxWidth().padding(top = 18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            BarraNeon(
+                (minutos.toFloat() / meta).coerceAtMost(1f),
+                Modifier.weight(1f),
+                altura = 6.dp,
+                cor = if (cumpriu) Ganho else Neon,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "%d:%02d".format(minutos, estado.segundos % 60),
+                    fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
+                    color = if (cumpriu) Ganho else Texto,
+                )
+                Text(
+                    // Cumprida a meta, o lugar da meta passa a dizer o que ainda se ganha lendo mais.
+                    if (cumpriu) " · +1 XP/min" else " / $meta min",
+                    fontFamily = ChakraPetch, fontWeight = FontWeight.Medium, fontSize = 14.sp,
+                    color = if (cumpriu) Ganho else TextoSecundario,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Cabeçalho recolhido: uma linha de 48dp com a abreviação do livro, a barra, o tempo e o
+ * play. Aparece enquanto a leitura desce e some assim que a rolagem inverte.
+ */
+@Composable
+private fun CabecalhoFino(
+    estado: EstadoBiblia,
+    minutos: Int,
+    meta: Int,
+    aoAbrirIndice: () -> Unit,
+    aoAlternarCronometro: () -> Unit,
+) {
+    val cumpriu = minutos >= meta
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        Row(
+            Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                estado.livroAberto?.let { "${it.abreviacao.replaceFirstChar(Char::uppercase)} ${estado.capitulo}" }.orEmpty(),
+                fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 15.sp,
+                color = TextoSecundario,
+                maxLines = 1,
+                modifier = Modifier.clickable(onClickLabel = "Escolher outro capítulo", onClick = aoAbrirIndice),
+            )
+            BarraNeon(
+                (minutos.toFloat() / meta).coerceAtMost(1f),
+                Modifier.weight(1f),
+                altura = 4.dp,
+                cor = if (cumpriu) Ganho else Neon,
+            )
+            Text(
+                "%d:%02d".format(minutos, estado.segundos % 60),
+                fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
+                color = if (cumpriu) Ganho else Texto,
+                maxLines = 1,
+            )
+            BotaoRedondo(
+                icone = if (estado.cronometroLigado) Icones.Pausar else Icones.Tocar,
+                descricao = if (estado.cronometroLigado) "Pausar leitura" else "Começar leitura",
+                aoTocar = aoAlternarCronometro,
+                cor = if (estado.cronometroLigado) Ganho else Neon,
+                tamanho = 32.dp,
+                tamanhoIcone = 16.dp,
+            )
+        }
+        Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(1.dp).background(Borda))
+    }
+}
+
+/**
+ * Verdadeiro enquanto a leitura está descendo; volta a falso ao subir ou ao chegar no topo.
+ *
+ * Observa a posição pelo `snapshotFlow` em vez de recompor a tela a cada pixel rolado.
+ * Movimentos de poucos pixels são ignorados: sem isso, a tremida do dedo parado faria o
+ * cabeçalho piscar.
+ */
+@Composable
+private fun LazyListState.rolandoParaBaixo(): State<Boolean> {
+    val descendo = remember { mutableStateOf(false) }
+    LaunchedEffect(this) {
+        var indiceAnterior = firstVisibleItemIndex
+        var offsetAnterior = firstVisibleItemScrollOffset
+        snapshotFlow { firstVisibleItemIndex to firstVisibleItemScrollOffset }.collect { (indice, offset) ->
+            val desceu = when {
+                indice != indiceAnterior -> indice > indiceAnterior
+                abs(offset - offsetAnterior) < LIMIAR_ROLAGEM_PX -> return@collect
+                else -> offset > offsetAnterior
+            }
+            // No começo do capítulo o cabeçalho está sempre aberto.
+            descendo.value = desceu && (indice > 0 || offset > 0)
+            indiceAnterior = indice
+            offsetAnterior = offset
+        }
+    }
+    return descendo
+}
 
 @Composable
 private fun Versiculo(
