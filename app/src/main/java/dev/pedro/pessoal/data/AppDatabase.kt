@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         VersiculoEntity::class,
         GrifoEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -38,12 +38,19 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v1.5.0: guarda a classe escolhida na criação do personagem. */
+        private val MIGRACAO_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `status` ADD COLUMN `classeEscolhida` TEXT")
+            }
+        }
+
         @Volatile private var instancia: AppDatabase? = null
 
         fun obter(contexto: Context): AppDatabase = instancia ?: synchronized(this) {
             instancia ?: Room
                 .databaseBuilder(contexto.applicationContext, AppDatabase::class.java, "pessoal.db")
-                .addMigrations(MIGRACAO_1_2)
+                .addMigrations(MIGRACAO_1_2, MIGRACAO_2_3)
                 .build()
                 .also { instancia = it }
         }

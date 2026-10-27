@@ -18,11 +18,14 @@ import dev.pedro.pessoal.data.AppDatabase
 import dev.pedro.pessoal.data.BibliaRepositorio
 import dev.pedro.pessoal.data.PreferenciasLeitura
 import dev.pedro.pessoal.data.Repositorio
+import dev.pedro.pessoal.data.auth.AutenticacaoRepositorio
+import dev.pedro.pessoal.data.nuvem.PerfilRepositorio
 import dev.pedro.pessoal.notificacoes.Agendador
 import dev.pedro.pessoal.notificacoes.Notificacoes
 import dev.pedro.pessoal.ui.AppViewModel
+import dev.pedro.pessoal.ui.auth.SessaoViewModel
 import dev.pedro.pessoal.ui.biblia.BibliaViewModel
-import dev.pedro.pessoal.ui.navegacao.AppNavegacao
+import dev.pedro.pessoal.ui.navegacao.Raiz
 import dev.pedro.pessoal.ui.theme.PessoalTema
 
 class MainActivity : ComponentActivity() {
@@ -42,6 +45,8 @@ class MainActivity : ComponentActivity() {
         val repositorio = Repositorio(banco.statusDao(), banco.registroDao())
         val biblia = BibliaRepositorio(banco.bibliaDao())
         val preferencias = PreferenciasLeitura(applicationContext)
+        val autenticacao = AutenticacaoRepositorio()
+        val perfis = PerfilRepositorio()
 
         Notificacoes.criarCanais(this)
         pedirPermissaoDeNotificacao()
@@ -53,9 +58,12 @@ class MainActivity : ComponentActivity() {
                 val leitor: BibliaViewModel = viewModel(
                     factory = BibliaViewModel.fabrica(biblia, preferencias, app::registrarLeitura),
                 )
+                val sessao: SessaoViewModel = viewModel(
+                    factory = SessaoViewModel.fabrica(autenticacao, perfis, repositorio::definirPersonagem),
+                )
                 // Se o app ficou aberto durante a virada da meia-noite, o dia troca aqui.
                 LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { app.revisarData() }
-                AppNavegacao(app, leitor)
+                Raiz(sessao, app, leitor)
             }
         }
     }

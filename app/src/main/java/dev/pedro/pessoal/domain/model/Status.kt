@@ -17,6 +17,13 @@ data class Status(
     val titulo: Titulo = Titulo.INICIANTE,
     /** Classe que está "tentando" assumir e há quantos dias seguidos. */
     val classeCandidata: Classe? = null,
+    /**
+     * Classe escolhida pelo dono do personagem na criação. Vale como ponto de partida:
+     * enquanto os atributos ainda não apontam nenhuma classe (todos parecidos, o que o
+     * motor lê como Aprendiz), é ela que aparece. Assim que os atributos indicam uma
+     * classe de verdade, o motor assume e a escolha deixa de valer.
+     */
+    val classeEscolhida: Classe? = null,
     val diasCandidata: Int = 0,
 ) {
     val rank: Rank get() = Rank.doNivel(nivel)

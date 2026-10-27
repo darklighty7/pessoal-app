@@ -117,7 +117,15 @@ object MotorPontuacao {
 
     /** A classe só muda depois que a nova se mantém por N dias seguidos. */
     fun atualizarClasse(status: Status): Status {
-        val indicada = calcularClasse(status.atributos)
+        val calculada = calcularClasse(status.atributos)
+        // Começo de jogo: com os atributos ainda parecidos o cálculo devolve Aprendiz, e sem
+        // isto a classe escolhida na criação sumiria em três dias. A escolha segura o lugar
+        // até os atributos apontarem uma classe de verdade.
+        val indicada = if (calculada == Classe.APRENDIZ && status.classeEscolhida != null) {
+            status.classeEscolhida
+        } else {
+            calculada
+        }
         if (indicada == status.classe) return status.copy(classeCandidata = null, diasCandidata = 0)
         val dias = if (indicada == status.classeCandidata) status.diasCandidata + 1 else 1
         return if (dias >= Regras.DIAS_PARA_TROCAR_CLASSE) {

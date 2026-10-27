@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
     kotlin("kapt")
 }
 
@@ -59,6 +60,13 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     kapt(libs.androidx.room.compiler)
+
+    // Firebase: login por e-mail/senha e perfil do personagem na nuvem.
+    // O BoM manda nas versões; as bibliotecas abaixo ficam sem versão de propósito.
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.kotlinx.coroutines.play.services)
     debugImplementation(libs.androidx.ui.tooling)
 
     testImplementation(libs.junit)
