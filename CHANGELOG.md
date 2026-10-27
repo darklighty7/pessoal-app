@@ -2,6 +2,34 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.5.0] - 2026-10-27
+
+Login por e-mail e senha, e personagem com nome e classe. Primeira parte da virada do app
+para vários usuários: antes o personagem era um só, fixo no aparelho.
+
+### Adicionado
+- **Login e cadastro por e-mail e senha** (Firebase Auth). O token de acesso é emitido e
+  renovado pelo próprio Firebase a cada login; `AutenticacaoRepositorio.token()` lê o token
+  atual para quando for preciso chamar algum serviço de fora.
+- **Criação do personagem**: nome e classe inicial, na primeira entrada depois do cadastro.
+  As classes oferecidas são o Aprendiz e as quatro puras; as híbridas e o Mestre seguem sendo
+  conquistadas pelo motor.
+- **Perfil na nuvem** (Firestore, coleção `usuarios`): nome do personagem, classe escolhida e
+  o campo `admin`. O app nunca escreve `admin` — quem dá esse acesso é o console do Firebase.
+- `firestore.rules` com as regras de acesso: cada pessoa só lê e escreve o que é dela.
+- Testes da classe escolhida em `ClasseEscolhidaTest`.
+
+### Alterado
+- `Status` ganhou `classeEscolhida`, e `MotorPontuacao.atualizarClasse` passou a respeitá-la:
+  enquanto os atributos estão parecidos (o que o cálculo lê como Aprendiz), vale a escolha da
+  criação. Quando os atributos apontam uma classe de verdade, o motor assume como antes.
+- Banco local na versão 3 (migração 2 → 3: nova coluna `classeEscolhida` em `status`).
+
+### A fazer nesta linha
+- Separar o banco local por usuário (`usuarioId` em `status`, `registro`, `dia_fechado` e
+  `progresso_exercicio`). Hoje dois usuários no mesmo aparelho compartilhariam o progresso.
+- Lembretes e exercícios criados pelo usuário; hábitos fixos do ADM separados dos do usuário comum.
+
 ## [1.4.2] - 2026-10-20
 
 ### Corrigido

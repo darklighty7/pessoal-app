@@ -32,3 +32,6 @@ Thumbs.db
 
 # Log files
 *.log
+
+# Firebase: chaves do projeto, cada um usa o seu
+app/google-services.json

@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// Regras do Firestore: cada pessoa só enxerga e escreve o que é dela.
+// Publicar com: firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /usuarios/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // O app pode criar e editar o próprio perfil, menos o campo admin:
+      // quem dá acesso de ADM é o console do Firebase, nunca o aplicativo.
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && !('admin' in request.resource.data);
+
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && (!('admin' in request.resource.data)
+                        || request.resource.data.admin == resource.data.admin);
+
+      allow delete: if false;
+
+      // Lembretes e exercícios criados pelo usuário (próxima etapa).
+      match /{colecao}/{documento} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@ package dev.pedro.pessoal.data
 
 import dev.pedro.pessoal.domain.engine.MotorPontuacao
 import dev.pedro.pessoal.domain.engine.Regras
+import dev.pedro.pessoal.domain.model.Classe
 import dev.pedro.pessoal.domain.model.Habito
 import dev.pedro.pessoal.domain.model.Recompensa
 import dev.pedro.pessoal.domain.model.ResultadoHabito
@@ -27,6 +28,24 @@ class Repositorio(
     private suspend fun status(): Status = statusDao.buscar()?.paraDominio() ?: Status()
 
     private suspend fun gravar(status: Status) = statusDao.gravar(StatusEntity.de(status))
+
+    /**
+     * Grava o personagem recém-criado: nome e classe escolhida. A classe entra também
+     * como [Status.classeEscolhida] para o motor saber que ela é um ponto de partida,
+     * e não um resultado dos atributos.
+     */
+    suspend fun definirPersonagem(nome: String, classe: Classe) {
+        val atual = status()
+        gravar(
+            atual.copy(
+                nome = nome.trim(),
+                classe = classe,
+                classeEscolhida = classe,
+                classeCandidata = null,
+                diasCandidata = 0,
+            ),
+        )
+    }
 
     /** Marca ou desmarca um hábito no dia, aplicando (ou devolvendo) a recompensa na hora. */
     suspend fun marcar(habito: Habito, data: LocalDate, concluido: Boolean) {
