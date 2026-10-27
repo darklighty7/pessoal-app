@@ -18,7 +18,7 @@ outro app.
 - `ui/componentes/MarcaForja.kt` — o F mais a palavra, para as telas de entrada
 - `ui/status` — tela de Status e gráfico em losango
 - `ui/navegacao` — `Raiz` (login, criação do personagem ou app) e a barra inferior
-- `ui/auth` — telas de login e de criação do personagem
+- `ui/auth` — login, nome do personagem e escolha da classe (três passos, nesta ordem)
 - `ui/biblia` — leitura, grifos e `BuscaLivro` (busca de passagem por nome do livro)
 - `ui/boasvindas` — a abertura que roda uma vez, logo depois de criar o personagem
 - `data/auth` e `data/nuvem` — Firebase Auth, perfil do personagem e contador de jogadores no Firestore

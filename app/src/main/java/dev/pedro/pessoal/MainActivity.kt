@@ -69,7 +69,8 @@ class MainActivity : ComponentActivity() {
                         autenticacao,
                         perfis,
                         contadores,
-                        repositorio::definirPersonagem,
+                        repositorio::definirNome,
+                        repositorio::definirClasse,
                     ),
                 )
                 // Se o app ficou aberto durante a virada da meia-noite, o dia troca aqui.

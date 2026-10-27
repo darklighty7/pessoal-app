@@ -2,6 +2,34 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.11.0] - 2026-10-27
+
+A entrada virou três passos, e a abertura entrou no meio deles.
+
+### Alterado
+- **Nova ordem: login → nome → abertura → classe → app.** Antes, nome e classe estavam na
+  mesma tela e a abertura vinha depois das duas. O problema era de sentido: a pessoa
+  escolhia um caminho antes de o sistema dizer qual é a missão. Agora ela dá o nome, ouve o
+  compromisso, e só então decide por onde começar — a escolha passa a ser resposta a algo.
+- **`NomeTela`** (nova) pede só o nome, centrada como a de login para as duas parecerem a
+  mesma sala. **`ClasseTela`** (saiu de `CriarPersonagemTela`) traz só as classes, com o
+  nome e o número do jogador no topo — quem a abertura acabou de anunciar.
+- **O contador de jogadores passou a rodar ao gravar o nome**, não ao criar o personagem
+  inteiro. É quando o jogador nasce, e é o que permite à abertura dizer nome e número.
+- `PerfilUsuario.classeInicial` nasce vazia em vez de `"APRENDIZ"`. Aprendiz é uma escolha
+  legítima, e com o padrão antigo não dava para distinguir de quem ainda não escolheu.
+  Entraram `temNome`, `temClasse` e `completo`, que é a conjunção das duas.
+- `PerfilRepositorio` e `Repositorio` ganharam um método por passo: `salvarNome`/`definirNome`
+  e `salvarClasse`/`definirClasse`, no lugar do antigo `definirPersonagem`.
+- `EstadoSessao` agora é `SemNome` → `BoasVindas` → `SemClasse` → `Pronto`.
+
+### Notas
+- A marca de abertura pendente vive só na memória, de propósito: se o app morrer no meio da
+  cutscene, a pessoa cai direto na escolha da classe em vez de ficar presa numa abertura
+  que não termina. Ela não volta a rodar, e isso é aceitável — o personagem já existe.
+- O bônus da classe continua só para quem está no estado inicial, agora conferido dentro
+  de `definirClasse`.
+
 ## [1.10.0] - 2026-10-27
 
 A classe escolhida na criação passa a render pontos de verdade, em vez de ser um caso
