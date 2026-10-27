@@ -20,8 +20,28 @@ class PreferenciasLeitura(contexto: Context) {
 
     fun salvarTamanhoFonte(valor: Float) = prefs.edit { putFloat(CHAVE_TAMANHO, valor) }
 
+    /**
+     * Onde a leitura parou da última vez, ou null na primeira abertura do app.
+     * O livro é o número canônico (1 = Gênesis).
+     */
+    fun lerUltimaPosicao(): Posicao? {
+        val livro = prefs.getInt(CHAVE_LIVRO, 0)
+        if (livro <= 0) return null
+        return Posicao(livro, prefs.getInt(CHAVE_CAPITULO, 1).coerceAtLeast(1))
+    }
+
+    fun salvarUltimaPosicao(livro: Int, capitulo: Int) = prefs.edit {
+        putInt(CHAVE_LIVRO, livro)
+        putInt(CHAVE_CAPITULO, capitulo)
+    }
+
+    /** Livro e capítulo onde a leitura parou. */
+    data class Posicao(val livro: Int, val capitulo: Int)
+
     private companion object {
         const val ARQUIVO = "leitura"
         const val CHAVE_TAMANHO = "tamanho_fonte"
+        const val CHAVE_LIVRO = "ultimo_livro"
+        const val CHAVE_CAPITULO = "ultimo_capitulo"
     }
 }

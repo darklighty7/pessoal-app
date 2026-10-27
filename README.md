@@ -11,6 +11,7 @@ App Android pessoal de melhoria de hábitos, estilo RPG. Kotlin + Jetpack Compos
 - `ui/status` — tela de Status e gráfico em losango
 - `ui/navegacao` — `Raiz` (login, criação do personagem ou app) e a barra inferior
 - `ui/auth` — telas de login e de criação do personagem
+- `ui/biblia` — leitura, grifos e `BuscaLivro` (busca de passagem por nome do livro)
 - `data/auth` e `data/nuvem` — Firebase Auth e perfil do personagem no Firestore
 
 ## Firebase

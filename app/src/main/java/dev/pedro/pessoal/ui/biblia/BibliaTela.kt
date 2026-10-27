@@ -1,5 +1,14 @@
 package dev.pedro.pessoal.ui.biblia
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.text.input.ImeAction
+import dev.pedro.pessoal.ui.theme.Fundo
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -92,7 +101,7 @@ import dev.pedro.pessoal.ui.theme.Trilho
 @Composable
 fun BibliaTela(
     estado: EstadoBiblia,
-    aoAbrir: (LivroEntity, Int) -> Unit,
+    aoAbrir: (LivroEntity, Int, Int?) -> Unit,
     aoAlternarCronometro: () -> Unit,
     aoAvancar: () -> Unit,
     aoVoltar: () -> Unit,
@@ -106,6 +115,7 @@ fun BibliaTela(
     aoDefinirTamanho: (Float) -> Unit = {},
     aoSalvarTamanho: () -> Unit = {},
     aoZoom: (Float) -> Unit = {},
+    aoAlvoAtingido: () -> Unit = {},
 ) {
     // Ao deixar a tela, fecha a leitura e entrega os minutos.
     DisposableEffect(Unit) { onDispose { aoSair() } }
@@ -147,6 +157,7 @@ fun BibliaTela(
             aoAbrirTamanho = { mostrandoTamanho = true },
             aoZoom = aoZoom,
             aoSalvarTamanho = aoSalvarTamanho,
+            aoAlvoAtingido = aoAlvoAtingido,
             modifier = modifier,
         )
     }
@@ -176,7 +187,7 @@ fun BibliaTela(
             ListaGrifos(
                 grifos = estado.todosGrifos,
                 aoEscolher = { grifo ->
-                    estado.livros.firstOrNull { it.numero == grifo.livro }?.let { aoAbrir(it, grifo.capitulo) }
+                    estado.livros.firstOrNull { it.numero == grifo.livro }?.let { aoAbrir(it, grifo.capitulo, null) }
                     mostrandoGrifos = false
                 },
             )
@@ -192,8 +203,8 @@ fun BibliaTela(
         ) {
             Indice(
                 livros = estado.livros,
-                aoEscolher = { livro, capitulo ->
-                    aoAbrir(livro, capitulo)
+                aoEscolher = { livro, capitulo, versiculo ->
+                    aoAbrir(livro, capitulo, versiculo)
                     mostrandoIndice = false
                 },
             )
@@ -216,6 +227,7 @@ private fun Leitor(
     aoAbrirTamanho: () -> Unit,
     aoZoom: (Float) -> Unit,
     aoSalvarTamanho: () -> Unit,
+    aoAlvoAtingido: () -> Unit,
     modifier: Modifier,
 ) {
     val minutos = estado.segundos / 60
@@ -228,6 +240,15 @@ private fun Leitor(
     // Esta tela recompõe a cada segundo (cronômetro): um modificador novo por recomposição
     // invalidaria o desenho da lista inteira a cada tique.
     val esmaecer = remember { Modifier.fadeBordas(topo = 0.05f, base = 0.08f) }
+
+    // A busca pode pedir um versículo ("Jo 3:16"): a lista rola até ele quando o capítulo abre.
+    val lista = rememberLazyListState()
+    LaunchedEffect(estado.versiculoAlvo, estado.versiculos) {
+        val alvo = estado.versiculoAlvo ?: return@LaunchedEffect
+        val indice = estado.versiculos.indexOfFirst { it.numero == alvo }
+        if (indice >= 0) lista.animateScrollToItem(indice)
+        aoAlvoAtingido()
+    }
 
     val tamanho = estado.tamanhoFonte
     val densidade = LocalDensity.current
@@ -306,6 +327,7 @@ private fun Leitor(
                 .padding(top = 12.dp)
                 .then(esmaecer)
                 .pinchParaZoom(zoomAtual, terminarAtual),
+            state = lista,
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -674,28 +696,66 @@ private fun ListaGrifos(grifos: List<GrifoListado>, aoEscolher: (GrifoListado) -
 }
 
 @Composable
-private fun Indice(livros: List<LivroEntity>, aoEscolher: (LivroEntity, Int) -> Unit) {
+private fun Indice(livros: List<LivroEntity>, aoEscolher: (LivroEntity, Int, Int?) -> Unit) {
     var escolhido by remember { mutableStateOf<LivroEntity?>(null) }
+    var busca by remember { mutableStateOf("") }
     val livro = escolhido
 
-    Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
+    // "1João 3:16" vira livro + capítulo + versículo; só o nome também serve.
+    val referencia = remember(busca) { BuscaLivro.interpretar(busca) }
+    val encontrados = remember(busca, livros) { BuscaLivro.filtrar(livros, busca) }
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .imePadding()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 24.dp),
+    ) {
+        if (livro == null) {
+            CampoBusca(busca, aoMudar = { busca = it })
+            Spacer(Modifier.height(14.dp))
+        }
+
         Text(
             if (livro == null) "ESCOLHA O LIVRO" else "CAPÍTULO DE ${livro.nome.uppercase()}",
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp),
             color = TextoSecundario,
-            modifier = Modifier.padding(horizontal = 4.dp).padding(bottom = 8.dp),
+            modifier = Modifier
+                .then(if (livro != null) Modifier.clickable(onClickLabel = "Voltar para os livros") { escolhido = null } else Modifier)
+                .padding(horizontal = 4.dp)
+                .padding(bottom = 8.dp),
         )
+
         if (livro == null) {
+            if (encontrados.isEmpty()) {
+                Text(
+                    "Nenhum livro com esse nome.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextoSecundario,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 16.dp),
+                )
+            }
             LazyColumn(Modifier.fillMaxWidth()) {
-                items(livros, key = { it.numero }) { item ->
-                    Column(Modifier.fillMaxWidth().clickable { escolhido = item }) {
+                items(encontrados, key = { it.numero }) { item ->
+                    // Quando a busca já trouxe o capítulo, tocar no livro abre direto nele.
+                    val capitulo = referencia.capitulo?.takeIf { it in 1..item.capitulos }
+                    Column(
+                        Modifier.fillMaxWidth().clickable {
+                            if (capitulo != null) {
+                                aoEscolher(item, capitulo, referencia.versiculo)
+                            } else {
+                                escolhido = item
+                            }
+                        },
+                    ) {
                         Row(
                             Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             Text(
-                                item.nome,
+                                if (capitulo == null) item.nome else "${item.nome} $capitulo",
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium,
                                 color = Texto,
@@ -713,7 +773,7 @@ private fun Indice(livros: List<LivroEntity>, aoEscolher: (LivroEntity, Int) -> 
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items((1..livro.capitulos).toList()) { numero ->
-                    Cartao(Modifier.clickable { aoEscolher(livro, numero) }, cantos = 14.dp, corBorda = Borda) {
+                    Cartao(Modifier.clickable { aoEscolher(livro, numero, null) }, cantos = 14.dp, corBorda = Borda) {
                         Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
                             Text("$numero", style = MaterialTheme.typography.bodyMedium, color = Texto)
                         }
@@ -722,6 +782,40 @@ private fun Indice(livros: List<LivroEntity>, aoEscolher: (LivroEntity, Int) -> 
             }
         }
     }
+}
+
+/** Campo de busca do índice: aceita "1João", "jo 3" ou "Jo 3:16". */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun CampoBusca(valor: String, aoMudar: (String) -> Unit) {
+    OutlinedTextField(
+        value = valor,
+        onValueChange = aoMudar,
+        singleLine = true,
+        placeholder = { Text("Buscar livro, ex.: 1João 3", style = MaterialTheme.typography.bodyMedium) },
+        leadingIcon = { Icon(Icones.Lupa, contentDescription = null, tint = TextoSecundario, modifier = Modifier.size(20.dp)) },
+        trailingIcon = {
+            if (valor.isNotEmpty()) {
+                Box(Modifier.clickable(onClickLabel = "Limpar busca") { aoMudar("") }.padding(8.dp)) {
+                    Icon(Icones.Fechar, contentDescription = "Limpar busca", tint = TextoSecundario, modifier = Modifier.size(18.dp))
+                }
+            }
+        },
+        shape = RoundedCornerShape(14.dp),
+        modifier = Modifier.fillMaxWidth(),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Texto,
+            unfocusedTextColor = Texto,
+            focusedContainerColor = Fundo,
+            unfocusedContainerColor = Fundo,
+            focusedBorderColor = Neon,
+            unfocusedBorderColor = Borda,
+            focusedPlaceholderColor = TextoSecundario,
+            unfocusedPlaceholderColor = TextoSecundario,
+            cursorColor = Neon,
+        ),
+    )
 }
 
 @Composable
@@ -757,7 +851,7 @@ private fun BibliaPreview() {
                 grifos = mapOf(2 to CorGrifo.AMARELO.ordinal),
                 selecionados = setOf(1),
             ),
-            aoAbrir = { _, _ -> },
+            aoAbrir = { _, _, _ -> },
             aoAlternarCronometro = {},
             aoAvancar = {},
             aoVoltar = {},

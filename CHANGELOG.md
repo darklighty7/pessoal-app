@@ -2,6 +2,28 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.6.0] - 2026-10-27
+
+Busca de passagem na Bíblia e retomada da leitura de onde parou.
+
+### Adicionado
+- **Busca no índice da Bíblia**: um campo no topo da folha filtra os livros enquanto você
+  digita. Aceita o jeito que a gente escreve de verdade — "1joao", "1 João", "1João 3",
+  "Jo 3:16", "SALMO 119" — sem depender de acento, de maiúscula ou de espaço depois do
+  número do livro.
+- Quando a busca já traz o capítulo ("1João 3"), tocar no livro abre direto nele, sem passar
+  pela grade de capítulos. Com versículo ("Jo 3:16"), a lista ainda rola até ele.
+- **Retoma de onde parou**: o livro e o capítulo abertos ficam guardados no aparelho, e a
+  Bíblia reabre naquele ponto em vez de Gênesis 1. Na primeira vez continua em Gênesis 1.
+- Ícone de lupa em `Icones`.
+- Testes da busca em `BuscaLivroTest`: normalização de acentos, leitura da referência e
+  ordem dos resultados.
+
+### Alterado
+- O cabeçalho "CAPÍTULO DE ..." agora volta para a lista de livros quando tocado. Antes, depois
+  de escolher um livro só dava para voltar fechando a folha.
+- A busca só procura nomes de livros, não palavras dentro dos versículos.
+
 ## [1.5.0] - 2026-10-27
 
 Login por e-mail e senha, e personagem com nome e classe. Primeira parte da virada do app
