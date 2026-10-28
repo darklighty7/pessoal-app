@@ -40,8 +40,9 @@ class ContadorRepositorio(
         /** Devolvido quando o contador não pôde ser lido. */
         const val SEM_NUMERO = 0
 
-        private const val COLECAO = "contadores"
-        private const val DOCUMENTO = "jogadores"
-        private const val CAMPO = "total"
+        // Visíveis no módulo: o PerfilRepositorio devolve o número ao apagar uma conta.
+        internal const val COLECAO = "contadores"
+        internal const val DOCUMENTO = "jogadores"
+        internal const val CAMPO = "total"
     }
 }
