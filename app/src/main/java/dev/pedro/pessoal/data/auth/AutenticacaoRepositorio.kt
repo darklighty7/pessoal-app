@@ -1,6 +1,8 @@
 package dev.pedro.pessoal.data.auth
 
 import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.FirebaseTooManyRequestsException
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
@@ -57,13 +59,23 @@ class AutenticacaoRepositorio(
     fun sair() = auth.signOut()
 
     /**
-     * O Firebase recusa apagar a conta quando o login é antigo, e a recusa só aparece
-     * depois da tentativa. Perguntar antes evita o pior cenário: apagar os dados e depois
-     * descobrir que a conta não sai.
+     * Confirma a senha de quem está logado (reautenticação). O Firebase só deixa apagar a
+     * conta com um login de poucos minutos atrás; confirmar a senha conta como login novo,
+     * sem a pessoa precisar sair e entrar. Devolve a mensagem do erro, ou nulo se deu certo.
      */
-    fun precisaEntrarDeNovo(): Boolean {
-        val entrou = auth.currentUser?.metadata?.lastSignInTimestamp ?: return true
-        return System.currentTimeMillis() - entrou > VALIDADE_DO_LOGIN_MS
+    suspend fun confirmarSenha(senha: String): String? = try {
+        val usuario = auth.currentUser ?: return "Ninguém está logado."
+        val email = usuario.email ?: return "Esta conta não tem e-mail para confirmar."
+        usuario.reauthenticate(EmailAuthProvider.getCredential(email, senha)).await()
+        null
+    } catch (e: FirebaseAuthInvalidCredentialsException) {
+        "Senha incorreta."
+    } catch (e: FirebaseTooManyRequestsException) {
+        "Muitas tentativas seguidas. Espere um pouco e tente de novo."
+    } catch (e: FirebaseNetworkException) {
+        "Sem conexão. Tente de novo quando houver internet."
+    } catch (e: Exception) {
+        "Não foi possível confirmar a senha agora. Tente de novo."
     }
 
     /** Apaga a conta do Firebase Auth. Devolve a mensagem do erro, ou nulo em caso de sucesso. */
@@ -108,6 +120,3 @@ class AutenticacaoRepositorio(
         ResultadoAuth.Erro("Não consegui entrar agora. Tente de novo em instantes.")
     }
 }
-
-/** Depois disso o Firebase passa a exigir um login novo para operações delicadas. */
-private const val VALIDADE_DO_LOGIN_MS = 5 * 60 * 1000L
