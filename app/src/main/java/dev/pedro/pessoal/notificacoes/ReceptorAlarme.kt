@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import dev.pedro.pessoal.domain.model.Habito
+import dev.pedro.pessoal.domain.model.textoParaDias
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -12,8 +13,17 @@ import java.time.LocalDateTime
  */
 class ReceptorAlarme : BroadcastReceiver() {
     override fun onReceive(contexto: Context, intencao: Intent) {
-        val alarme = Alarme.porId(intencao.getIntExtra(Acoes.EXTRA_ID, -1)) ?: return
+        val id = intencao.getIntExtra(Acoes.EXTRA_ID, -1)
         Notificacoes.criarCanais(contexto)
+
+        // Acima da base ficam os lembretes que a pessoa criou. Tudo o que eles precisam veio
+        // dentro da intenção, então nem a notificação nem o reagendamento abrem o banco.
+        if (id >= Agendador.BASE_PESSOAL) {
+            mostrarPessoal(contexto, id, intencao)
+            return
+        }
+
+        val alarme = Alarme.porId(id) ?: return
         val hoje = LocalDate.now()
 
         when (alarme) {
@@ -60,5 +70,25 @@ class ReceptorAlarme : BroadcastReceiver() {
 
         // Reagenda a partir de um minuto depois, para não pegar o próprio horário de novo.
         Agendador.agendar(contexto, alarme, LocalDateTime.now().plusMinutes(1))
+    }
+
+    private fun mostrarPessoal(contexto: Context, id: Int, intencao: Intent) {
+        val titulo = intencao.getStringExtra(Agendador.EXTRA_TITULO) ?: return
+        val texto = intencao.getStringExtra(Agendador.EXTRA_TEXTO).orEmpty()
+        Notificacoes.lembrete(contexto, id, titulo, texto, habitos = emptyList())
+
+        val dias = textoParaDias(intencao.getStringExtra(Agendador.EXTRA_DIAS).orEmpty())
+        val minuto = intencao.getIntExtra(Agendador.EXTRA_MINUTO, -1)
+        if (dias.isEmpty() || minuto < 0) return
+
+        Agendador.reagendarPessoal(
+            contexto = contexto,
+            id = id,
+            titulo = titulo,
+            texto = texto,
+            dias = dias,
+            minutoDoDia = minuto,
+            apartirDe = LocalDateTime.now().plusMinutes(1),
+        )
     }
 }

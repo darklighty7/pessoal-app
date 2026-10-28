@@ -9,7 +9,6 @@ import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -19,9 +18,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.runtime.State
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -79,42 +80,65 @@ fun SeloRank(rank: Rank, modifier: Modifier = Modifier, tamanho: Dp = 88.dp) {
     val m = materialDo(rank)
     val etapa = rank.ordinal // E=0 ... S=5
     val lendario = rank == Rank.S
+    val comBrilhos = etapa >= 4
 
     val anim = rememberInfiniteTransition(label = "selo")
-    val reflexo by anim.animateFloat(
+
+    // Guardados como State e lidos só lá dentro do desenho. Ler aqui com `by` faria este
+    // composable recompor a cada quadro, e cada recomposição jogaria fora o cache dos
+    // caminhos logo abaixo — que é justamente o que se quer evitar.
+    val reflexo = anim.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(if (lendario) 2400 else 3600, easing = LinearEasing)),
         label = "reflexo",
     )
-    // Só o S muda de cor; nos outros ranks os três pontos são a mesma cor
-    val corTopo by anim.animateColor(
-        initialValue = m.claro,
-        targetValue = m.claro,
-        animationSpec = infiniteRepeatable(
-            keyframes {
-                durationMillis = 4000
-                m.claro at 0
-                (if (lendario) RoxoLendario else m.claro) at 1333
-                (if (lendario) Neon else m.claro) at 2666
-                m.claro at 4000
-            },
-        ),
-        label = "corTopo",
-    )
-    val aura by anim.animateFloat(
-        initialValue = 0.2f,
-        targetValue = 0.5f,
-        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
-        label = "aura",
-    )
-    val brilho1 by anim.animateFloat(0f, 1f, infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "b1")
-    val brilho2 by anim.animateFloat(
-        0f, 1f, infiniteRepeatable(tween(1100), RepeatMode.Reverse, StartOffset(600)), label = "b2",
-    )
-    val brilho3 by anim.animateFloat(
-        0f, 1f, infiniteRepeatable(tween(800), RepeatMode.Reverse, StartOffset(1100)), label = "b3",
-    )
+
+    // Só o S muda de cor e tem aura, e só A e S piscam. Nos outros ranks essas animações
+    // nem são criadas: antes rodavam todas, sempre, e o resultado era idêntico.
+    val corTopo = if (lendario) {
+        anim.animateColor(
+            initialValue = m.claro,
+            targetValue = m.claro,
+            animationSpec = infiniteRepeatable(
+                keyframes {
+                    durationMillis = 4000
+                    m.claro at 0
+                    RoxoLendario at 1333
+                    Neon at 2666
+                    m.claro at 4000
+                },
+            ),
+            label = "corTopo",
+        )
+    } else {
+        null
+    }
+
+    val aura = if (lendario) {
+        anim.animateFloat(
+            initialValue = 0.2f,
+            targetValue = 0.5f,
+            animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
+            label = "aura",
+        )
+    } else {
+        null
+    }
+
+    val brilhos: List<State<Float>> = if (comBrilhos) {
+        listOf(
+            anim.animateFloat(0f, 1f, infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "b1"),
+            anim.animateFloat(
+                0f, 1f, infiniteRepeatable(tween(1100), RepeatMode.Reverse, StartOffset(600)), label = "b2",
+            ),
+            anim.animateFloat(
+                0f, 1f, infiniteRepeatable(tween(800), RepeatMode.Reverse, StartOffset(1100)), label = "b3",
+            ),
+        )
+    } else {
+        emptyList()
+    }
 
     Box(
         modifier
@@ -122,87 +146,130 @@ fun SeloRank(rank: Rank, modifier: Modifier = Modifier, tamanho: Dp = 88.dp) {
             .clearAndSetSemantics { contentDescription = "Rank ${rank.name}, ${m.nome}" },
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            val u = size.width / 120f
-            fun p(x: Float, y: Float) = Offset(x * u, y * u)
-            val material = Brush.verticalGradient(listOf(corTopo, m.escuro), startY = 26 * u, endY = 97 * u)
-            val escudo = caminhoEscudo(u)
+        Spacer(
+            Modifier.fillMaxSize().drawWithCache {
+                // Este bloco roda uma vez por tamanho, não por quadro. Tudo o que depende
+                // só de `u` mora aqui: antes, o escudo, a coroa, as penas e as faíscas
+                // eram alocados sessenta vezes por segundo para sair sempre iguais.
+                val u = size.width / 120f
+                fun p(x: Float, y: Float) = Offset(x * u, y * u)
 
-            if (lendario) {
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        listOf(Color(0xFF6D3CFF).copy(alpha = aura), Color.Transparent),
-                        center = p(60f, 62f),
-                        radius = 50 * u,
-                    ),
-                    radius = 50 * u,
-                    center = p(60f, 62f),
-                )
-            }
+                val escudo = caminhoEscudo(u)
+                val interno = caminhoEscudoInterno(u)
+                val centro = p(60f, 62f)
+                val rebiteEsquerdo = p(31f, 62f)
+                val rebiteDireito = p(89f, 62f)
 
-            // Asas: 1 par no C, 2 no B, 3 no A e S
-            if (etapa >= 2) {
-                val penas = when (etapa) { 2 -> 1; 3 -> 2; else -> 3 }
-                val desenharAsa: DrawScope.() -> Unit = {
-                    for (k in 0 until penas) {
+                val enfeite: Path? = when {
+                    lendario -> poligono(
+                        u, 44f to 26f, 48f to 12f, 54f to 22f, 60f to 8f, 66f to 22f, 72f to 12f, 76f to 26f,
+                    )
+                    etapa >= 3 -> poligono(
+                        u, 60f to 7f, 63f to 15f, 71f to 15f, 64.5f to 20f, 67f to 28f,
+                        60f to 23f, 53f to 28f, 55.5f to 20f, 49f to 15f, 57f to 15f,
+                    )
+                    else -> null
+                }
+
+                // Cada pena com a espessura do seu traço, já pronta.
+                val penas: List<Pair<Path, Float>> = if (etapa >= 2) {
+                    val quantas = when (etapa) { 2 -> 1; 3 -> 2; else -> 3 }
+                    (0 until quantas).map { k ->
                         val y = 44f + k * 10
-                        val pena = Path().apply {
+                        val caminho = Path().apply {
                             moveTo(34 * u, y * u)
                             quadraticTo((22f - k * 2) * u, (y - 4) * u, (12f + k * 4) * u, (y - 12 + k * 3) * u)
                         }
-                        drawPath(pena, material, style = Stroke((5f - k) * u, cap = StrokeCap.Round))
+                        caminho to (5f - k) * u
+                    }
+                } else {
+                    emptyList()
+                }
+
+                val faiscas = if (comBrilhos) {
+                    listOf(faisca(u, 24f, 30f), faisca(u, 96f, 40f), faisca(u, 88f, 92f))
+                } else {
+                    emptyList()
+                }
+
+                // Fora do S a cor do topo não muda, então o pincel também não precisa mudar.
+                val materialFixo = Brush.verticalGradient(
+                    listOf(m.claro, m.escuro),
+                    startY = 26 * u,
+                    endY = 97 * u,
+                )
+
+                onDrawBehind {
+                    val material = if (corTopo != null) {
+                        Brush.verticalGradient(listOf(corTopo.value, m.escuro), startY = 26 * u, endY = 97 * u)
+                    } else {
+                        materialFixo
+                    }
+
+                    if (aura != null) {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                listOf(Color(0xFF6D3CFF).copy(alpha = aura.value), Color.Transparent),
+                                center = centro,
+                                radius = 50 * u,
+                            ),
+                            radius = 50 * u,
+                            center = centro,
+                        )
+                    }
+
+                    // Asas: 1 par no C, 2 no B, 3 no A e S
+                    if (penas.isNotEmpty()) {
+                        val desenharAsa: DrawScope.() -> Unit = {
+                            penas.forEach { (caminho, espessura) ->
+                                drawPath(caminho, material, style = Stroke(espessura, cap = StrokeCap.Round))
+                            }
+                        }
+                        desenharAsa()
+                        scale(scaleX = -1f, scaleY = 1f, pivot = center) { desenharAsa() }
+                    }
+
+                    // Rebites nas laterais (D em diante)
+                    if (etapa >= 1) {
+                        drawCircle(material, radius = 3 * u, center = rebiteEsquerdo)
+                        drawCircle(material, radius = 3 * u, center = rebiteDireito)
+                    }
+
+                    // Coroa no S, estrela no B e no A
+                    if (enfeite != null) {
+                        drawPath(enfeite, material)
+                        if (lendario) drawPath(enfeite, m.borda, style = Stroke(1 * u))
+                    }
+
+                    // Escudo
+                    drawPath(escudo, material)
+                    drawPath(escudo, m.borda, style = Stroke(2 * u))
+                    drawPath(interno, m.borda.copy(alpha = 0.55f), style = Stroke(1 * u))
+
+                    // Reflexo de luz atravessando o escudo. É o único pincel que precisa
+                    // nascer a cada quadro: ele depende de onde a luz está.
+                    clipPath(escudo) {
+                        val x = (-20f + reflexo.value * 130f) * u
+                        rotate(20f, pivot = Offset(x + 7 * u, size.height / 2)) {
+                            drawRect(
+                                brush = Brush.horizontalGradient(
+                                    listOf(Color.Transparent, Color.White.copy(alpha = 0.7f), Color.Transparent),
+                                    startX = x,
+                                    endX = x + 14 * u,
+                                ),
+                                topLeft = Offset(x, -20 * u),
+                                size = Size(14 * u, size.height + 40 * u),
+                            )
+                        }
+                    }
+
+                    // Brilhos piscando (A e S)
+                    faiscas.forEachIndexed { i, caminho ->
+                        drawPath(caminho, Color.White.copy(alpha = brilhos[i].value))
                     }
                 }
-                desenharAsa()
-                scale(scaleX = -1f, scaleY = 1f, pivot = center) { desenharAsa() }
-            }
-
-            // Rebites nas laterais (D em diante)
-            if (etapa >= 1) {
-                drawCircle(material, radius = 3 * u, center = p(31f, 62f))
-                drawCircle(material, radius = 3 * u, center = p(89f, 62f))
-            }
-
-            // Estrela no topo (B e A) ou coroa (S)
-            if (lendario) {
-                val coroa = poligono(u, 44f to 26f, 48f to 12f, 54f to 22f, 60f to 8f, 66f to 22f, 72f to 12f, 76f to 26f)
-                drawPath(coroa, material)
-                drawPath(coroa, m.borda, style = Stroke(1 * u))
-            } else if (etapa >= 3) {
-                val estrela = poligono(
-                    u, 60f to 7f, 63f to 15f, 71f to 15f, 64.5f to 20f, 67f to 28f,
-                    60f to 23f, 53f to 28f, 55.5f to 20f, 49f to 15f, 57f to 15f,
-                )
-                drawPath(estrela, material)
-            }
-
-            // Escudo
-            drawPath(escudo, material)
-            drawPath(escudo, m.borda, style = Stroke(2 * u))
-            drawPath(caminhoEscudoInterno(u), m.borda.copy(alpha = 0.55f), style = Stroke(1 * u))
-
-            // Reflexo de luz atravessando o escudo
-            clipPath(escudo) {
-                val x = (-20f + reflexo * 130f) * u
-                rotate(20f, pivot = Offset(x + 7 * u, size.height / 2)) {
-                    drawRect(
-                        brush = Brush.horizontalGradient(
-                            listOf(Color.Transparent, Color.White.copy(alpha = 0.7f), Color.Transparent),
-                            startX = x,
-                            endX = x + 14 * u,
-                        ),
-                        topLeft = Offset(x, -20 * u),
-                        size = Size(14 * u, size.height + 40 * u),
-                    )
-                }
-            }
-
-            // Brilhos piscando (A e S)
-            if (etapa >= 4) {
-                listOf(Triple(24f, 30f, brilho1), Triple(96f, 40f, brilho2), Triple(88f, 92f, brilho3))
-                    .forEach { (x, y, alfa) -> drawPath(faisca(u, x, y), Color.White.copy(alpha = alfa)) }
-            }
-        }
+            },
+        )
         Text(
             rank.name,
             color = m.letra,

@@ -2,6 +2,192 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.13.2] - 2026-10-27
+
+### Corrigido
+- `ReceptorAcao` montava o `Repositorio` com dois argumentos; ele passou a exigir três na
+  v1.12.0, quando ganhou o `itensDao`. É o receptor que marca o hábito pelo botão da
+  notificação, sem abrir o app.
+
+### Adicionado
+- `ferramentas/checar_chamadas.py`: confere, sem compilador, se toda chamada bate com a
+  assinatura da função ou do construtor. Não substitui a build — pega só a família de erro
+  que aparece quando uma assinatura muda e uma chamada fica para trás, que foi exatamente
+  o que apareceu nestas três rodadas. Rodado contra o projeto inteiro: 259 funções e 62
+  classes, nada fora do lugar.
+
+## [1.13.1] - 2026-10-27
+
+Dois erros de compilação que escaparam por nunca ter passado pelo compilador: a branch
+acumulou seis commits antes da primeira build.
+
+### Corrigido
+- `Repositorio.registrarLeitura` tinha sumido do arquivo na v1.12.0, numa substituição de
+  texto que comeu mais linhas do que devia. O cronômetro de leitura da Bíblia chamava uma
+  função que não existia mais. Restaurada igual ao original.
+- Faltava o import de `height` em `LembretesTela`.
+
+## [1.13.0] - 2026-10-27
+
+O botão de configurações na tela de Status deixou de ser enfeite. Duas seções com donos
+diferentes: a conta é de quem está logado, o sistema é do dono do app.
+
+### Adicionado
+- **Sua conta**, para qualquer pessoa: trocar o nome do personagem, ver o e-mail e o número
+  de jogador, conferir se as notificações e os alarmes exatos estão liberados (com atalho
+  para a tela certa do sistema), sair da conta e apagar a conta.
+- **Sistema**, só para o administrador: ligar e desligar cada hábito fixo, ver quantas
+  contas existem, e zerar o progresso.
+- Ligar e desligar hábito fixo é novo de verdade: antes os cinco estavam presos no código e
+  não havia como tirar nenhum. O desligado some das Missões do dia e do fechamento, e o
+  histórico que já existe não é apagado. Guardado em `status.habitosDesligados` (Room 5).
+- `firestore.rules`: o dono passa a poder apagar o próprio documento. Antes era
+  `allow delete: if false`, e o botão de apagar deixaria o perfil órfão na nuvem.
+
+### Sobre apagar a conta
+- A ordem não é a óbvia, e vale explicar. O Firebase exige login recente para apagar a
+  conta e só avisa isso **depois** da tentativa, então o app pergunta antes: se o login for
+  velho, ele pede para sair e entrar de novo, e nada é tocado.
+- Passando nessa checagem, os dados saem antes do login — as regras só deixam o dono apagar
+  o próprio perfil, então sem usuário logado o documento ficaria órfão para sempre, sem
+  ninguém com direito de removê-lo.
+- Se a rede cair entre os dois passos, os dados já foram e a conta continua de pé. Entrar de
+  novo recria um perfil vazio e permite repetir. É o pior caso, e é recuperável.
+
+### Notas
+- As duas permissões são de sistema: o app não consegue conceder nenhuma delas sozinho. O
+  máximo que a tela faz é dizer como está e abrir a tela certa do Android.
+- Zerar o progresso mantém nome, classe e lembretes, e devolve os atributos ao bônus da
+  classe escolhida. É recomeçar o jogo, não trocar de jogador.
+- `buildConfig = true` no Gradle, para a tela mostrar a versão.
+
+## [1.12.3] - 2026-10-27
+
+Dívida da auditoria da v1.4.1, que tinha sido encontrada e nunca corrigida — o arquivo
+seguia com um commit só, o inicial.
+
+### Desempenho
+- **`SeloRank` parou de refazer o desenho a cada quadro.** O escudo, a moldura interna, a
+  coroa, a estrela, as penas e as faíscas são os mesmos sessenta vezes por segundo, e eram
+  alocados de novo em cada um. Passaram para o bloco de `drawWithCache`, que roda uma vez
+  por tamanho.
+- **O detalhe que faz isso funcionar**: os valores animados deixaram de ser lidos com `by`
+  na composição e viraram `State` lidos dentro do desenho. Lidos de fora, o composable
+  recomporia a cada quadro e descartaria o cache junto — o `drawWithCache` não teria
+  servido para nada.
+- **Só as animações que o rank usa são criadas.** A cor do topo e a aura existem apenas no
+  S; os três brilhos, apenas no A e no S. Antes as seis rodavam em todos os ranks, com
+  resultado idêntico nos que não as desenham.
+- O pincel do material também é fixo fora do S, onde a cor não muda. De todos os pincéis,
+  só o do reflexo nasce a cada quadro, porque depende de onde a luz está.
+- Nada mudou visualmente.
+
+## [1.12.2] - 2026-10-27
+
+Duas coisas que eu mesmo tinha deixado caras nas duas versões anteriores.
+
+### Corrigido
+- **Consulta repetida ao fechar os dias.** `fecharDia` buscava os lembretes do usuário a
+  cada dia fechado. Depois de uma ausência longa o laço roda até 60 vezes, e seriam 60
+  consultas idênticas — a lista é a mesma em todas elas. Agora busca uma vez só, antes do laço.
+- **Corrotina recriada a cada tecla** no formulário de lembrete. A sugestão de atributo
+  estava num `LaunchedEffect` com o título por chave, então cada letra digitada cancelava e
+  recriava uma corrotina para calcular uma função pura. Virou `remember(titulo)`, que
+  devolve o mesmo resultado sem corrotina nenhuma, e o atributo em uso passou a ser
+  derivado em vez de guardado — um estado a menos para sair de sincronia.
+
+## [1.12.1] - 2026-10-27
+
+### Adicionado
+- **O título sugere o atributo.** Escrever "Correr" move o seletor para Força; "Ler a
+  Bíblia", para Espírito; "Estudar inglês", para Inteligência. `SugestaoAtributo` compara
+  começos de palavra, então "estud" cobre estudar, estudo e estudando sem uma entrada para
+  cada conjugação, e ignora acento e caixa.
+- Quando dois começos batem, vence o mais longo, que é o mais específico: em "Ler a Bíblia",
+  "bibli" ganha de "ler". Sem reconhecer nada, a sugestão não devolve nada — um palpite
+  fraco seria pior que silêncio, porque ela move a escolha da pessoa.
+- A linha abaixo dos atributos diz "sugerido pelo título" enquanto a sugestão estiver
+  valendo. É o que separa sugerir de decidir por alguém.
+- Tocar num atributo trava a escolha: dali em diante o título não mexe mais nela. Editar um
+  lembrete que já existe começa travado — quem escolheu Espírito para "Ler a Bíblia" não
+  quer ver isso mudar ao corrigir uma vírgula.
+- `SugestaoAtributoTest` cobre o óbvio de cada atributo, as sobreposições e o silêncio.
+
+## [1.12.0] - 2026-10-27
+
+Lembretes e exercícios criados pela própria pessoa, e a separação entre o dono do app e
+quem cria uma conta.
+
+### Adicionado
+- **Lembretes próprios**: título, descrição, horário e dias. O aviso sai 30 minutos antes,
+  a mesma lógica do karatê — o lembrete existe para dar tempo de se preparar, não para
+  avisar quando já é tarde.
+- Cada lembrete escolhe **qual atributo treina**, e cumpri-lo rende XP mais +0,10 nele. Sem
+  isso, criar "Estudar inglês" daria Disciplina, e o app inteiro existe para os atributos
+  refletirem o que a pessoa faz de verdade.
+- **Exercícios próprios**: nome, séries, repetições ou segundos, e dias. Aparecem na aba de
+  Treinos, abaixo do treino fixo quando há um, e sozinhos quando não há.
+- `ui/itens` com os dois formulários e o seletor de dias da semana.
+- Room na versão 4, com as tabelas `lembrete` e `exercicio` — ambas já com `usuarioId`.
+
+### Alterado
+- **`Habito` ganhou `doDono`.** Só a leitura da Bíblia vale para todos; oração, karatê,
+  treino e mobilidade são a agenda do Pedro. Quem cria uma conta monta a própria.
+- `Habito.doDia` agora pede o `admin`, que desceu para o `Status` local: o fechamento do dia
+  precisa dele e não fala com a nuvem.
+- **Os lembretes criados contam no fechamento do dia** igual aos fixos, com sequência e
+  falhas seguidas. Sem isso, quem monta a própria rotina teria um dia perfeito só com a
+  Bíblia, e tudo o que escolheu fazer não valeria nada.
+- `fecharDiasPendentes` não faz mais nada enquanto não souber de quem é o dia. Fechar antes
+  marcaria o dia como resolvido sem contar os lembretes da pessoa, e isso não se desfaz.
+- `marcar` e a marcação dos criados passaram a dividir o mesmo caminho interno: a tabela de
+  registros guarda o hábito por nome, então basta a chave ser diferente.
+
+### Notas
+- O alarme dos lembretes criados usa id a partir de 1000, bem acima dos cinco fixos, e leva
+  título, texto, dias e horário dentro da própria intenção — assim o receptor mostra o aviso
+  e marca o próximo sem abrir o banco, que é trabalho pesado demais para um BroadcastReceiver.
+- Os exercícios criados não contam séries nem liberam o botão de concluir: isso pertence ao
+  treino fixo. Eles são o conteúdo do treino, não a pontuação. Quem quiser que treinar valha
+  pontos cria um lembrete de Força, que é onde a conta acontece.
+- As tabelas antigas (status, registro, dia fechado, progresso) continuam sem dono. Enquanto
+  houver uma conta por aparelho não aparece; duas contas no mesmo celular dividiriam o
+  progresso. É a próxima migração.
+
+## [1.11.3] - 2026-10-27
+
+### Corrigido
+- **A variante `otimizado` não abria.** Ela minifica com R8, e o projeto não tinha nenhum
+  arquivo de regras: o `proguardFiles` listava só o padrão do Android. O Firestore monta o
+  perfil por reflexão — `toObject(PerfilUsuario::class.java)` lê os nomes dos campos e chama
+  o construtor sem argumentos —, então o R8 renomeava tudo e a leitura quebrava no aparelho.
+- A variante nasceu na v1.4.1, antes de o Firebase existir. Funcionava; parou de funcionar
+  quando o login entrou na v1.5.0, e ninguém rodou ela desde então.
+- Entrou `app/proguard-rules.pro`, guardando o pacote `domain.model` inteiro: o perfil, por
+  causa da reflexão, e as enumerações, que são gravadas pelo nome e lidas com `valueOf` tanto
+  no Room quanto no Firestore.
+
+## [1.11.2] - 2026-10-27
+
+### Corrigido
+- O build `otimizado` parava no `lintVitalOtimizado` com
+  `InvalidFragmentVersionForActivityResult`: o `firebase-auth` arrasta uma versão antiga do
+  `androidx.fragment`, e `registerForActivityResult` exige 1.3.0 ou mais novo. O erro só
+  aparecia em release, porque o lint fatal não roda no debug.
+- A correção é uma restrição de versão, não uma dependência nova: o app não usa fragment
+  nenhum — é uma Activity só, tudo em Compose —, então o piso sobe para quem puxar a
+  biblioteca sem ela entrar no APK por conta própria.
+
+## [1.11.1] - 2026-10-27
+
+Primeira compilação do projeto desde a v1.5.0. Um erro só apareceu.
+
+### Corrigido
+- `SessaoViewModel`: o `catch` do fluxo de perfil ainda emitia `semPersonagem`, nome que
+  deixou de existir quando a entrada virou três passos na 1.11.0. Passou a emitir `semNome`.
+  O renomear anterior pegou as outras ocorrências e deixou esta porque ela está dentro de
+  uma lambda, longe do bloco que mudou.
+
 ## [1.11.0] - 2026-10-27
 
 A entrada virou três passos, e a abertura entrou no meio deles.

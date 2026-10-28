@@ -25,6 +25,16 @@ data class Status(
      */
     val classeEscolhida: Classe? = null,
     val diasCandidata: Int = 0,
+    /**
+     * Cópia local de `PerfilUsuario.admin`. Mora aqui porque o motor e o fechamento do dia
+     * precisam saber quais hábitos fixos valem, e nenhum dos dois fala com a nuvem.
+     */
+    val admin: Boolean = false,
+    /**
+     * Hábitos fixos que o dono desligou nas configurações. Só o ADM tem o que desligar —
+     * para os demais a lista é vazia, porque o único fixo deles é a Bíblia.
+     */
+    val habitosDesligados: Set<Habito> = emptySet(),
 ) {
     val rank: Rank get() = Rank.doNivel(nivel)
     val xpNecessario: Int get() = Regras.xpParaProximoNivel(nivel)

@@ -46,7 +46,7 @@ import dev.pedro.pessoal.ui.theme.TextoSecundario
 import dev.pedro.pessoal.ui.theme.Trilho
 
 @Composable
-fun StatusTela(status: Status, modifier: Modifier = Modifier) {
+fun StatusTela(status: Status, aoAbrirConfiguracoes: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxSize()
@@ -54,7 +54,7 @@ fun StatusTela(status: Status, modifier: Modifier = Modifier) {
             .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Cabecalho()
+        Cabecalho(aoAbrirConfiguracoes)
         CartaoPerfil(status)
         BarraExperiencia(status)
         GradeAtributos(status)
@@ -66,11 +66,11 @@ fun StatusTela(status: Status, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Cabecalho() {
+private fun Cabecalho(aoAbrirConfiguracoes: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text("Status", style = MaterialTheme.typography.headlineMedium, color = Texto)
         Spacer(Modifier.weight(1f))
-        BotaoIcone(Icones.Ajustes, "Configurações", aoTocar = { /* Configurações: próximas etapas */ })
+        BotaoIcone(Icones.Ajustes, "Configurações", aoTocar = aoAbrirConfiguracoes)
     }
 }
 
@@ -198,11 +198,11 @@ private fun ProgressoClasse(status: Status) {
 @Preview(name = "Início", showBackground = true, backgroundColor = 0xFF0B0E14, widthDp = 390, heightDp = 844)
 @Composable
 private fun StatusInicioPreview() {
-    PessoalTema { StatusTela(Status()) }
+    PessoalTema { StatusTela(Status(), aoAbrirConfiguracoes = {}) }
 }
 
 @Preview(name = "Após 4 dias (simulado)", showBackground = true, backgroundColor = 0xFF0B0E14, widthDp = 390, heightDp = 844)
 @Composable
 private fun StatusSimuladoPreview() {
-    PessoalTema { StatusTela(StatusExemplo.gerar()) }
+    PessoalTema { StatusTela(StatusExemplo.gerar(), aoAbrirConfiguracoes = {}) }
 }

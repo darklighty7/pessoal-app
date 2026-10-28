@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +20,7 @@ import dev.pedro.pessoal.ui.auth.NomeTela
 import dev.pedro.pessoal.ui.auth.SessaoViewModel
 import dev.pedro.pessoal.ui.biblia.BibliaViewModel
 import dev.pedro.pessoal.ui.boasvindas.BoasVindasTela
+import dev.pedro.pessoal.ui.config.ConfiguracoesViewModel
 import dev.pedro.pessoal.ui.theme.Fundo
 import dev.pedro.pessoal.ui.theme.Neon
 
@@ -32,6 +34,7 @@ fun Raiz(
     sessao: SessaoViewModel,
     appViewModel: AppViewModel,
     bibliaViewModel: BibliaViewModel,
+    configViewModel: ConfiguracoesViewModel,
 ) {
     val estado by sessao.estado.collectAsStateWithLifecycle()
 
@@ -71,7 +74,14 @@ fun Raiz(
             aoSair = sessao::sair,
         )
 
-        is EstadoSessao.Pronto -> AppNavegacao(appViewModel, bibliaViewModel)
+        is EstadoSessao.Pronto -> {
+            // Só aqui o banco local descobre de quem ele é. Antes disso os lembretes criados
+            // não aparecem e os dias não fecham — nenhum dos dois sabe de quem é o dia.
+            LaunchedEffect(atual.perfil.uid, atual.perfil.admin) {
+                appViewModel.entrarComo(atual.perfil.uid, atual.perfil.admin)
+            }
+            AppNavegacao(appViewModel, bibliaViewModel, configViewModel, atual.perfil)
+        }
     }
 }
 

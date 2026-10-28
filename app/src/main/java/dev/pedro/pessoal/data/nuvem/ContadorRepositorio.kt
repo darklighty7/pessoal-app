@@ -32,6 +32,10 @@ class ContadorRepositorio(
         }.await()
     }
 
+    /** Quantas contas existem. Zero quando o contador ainda não foi criado ou não respondeu. */
+    suspend fun total(): Int =
+        db.collection(COLECAO).document(DOCUMENTO).get().await().getLong(CAMPO)?.toInt() ?: 0
+
     companion object {
         /** Devolvido quando o contador não pôde ser lido. */
         const val SEM_NUMERO = 0

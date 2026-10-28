@@ -15,4 +15,7 @@ interface StatusDao {
 
     @Upsert
     suspend fun gravar(status: StatusEntity)
+
+    @Query("DELETE FROM status")
+    suspend fun limpar()
 }

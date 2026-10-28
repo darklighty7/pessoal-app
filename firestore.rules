@@ -19,7 +19,9 @@ service cloud.firestore {
                     && (!('admin' in request.resource.data)
                         || request.resource.data.admin == resource.data.admin);
 
-      allow delete: if false;
+      // Apagar a própria conta é um direito, não um favor: sem isto, o botão de
+      // apagar nas configurações deixaria o perfil órfão na nuvem.
+      allow delete: if request.auth != null && request.auth.uid == uid;
 
       // Lembretes e exercícios criados pelo usuário (próxima etapa).
       match /{colecao}/{documento} {

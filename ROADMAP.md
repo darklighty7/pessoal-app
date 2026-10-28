@@ -4,6 +4,7 @@ Melhorias futuras para o app Forja, sem compromisso de prazo.
 
 ## Concluído
 
+- v1.12.3: `SeloRank` com os caminhos em cache e só as animações que cada rank usa.
 - v1.9.0: nome final (Forja), ícone, letreiro, brasa e splash.
 - v1.4.2: ícones das notificações (pequeno próprio e grande com fundo preto).
 - v1.4.1: ajustes de desempenho (transição entre abas, esmaecimento da lista) e variante de build `otimizado`.
@@ -14,7 +15,6 @@ Melhorias futuras para o app Forja, sem compromisso de prazo.
 ## Pendências conhecidas
 
 - Desempenho: a auditoria da v1.4.1 não achou trabalho pesado na thread principal. O maior fator provável é rodar o APK de debug; medir de novo com a variante `otimizado`. Ficaram de fora, por impacto baixo ou sem medição:
-  - `SeloRank.kt` refaz caminhos e gradientes a cada frame (hoistar os `Path` com `drawWithCache`; as seis animações infinitas rodam mesmo nos ranks que usam só duas).
   - O cronômetro da leitura emite um `EstadoBiblia` novo a cada segundo (tirar `segundos` do estado e coletar em um painel próprio).
   - `MainActivity.onCreate` faz cerca de 17 chamadas de Binder (canais e 5 alarmes) antes do primeiro frame; mover para fora da thread principal.
   - Estado inicial "falso" (nível 1, tudo pendente) até o banco responder na abertura do app.

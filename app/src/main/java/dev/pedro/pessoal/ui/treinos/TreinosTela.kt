@@ -39,9 +39,19 @@ import dev.pedro.pessoal.domain.model.Treino
 import dev.pedro.pessoal.ui.componentes.BarraNeon
 import dev.pedro.pessoal.ui.componentes.Cartao
 import dev.pedro.pessoal.ui.componentes.Icones
-import dev.pedro.pessoal.ui.componentes.TelaEmConstrucao
 import dev.pedro.pessoal.ui.componentes.fadeInferior
 import dev.pedro.pessoal.ui.theme.BordaForte
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import dev.pedro.pessoal.domain.model.ExercicioPessoal
+import dev.pedro.pessoal.ui.componentes.BotaoIcone
+import dev.pedro.pessoal.ui.itens.FormularioExercicio
+import dev.pedro.pessoal.ui.itens.resumoDeDias
+import dev.pedro.pessoal.ui.theme.Borda
+import java.time.DayOfWeek
+import java.time.LocalDate
 import dev.pedro.pessoal.ui.theme.ChakraPetch
 import dev.pedro.pessoal.ui.theme.SobreGanho
 import dev.pedro.pessoal.ui.theme.SobreNeon
@@ -60,16 +70,51 @@ fun TreinosTela(
     treino: Treino?,
     progresso: Map<String, ProgressoExercicio>,
     concluido: Boolean,
+    pessoais: List<ExercicioPessoal>,
     aoConcluir: () -> Unit,
+    aoSalvarExercicio: (ExercicioPessoal) -> Unit,
+    aoApagarExercicio: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (treino == null) {
-        TelaEmConstrucao(
-            "Treinos",
-            Icones.Halter,
-            "Hoje é dia de descanso. O próximo treino aparece aqui no dia certo.",
-            modifier,
+    // Nulo = formulário fechado. Um exercício de id zero é novo; com id, é edição.
+    var emEdicao by remember { mutableStateOf<ExercicioPessoal?>(null) }
+    val abrirNovo = {
+        emEdicao = ExercicioPessoal(
+            id = 0L,
+            nome = "",
+            series = 3,
+            repeticoes = 12,
+            porTempo = false,
+            dias = setOf(LocalDate.now().dayOfWeek),
         )
+    }
+
+    emEdicao?.let { atual ->
+        FormularioExercicio(
+            original = atual.takeIf { it.id > 0 },
+            aoSalvar = aoSalvarExercicio,
+            aoApagar = aoApagarExercicio,
+            aoFechar = { emEdicao = null },
+        )
+    }
+
+    if (treino == null) {
+        // Sem treino fixo hoje: ou é descanso, ou a pessoa montou o próprio.
+        Column(modifier.fillMaxSize().padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp)) {
+            Text("Treinos", style = MaterialTheme.typography.headlineMedium, color = Texto)
+            Text(
+                if (pessoais.isEmpty()) "Hoje é dia de descanso." else "Os seus exercícios de hoje.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextoSecundario,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            LazyColumn(
+                Modifier.weight(1f).padding(top = 20.dp).fadeInferior(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                meusExercicios(pessoais, abrirNovo) { emEdicao = it }
+            }
+        }
         return
     }
 
@@ -116,6 +161,8 @@ fun TreinosTela(
                     },
                 )
             }
+
+            meusExercicios(pessoais, abrirNovo) { emEdicao = it }
         }
 
         Spacer(Modifier.height(12.dp))
@@ -221,7 +268,90 @@ private fun TreinosPreview() {
             treino = Treino.A,
             progresso = mapOf("Flexão" to ProgressoExercicio(nivel = 1, treinosCompletos = 2)),
             concluido = false,
+            pessoais = listOf(
+                ExercicioPessoal(
+                    id = 1,
+                    nome = "Prancha lateral",
+                    series = 3,
+                    repeticoes = 40,
+                    porTempo = true,
+                    dias = setOf(DayOfWeek.MONDAY, DayOfWeek.FRIDAY),
+                ),
+            ),
             aoConcluir = {},
+            aoSalvarExercicio = {},
+            aoApagarExercicio = {},
         )
     }
+}
+
+/**
+ * A parte da lista que é da pessoa: o que ela criou para hoje, mais o botão de criar.
+ *
+ * Os exercícios criados não entram na contagem de séries nem liberam o botão de concluir —
+ * isso pertence ao treino fixo. Aqui eles são o conteúdo do treino, não a pontuação: quem
+ * quiser que treinar valha pontos cria um lembrete de Força, que é onde a conta acontece.
+ */
+private fun LazyListScope.meusExercicios(
+    pessoais: List<ExercicioPessoal>,
+    aoCriar: () -> Unit,
+    aoEditar: (ExercicioPessoal) -> Unit,
+) {
+    if (pessoais.isNotEmpty()) {
+        item(key = "titulo-meus") {
+            Text(
+                "MEUS EXERCÍCIOS",
+                style = MaterialTheme.typography.labelMedium,
+                color = TextoSecundario,
+                letterSpacing = 1.5.sp,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+    }
+
+    items(pessoais, key = { "pessoal-" + it.id }) { exercicio ->
+        Cartao(Modifier.fillMaxWidth()) {
+            Row(
+                Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 16.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        exercicio.nome,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = Texto,
+                    )
+                    Text(
+                        exercicio.resumo + " · " + resumoDeDias(exercicio.dias),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextoSecundario,
+                    )
+                }
+                BotaoIcone(Icones.Lapis, "Editar " + exercicio.nome, { aoEditar(exercicio) })
+            }
+        }
+    }
+
+    item(key = "novo-exercicio") {
+        Cartao(Modifier.fillMaxWidth(), corBorda = Borda) {
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = 60.dp).clickable(onClick = aoCriar)
+                    .padding(horizontal = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(Icones.Mais, contentDescription = null, tint = Neon, modifier = Modifier.size(20.dp))
+                Text(
+                    "Novo exercício",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Neon,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+        }
+    }
+
+    item(key = "respiro-exercicios") { Spacer(Modifier.height(8.dp)) }
 }

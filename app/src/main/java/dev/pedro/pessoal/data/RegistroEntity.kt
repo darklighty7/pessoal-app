@@ -65,4 +65,13 @@ interface RegistroDao {
 
     @Upsert
     suspend fun gravarProgresso(progresso: ProgressoExercicioEntity)
+
+    @Query("DELETE FROM registro")
+    suspend fun limparRegistros()
+
+    @Query("DELETE FROM dia_fechado")
+    suspend fun limparDiasFechados()
+
+    @Query("DELETE FROM progresso_exercicio")
+    suspend fun limparProgresso()
 }

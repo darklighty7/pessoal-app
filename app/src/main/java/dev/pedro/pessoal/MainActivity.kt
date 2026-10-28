@@ -27,6 +27,7 @@ import dev.pedro.pessoal.notificacoes.Notificacoes
 import dev.pedro.pessoal.ui.AppViewModel
 import dev.pedro.pessoal.ui.auth.SessaoViewModel
 import dev.pedro.pessoal.ui.biblia.BibliaViewModel
+import dev.pedro.pessoal.ui.config.ConfiguracoesViewModel
 import dev.pedro.pessoal.ui.navegacao.Raiz
 import dev.pedro.pessoal.ui.theme.PessoalTema
 
@@ -47,7 +48,7 @@ class MainActivity : ComponentActivity() {
         )
 
         val banco = AppDatabase.obter(this)
-        val repositorio = Repositorio(banco.statusDao(), banco.registroDao())
+        val repositorio = Repositorio(banco.statusDao(), banco.registroDao(), banco.itensDao())
         val biblia = BibliaRepositorio(banco.bibliaDao())
         val preferencias = PreferenciasLeitura(applicationContext)
         val autenticacao = AutenticacaoRepositorio()
@@ -60,7 +61,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             PessoalTema {
-                val app: AppViewModel = viewModel(factory = AppViewModel.fabrica(repositorio))
+                val app: AppViewModel = viewModel(
+                    factory = AppViewModel.fabrica(
+                        repositorio = repositorio,
+                        agendarLembretes = { Agendador.agendarPessoais(applicationContext, it) },
+                        cancelarLembrete = { Agendador.cancelarPessoal(applicationContext, it) },
+                    ),
+                )
                 val leitor: BibliaViewModel = viewModel(
                     factory = BibliaViewModel.fabrica(biblia, preferencias, app::registrarLeitura),
                 )
@@ -75,7 +82,10 @@ class MainActivity : ComponentActivity() {
                 )
                 // Se o app ficou aberto durante a virada da meia-noite, o dia troca aqui.
                 LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { app.revisarData() }
-                Raiz(sessao, app, leitor)
+                val config: ConfiguracoesViewModel = viewModel(
+                    factory = ConfiguracoesViewModel.fabrica(repositorio, autenticacao, perfis, contadores),
+                )
+                Raiz(sessao, app, leitor, config)
             }
         }
     }

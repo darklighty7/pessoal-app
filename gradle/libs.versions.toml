@@ -5,6 +5,7 @@ coreKtx = "1.15.0"
 lifecycle = "2.8.7"
 activityCompose = "1.9.3"
 coreSplashscreen = "1.0.1"
+fragment = "1.8.5"
 composeBom = "2024.12.01"
 navigation = "2.8.5"
 room = "2.7.2"
@@ -20,6 +21,7 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
+androidx-fragment = { group = "androidx.fragment", name = "fragment", version.ref = "fragment" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
