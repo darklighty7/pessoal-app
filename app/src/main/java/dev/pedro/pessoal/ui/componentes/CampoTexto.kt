@@ -29,6 +29,7 @@ fun CampoTexto(
     modifier: Modifier = Modifier,
     senha: Boolean = false,
     email: Boolean = false,
+    numero: Boolean = false,
     ultimo: Boolean = false,
     habilitado: Boolean = true,
 ) {
@@ -45,6 +46,7 @@ fun CampoTexto(
             keyboardType = when {
                 email -> KeyboardType.Email
                 senha -> KeyboardType.Password
+                numero -> KeyboardType.Number
                 else -> KeyboardType.Text
             },
             imeAction = if (ultimo) ImeAction.Done else ImeAction.Next,

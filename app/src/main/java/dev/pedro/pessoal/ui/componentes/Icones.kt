@@ -51,5 +51,7 @@ object Icones {
     val Lupa = linha("lupa", "M4 11a7 7 0 1 0 14 0a7 7 0 1 0-14 0", "M16 16l4 4")
     val Marcador = linha("marcador", "M4 20h9", "M14.5 4.5l5 5L9 20l-5-5L14.5 4.5z")
     val Borracha = linha("borracha", "M8 20h12", "M5 14l8-8 6 6-6 6H9l-4-4z")
+    val Mais = linha("mais", "M12 5v14M5 12h14")
+    val Lapis = linha("lapis", "M4 20h4L19 9l-4-4L4 16v4z", "M14 6l4 4")
     val Fonte = linha("fonte", "M3 18l5-12 5 12M5 14h6", "M15 15.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0", "M20 13v5")
 }

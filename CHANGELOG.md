@@ -2,6 +2,47 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.12.0] - 2026-10-27
+
+Lembretes e exercícios criados pela própria pessoa, e a separação entre o dono do app e
+quem cria uma conta.
+
+### Adicionado
+- **Lembretes próprios**: título, descrição, horário e dias. O aviso sai 30 minutos antes,
+  a mesma lógica do karatê — o lembrete existe para dar tempo de se preparar, não para
+  avisar quando já é tarde.
+- Cada lembrete escolhe **qual atributo treina**, e cumpri-lo rende XP mais +0,10 nele. Sem
+  isso, criar "Estudar inglês" daria Disciplina, e o app inteiro existe para os atributos
+  refletirem o que a pessoa faz de verdade.
+- **Exercícios próprios**: nome, séries, repetições ou segundos, e dias. Aparecem na aba de
+  Treinos, abaixo do treino fixo quando há um, e sozinhos quando não há.
+- `ui/itens` com os dois formulários e o seletor de dias da semana.
+- Room na versão 4, com as tabelas `lembrete` e `exercicio` — ambas já com `usuarioId`.
+
+### Alterado
+- **`Habito` ganhou `doDono`.** Só a leitura da Bíblia vale para todos; oração, karatê,
+  treino e mobilidade são a agenda do Pedro. Quem cria uma conta monta a própria.
+- `Habito.doDia` agora pede o `admin`, que desceu para o `Status` local: o fechamento do dia
+  precisa dele e não fala com a nuvem.
+- **Os lembretes criados contam no fechamento do dia** igual aos fixos, com sequência e
+  falhas seguidas. Sem isso, quem monta a própria rotina teria um dia perfeito só com a
+  Bíblia, e tudo o que escolheu fazer não valeria nada.
+- `fecharDiasPendentes` não faz mais nada enquanto não souber de quem é o dia. Fechar antes
+  marcaria o dia como resolvido sem contar os lembretes da pessoa, e isso não se desfaz.
+- `marcar` e a marcação dos criados passaram a dividir o mesmo caminho interno: a tabela de
+  registros guarda o hábito por nome, então basta a chave ser diferente.
+
+### Notas
+- O alarme dos lembretes criados usa id a partir de 1000, bem acima dos cinco fixos, e leva
+  título, texto, dias e horário dentro da própria intenção — assim o receptor mostra o aviso
+  e marca o próximo sem abrir o banco, que é trabalho pesado demais para um BroadcastReceiver.
+- Os exercícios criados não contam séries nem liberam o botão de concluir: isso pertence ao
+  treino fixo. Eles são o conteúdo do treino, não a pontuação. Quem quiser que treinar valha
+  pontos cria um lembrete de Força, que é onde a conta acontece.
+- As tabelas antigas (status, registro, dia fechado, progresso) continuam sem dono. Enquanto
+  houver uma conta por aparelho não aparece; duas contas no mesmo celular dividiriam o
+  progresso. É a próxima migração.
+
 ## [1.11.3] - 2026-10-27
 
 ### Corrigido

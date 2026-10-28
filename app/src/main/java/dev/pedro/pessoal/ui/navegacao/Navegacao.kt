@@ -45,6 +45,7 @@ import dev.pedro.pessoal.ui.AppViewModel
 import dev.pedro.pessoal.ui.biblia.BibliaTela
 import dev.pedro.pessoal.ui.biblia.BibliaViewModel
 import dev.pedro.pessoal.ui.componentes.Icones
+import dev.pedro.pessoal.ui.lembretes.ItemCriado
 import dev.pedro.pessoal.ui.lembretes.ItemLembrete
 import dev.pedro.pessoal.ui.lembretes.LembretesTela
 import dev.pedro.pessoal.ui.status.StatusTela
@@ -75,6 +76,8 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
     val hoje by appViewModel.hoje.collectAsStateWithLifecycle()
     val registros by appViewModel.registrosDeHoje.collectAsStateWithLifecycle()
     val progresso by appViewModel.progressoDoTreino.collectAsStateWithLifecycle()
+    val lembretesPessoais by appViewModel.lembretesPessoais.collectAsStateWithLifecycle()
+    val exerciciosPessoais by appViewModel.exerciciosPessoais.collectAsStateWithLifecycle()
 
     Scaffold(
         containerColor = Fundo,
@@ -116,8 +119,14 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
                             minutosLeitura = registro?.minutosLeitura ?: 0,
                         )
                     },
+                    pessoais = lembretesPessoais
+                        .filter { it.ocorreEm(hoje) }
+                        .map { ItemCriado(it, porHabito[it.chaveRegistro]?.concluido == true) },
                     aoMarcar = appViewModel::marcar,
+                    aoMarcarPessoal = appViewModel::marcarPessoal,
                     aoAbrirBiblia = { nav.navigate(ROTA_BIBLIA) { launchSingleTop = true } },
+                    aoSalvarLembrete = appViewModel::salvarLembrete,
+                    aoApagarLembrete = appViewModel::apagarLembrete,
                 )
             }
 
@@ -128,7 +137,10 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
                     treino = treino,
                     progresso = progresso.mapValues { (_, p) -> ProgressoExercicio(p.nivel, p.treinosCompletos) },
                     concluido = registros.any { it.habito == habito.name && it.concluido },
+                    pessoais = exerciciosPessoais.filter { it.ocorreEm(hoje) },
                     aoConcluir = { treino?.let(appViewModel::concluirTreino) },
+                    aoSalvarExercicio = appViewModel::salvarExercicio,
+                    aoApagarExercicio = appViewModel::apagarExercicio,
                 )
             }
 

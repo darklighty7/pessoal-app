@@ -38,10 +38,6 @@ data class LembretePessoal(
 
     companion object {
         const val PREFIXO = "LEMBRETE_"
-
-        /** Se a chave de registro veio de um lembrete criado, devolve o id; senão, nulo. */
-        fun idDaChave(chave: String): Long? =
-            if (chave.startsWith(PREFIXO)) chave.removePrefix(PREFIXO).toLongOrNull() else null
     }
 }
 

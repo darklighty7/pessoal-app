@@ -19,6 +19,7 @@ outro app.
 - `ui/status` — tela de Status e gráfico em losango
 - `ui/navegacao` — `Raiz` (login, criação do personagem ou app) e a barra inferior
 - `ui/auth` — login, nome do personagem e escolha da classe (três passos, nesta ordem)
+- `ui/itens` — formulários dos lembretes e exercícios que a pessoa cria
 - `ui/biblia` — leitura, grifos e `BuscaLivro` (busca de passagem por nome do livro)
 - `ui/boasvindas` — a abertura que roda uma vez, logo depois de criar o personagem
 - `data/auth` e `data/nuvem` — Firebase Auth, perfil do personagem e contador de jogadores no Firestore
