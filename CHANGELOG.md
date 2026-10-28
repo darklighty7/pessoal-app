@@ -2,6 +2,19 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.11.3] - 2026-10-27
+
+### Corrigido
+- **A variante `otimizado` não abria.** Ela minifica com R8, e o projeto não tinha nenhum
+  arquivo de regras: o `proguardFiles` listava só o padrão do Android. O Firestore monta o
+  perfil por reflexão — `toObject(PerfilUsuario::class.java)` lê os nomes dos campos e chama
+  o construtor sem argumentos —, então o R8 renomeava tudo e a leitura quebrava no aparelho.
+- A variante nasceu na v1.4.1, antes de o Firebase existir. Funcionava; parou de funcionar
+  quando o login entrou na v1.5.0, e ninguém rodou ela desde então.
+- Entrou `app/proguard-rules.pro`, guardando o pacote `domain.model` inteiro: o perfil, por
+  causa da reflexão, e as enumerações, que são gravadas pelo nome e lidas com `valueOf` tanto
+  no Room quanto no Firestore.
+
 ## [1.11.2] - 2026-10-27
 
 ### Corrigido
