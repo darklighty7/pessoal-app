@@ -2,6 +2,17 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.11.2] - 2026-10-27
+
+### Corrigido
+- O build `otimizado` parava no `lintVitalOtimizado` com
+  `InvalidFragmentVersionForActivityResult`: o `firebase-auth` arrasta uma versão antiga do
+  `androidx.fragment`, e `registerForActivityResult` exige 1.3.0 ou mais novo. O erro só
+  aparecia em release, porque o lint fatal não roda no debug.
+- A correção é uma restrição de versão, não uma dependência nova: o app não usa fragment
+  nenhum — é uma Activity só, tudo em Compose —, então o piso sobe para quem puxar a
+  biblioteca sem ela entrar no APK por conta própria.
+
 ## [1.11.1] - 2026-10-27
 
 Primeira compilação do projeto desde a v1.5.0. Um erro só apareceu.

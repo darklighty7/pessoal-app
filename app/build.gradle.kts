@@ -14,8 +14,8 @@ android {
         applicationId = "dev.pedro.pessoal"
         minSdk = 26
         targetSdk = 35
-        versionCode = 13
-        versionName = "1.11.1"
+        versionCode = 14
+        versionName = "1.11.2"
     }
 
     buildTypes {
@@ -46,6 +46,14 @@ android {
 }
 
 dependencies {
+    // O firebase-auth arrasta uma versão antiga do androidx.fragment, e o lint só do build de
+    // release reprova por isso: registerForActivityResult exige fragment 1.3.0 ou mais novo.
+    // O app não usa fragment nenhum — é uma Activity só, tudo em Compose. A restrição eleva o
+    // piso de quem puxar a dependência, sem acrescentá-la ao app.
+    constraints {
+        implementation(libs.androidx.fragment)
+    }
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
