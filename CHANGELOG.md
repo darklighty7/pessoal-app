@@ -2,6 +2,27 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.12.3] - 2026-10-27
+
+Dívida da auditoria da v1.4.1, que tinha sido encontrada e nunca corrigida — o arquivo
+seguia com um commit só, o inicial.
+
+### Desempenho
+- **`SeloRank` parou de refazer o desenho a cada quadro.** O escudo, a moldura interna, a
+  coroa, a estrela, as penas e as faíscas são os mesmos sessenta vezes por segundo, e eram
+  alocados de novo em cada um. Passaram para o bloco de `drawWithCache`, que roda uma vez
+  por tamanho.
+- **O detalhe que faz isso funcionar**: os valores animados deixaram de ser lidos com `by`
+  na composição e viraram `State` lidos dentro do desenho. Lidos de fora, o composable
+  recomporia a cada quadro e descartaria o cache junto — o `drawWithCache` não teria
+  servido para nada.
+- **Só as animações que o rank usa são criadas.** A cor do topo e a aura existem apenas no
+  S; os três brilhos, apenas no A e no S. Antes as seis rodavam em todos os ranks, com
+  resultado idêntico nos que não as desenham.
+- O pincel do material também é fixo fora do S, onde a cor não muda. De todos os pincéis,
+  só o do reflexo nasce a cada quadro, porque depende de onde a luz está.
+- Nada mudou visualmente.
+
 ## [1.12.2] - 2026-10-27
 
 Duas coisas que eu mesmo tinha deixado caras nas duas versões anteriores.
