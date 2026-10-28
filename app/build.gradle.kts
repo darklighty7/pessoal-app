@@ -14,8 +14,8 @@ android {
         applicationId = "dev.pedro.pessoal"
         minSdk = 26
         targetSdk = 35
-        versionCode = 19
-        versionName = "1.12.3"
+        versionCode = 20
+        versionName = "1.13.0"
     }
 
     buildTypes {
@@ -42,6 +42,8 @@ android {
     }
     buildFeatures {
         compose = true
+        // A tela de configurações mostra a versão; sem isto, BuildConfig nem é gerado.
+        buildConfig = true
     }
 }
 

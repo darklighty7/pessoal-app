@@ -68,7 +68,12 @@ enum class Habito(
          * Os hábitos fixos do dia. Para o dono do app, todos; para os demais, só os que não
          * são da rotina dele — hoje, só a Bíblia.
          */
-        fun doDia(data: LocalDate, admin: Boolean): List<Habito> =
-            entries.filter { it.ocorreEm(data) && (admin || !it.doDono) }
+        fun doDia(
+            data: LocalDate,
+            admin: Boolean,
+            desligados: Set<Habito> = emptySet(),
+        ): List<Habito> = entries.filter {
+            it.ocorreEm(data) && (admin || !it.doDono) && it !in desligados
+        }
     }
 }

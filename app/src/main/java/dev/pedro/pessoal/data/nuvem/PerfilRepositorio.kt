@@ -62,6 +62,15 @@ class PerfilRepositorio(
         documento(uid).set(mapOf("classeInicial" to classe.name), SetOptions.merge()).await()
     }
 
+    /**
+     * Apaga o perfil na nuvem. Os lembretes e exercícios vivem só no banco do aparelho,
+     * então não há subcoleção para limpar aqui — se um dia subirem para o Firestore, este
+     * é o lugar onde isso precisa entrar junto.
+     */
+    suspend fun apagar(uid: String) {
+        documento(uid).delete().await()
+    }
+
     private companion object {
         const val COLECAO = "usuarios"
     }

@@ -20,6 +20,7 @@ import dev.pedro.pessoal.ui.auth.NomeTela
 import dev.pedro.pessoal.ui.auth.SessaoViewModel
 import dev.pedro.pessoal.ui.biblia.BibliaViewModel
 import dev.pedro.pessoal.ui.boasvindas.BoasVindasTela
+import dev.pedro.pessoal.ui.config.ConfiguracoesViewModel
 import dev.pedro.pessoal.ui.theme.Fundo
 import dev.pedro.pessoal.ui.theme.Neon
 
@@ -33,6 +34,7 @@ fun Raiz(
     sessao: SessaoViewModel,
     appViewModel: AppViewModel,
     bibliaViewModel: BibliaViewModel,
+    configViewModel: ConfiguracoesViewModel,
 ) {
     val estado by sessao.estado.collectAsStateWithLifecycle()
 
@@ -78,7 +80,7 @@ fun Raiz(
             LaunchedEffect(atual.perfil.uid, atual.perfil.admin) {
                 appViewModel.entrarComo(atual.perfil.uid, atual.perfil.admin)
             }
-            AppNavegacao(appViewModel, bibliaViewModel)
+            AppNavegacao(appViewModel, bibliaViewModel, configViewModel, atual.perfil)
         }
     }
 }

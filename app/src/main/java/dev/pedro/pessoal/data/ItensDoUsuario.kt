@@ -120,4 +120,10 @@ interface ItensDao {
 
     @Query("DELETE FROM exercicio WHERE id = :id")
     suspend fun apagarExercicio(id: Long)
+
+    @Query("DELETE FROM lembrete WHERE usuarioId = :usuarioId")
+    suspend fun limparLembretes(usuarioId: String)
+
+    @Query("DELETE FROM exercicio WHERE usuarioId = :usuarioId")
+    suspend fun limparExercicios(usuarioId: String)
 }

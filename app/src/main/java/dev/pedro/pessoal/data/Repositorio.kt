@@ -127,6 +127,55 @@ class Repositorio(
         gravar(novo)
     }
 
+    // ----- Configurações -----
+
+    /** Liga ou desliga um hábito fixo. Só o ADM tem o que desligar. */
+    suspend fun alternarHabito(habito: Habito) {
+        val atual = status()
+        val novos = if (habito in atual.habitosDesligados) {
+            atual.habitosDesligados - habito
+        } else {
+            atual.habitosDesligados + habito
+        }
+        gravar(atual.copy(habitosDesligados = novos))
+    }
+
+    /**
+     * Zera o que foi conquistado e mantém quem é o personagem: nome, classe e os hábitos
+     * desligados continuam. É recomeçar o jogo, não trocar de jogador.
+     */
+    suspend fun zerarProgresso() {
+        val atual = status()
+        registroDao.limparRegistros()
+        registroDao.limparDiasFechados()
+        registroDao.limparProgresso()
+        gravar(
+            Status(
+                nome = atual.nome,
+                classe = atual.classeEscolhida ?: Classe.APRENDIZ,
+                classeEscolhida = atual.classeEscolhida,
+                admin = atual.admin,
+                habitosDesligados = atual.habitosDesligados,
+                atributos = atual.classeEscolhida
+                    ?.let { MotorPontuacao.atributosIniciais(it) }
+                    ?: Status().atributos,
+            ),
+        )
+    }
+
+    /** Apaga tudo o que é desta conta no aparelho. Usado ao apagar a conta. */
+    suspend fun apagarTudoLocal() {
+        usuarioAtual.value?.let { uid ->
+            itensDao.limparLembretes(uid)
+            itensDao.limparExercicios(uid)
+        }
+        registroDao.limparRegistros()
+        registroDao.limparDiasFechados()
+        registroDao.limparProgresso()
+        statusDao.limpar()
+        usuarioAtual.value = null
+    }
+
     // ----- Fechamento do dia -----
 
     suspend fun fecharDiasPendentes(hoje: LocalDate = LocalDate.now()) {
@@ -153,9 +202,11 @@ class Repositorio(
         val atual = status()
         val registros = registroDao.buscarDia(data.toString()).associateBy { it.habito }
 
-        val fixos = Habito.doDia(data, atual.admin).filter { it.obrigatorio }.map { habito ->
-            resultado(habito.atributo, habito.name, data, registros) { habito.ocorreEm(it) }
-        }
+        val fixos = Habito.doDia(data, atual.admin, atual.habitosDesligados)
+            .filter { it.obrigatorio }
+            .map { habito ->
+                resultado(habito.atributo, habito.name, data, registros) { habito.ocorreEm(it) }
+            }
 
         // Os lembretes criados contam igual aos fixos. Sem isso, quem monta a própria rotina
         // teria um dia perfeito só com a Bíblia, e tudo o que escolheu fazer não valeria nada.

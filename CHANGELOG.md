@@ -2,6 +2,40 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.13.0] - 2026-10-27
+
+O botão de configurações na tela de Status deixou de ser enfeite. Duas seções com donos
+diferentes: a conta é de quem está logado, o sistema é do dono do app.
+
+### Adicionado
+- **Sua conta**, para qualquer pessoa: trocar o nome do personagem, ver o e-mail e o número
+  de jogador, conferir se as notificações e os alarmes exatos estão liberados (com atalho
+  para a tela certa do sistema), sair da conta e apagar a conta.
+- **Sistema**, só para o administrador: ligar e desligar cada hábito fixo, ver quantas
+  contas existem, e zerar o progresso.
+- Ligar e desligar hábito fixo é novo de verdade: antes os cinco estavam presos no código e
+  não havia como tirar nenhum. O desligado some das Missões do dia e do fechamento, e o
+  histórico que já existe não é apagado. Guardado em `status.habitosDesligados` (Room 5).
+- `firestore.rules`: o dono passa a poder apagar o próprio documento. Antes era
+  `allow delete: if false`, e o botão de apagar deixaria o perfil órfão na nuvem.
+
+### Sobre apagar a conta
+- A ordem não é a óbvia, e vale explicar. O Firebase exige login recente para apagar a
+  conta e só avisa isso **depois** da tentativa, então o app pergunta antes: se o login for
+  velho, ele pede para sair e entrar de novo, e nada é tocado.
+- Passando nessa checagem, os dados saem antes do login — as regras só deixam o dono apagar
+  o próprio perfil, então sem usuário logado o documento ficaria órfão para sempre, sem
+  ninguém com direito de removê-lo.
+- Se a rede cair entre os dois passos, os dados já foram e a conta continua de pé. Entrar de
+  novo recria um perfil vazio e permite repetir. É o pior caso, e é recuperável.
+
+### Notas
+- As duas permissões são de sistema: o app não consegue conceder nenhuma delas sozinho. O
+  máximo que a tela faz é dizer como está e abrir a tela certa do Android.
+- Zerar o progresso mantém nome, classe e lembretes, e devolve os atributos ao bônus da
+  classe escolhida. É recomeçar o jogo, não trocar de jogador.
+- `buildConfig = true` no Gradle, para a tela mostrar a versão.
+
 ## [1.12.3] - 2026-10-27
 
 Dívida da auditoria da v1.4.1, que tinha sido encontrada e nunca corrigida — o arquivo

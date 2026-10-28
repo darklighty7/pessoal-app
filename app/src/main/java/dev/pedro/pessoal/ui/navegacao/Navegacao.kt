@@ -41,7 +41,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dev.pedro.pessoal.domain.model.Habito
 import dev.pedro.pessoal.domain.model.Treino
+import dev.pedro.pessoal.BuildConfig
+import dev.pedro.pessoal.domain.model.PerfilUsuario
 import dev.pedro.pessoal.ui.AppViewModel
+import dev.pedro.pessoal.ui.config.ConfiguracoesTela
+import dev.pedro.pessoal.ui.config.ConfiguracoesViewModel
 import dev.pedro.pessoal.ui.biblia.BibliaTela
 import dev.pedro.pessoal.ui.biblia.BibliaViewModel
 import dev.pedro.pessoal.ui.componentes.Icones
@@ -62,12 +66,18 @@ private enum class Aba(val rota: String, val rotulo: String, val icone: ImageVec
 }
 
 private const val ROTA_BIBLIA = "biblia"
+private const val ROTA_CONFIG = "configuracoes"
 
 /** Duração do fade ao trocar de tela. */
 private const val TROCA_DE_TELA_MS = 120
 
 @Composable
-fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
+fun AppNavegacao(
+    appViewModel: AppViewModel,
+    bibliaViewModel: BibliaViewModel,
+    configViewModel: ConfiguracoesViewModel,
+    perfil: PerfilUsuario,
+) {
     val nav = rememberNavController()
     val entrada by nav.currentBackStackEntryAsState()
     val rotaAtual = entrada?.destination?.route
@@ -83,7 +93,7 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
         containerColor = Fundo,
         bottomBar = {
             // A tela da Bíblia ocupa tudo: sem barra embaixo.
-            if (rotaAtual != ROTA_BIBLIA) {
+            if (rotaAtual != ROTA_BIBLIA && rotaAtual != ROTA_CONFIG) {
                 BarraInferior(rotaAtual) { aba ->
                     nav.navigate(aba.rota) {
                         popUpTo(nav.graph.findStartDestination().id) { saveState = true }
@@ -105,7 +115,12 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
             popEnterTransition = { fadeIn(tween(TROCA_DE_TELA_MS)) },
             popExitTransition = { fadeOut(tween(TROCA_DE_TELA_MS)) },
         ) {
-            composable(Aba.STATUS.rota) { StatusTela(status) }
+            composable(Aba.STATUS.rota) {
+                StatusTela(
+                    status = status,
+                    aoAbrirConfiguracoes = { nav.navigate(ROTA_CONFIG) { launchSingleTop = true } },
+                )
+            }
 
             composable(Aba.LEMBRETES.rota) {
                 val porHabito = registros.associateBy { it.habito }
@@ -141,6 +156,24 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
                     aoConcluir = { treino?.let(appViewModel::concluirTreino) },
                     aoSalvarExercicio = appViewModel::salvarExercicio,
                     aoApagarExercicio = appViewModel::apagarExercicio,
+                )
+            }
+
+            composable(ROTA_CONFIG) {
+                val estadoConfig by configViewModel.estado.collectAsStateWithLifecycle()
+                ConfiguracoesTela(
+                    perfil = perfil,
+                    status = status,
+                    estado = estadoConfig,
+                    versao = BuildConfig.VERSION_NAME,
+                    aoVoltar = { nav.popBackStack() },
+                    aoRenomear = { configViewModel.renomear(perfil.uid, perfil.email, it) },
+                    aoAlternarHabito = configViewModel::alternarHabito,
+                    aoZerarProgresso = configViewModel::zerarProgresso,
+                    aoApagarConta = { configViewModel.apagarConta(perfil.uid) },
+                    aoSair = configViewModel::sair,
+                    aoPedirTotal = configViewModel::carregarTotalDeJogadores,
+                    aoLimparRecado = configViewModel::limparRecado,
                 )
             }
 

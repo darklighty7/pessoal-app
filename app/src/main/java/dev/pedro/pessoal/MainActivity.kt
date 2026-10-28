@@ -27,6 +27,7 @@ import dev.pedro.pessoal.notificacoes.Notificacoes
 import dev.pedro.pessoal.ui.AppViewModel
 import dev.pedro.pessoal.ui.auth.SessaoViewModel
 import dev.pedro.pessoal.ui.biblia.BibliaViewModel
+import dev.pedro.pessoal.ui.config.ConfiguracoesViewModel
 import dev.pedro.pessoal.ui.navegacao.Raiz
 import dev.pedro.pessoal.ui.theme.PessoalTema
 
@@ -81,7 +82,10 @@ class MainActivity : ComponentActivity() {
                 )
                 // Se o app ficou aberto durante a virada da meia-noite, o dia troca aqui.
                 LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { app.revisarData() }
-                Raiz(sessao, app, leitor)
+                val config: ConfiguracoesViewModel = viewModel(
+                    factory = ConfiguracoesViewModel.fabrica(repositorio, autenticacao, perfis, contadores),
+                )
+                Raiz(sessao, app, leitor, config)
             }
         }
     }

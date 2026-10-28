@@ -19,7 +19,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         LembreteEntity::class,
         ExercicioEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -73,12 +73,19 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v1.13.0: os hábitos fixos que o dono desligou nas configurações. */
+        private val MIGRACAO_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `status` ADD COLUMN `habitosDesligados` TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         @Volatile private var instancia: AppDatabase? = null
 
         fun obter(contexto: Context): AppDatabase = instancia ?: synchronized(this) {
             instancia ?: Room
                 .databaseBuilder(contexto.applicationContext, AppDatabase::class.java, "pessoal.db")
-                .addMigrations(MIGRACAO_1_2, MIGRACAO_2_3, MIGRACAO_3_4)
+                .addMigrations(MIGRACAO_1_2, MIGRACAO_2_3, MIGRACAO_3_4, MIGRACAO_4_5)
                 .build()
                 .also { instancia = it }
         }
