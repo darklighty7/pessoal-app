@@ -28,6 +28,7 @@ import androidx.compose.material3.TimeInput
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.pedro.pessoal.domain.engine.Regras
+import dev.pedro.pessoal.domain.engine.SugestaoAtributo
 import dev.pedro.pessoal.domain.model.Atributo
 import dev.pedro.pessoal.domain.model.LembretePessoal
 import dev.pedro.pessoal.ui.componentes.CampoTexto
@@ -75,6 +77,21 @@ fun FormularioLembrete(
     var dias by remember { mutableStateOf(original?.dias ?: DIAS_TODOS) }
     var atributo by remember { mutableStateOf(original?.atributo ?: Atributo.DISCIPLINA) }
     var escolhendoHora by remember { mutableStateOf(false) }
+
+    /**
+     * Enquanto a pessoa não tocar num atributo, o título manda. Editar um lembrete que já
+     * existe começa travado: quem escolheu Espírito para "Ler a Bíblia" não quer ver a
+     * escolha mudar sozinha ao corrigir uma vírgula no título.
+     */
+    var escolhaManual by remember { mutableStateOf(original != null) }
+    var veioDoTitulo by remember { mutableStateOf(false) }
+
+    LaunchedEffect(titulo, escolhaManual) {
+        if (escolhaManual) return@LaunchedEffect
+        val sugerido = SugestaoAtributo.de(titulo)
+        veioDoTitulo = sugerido != null
+        if (sugerido != null) atributo = sugerido
+    }
 
     val valido = titulo.trim().length >= 2 && dias.isNotEmpty()
 
@@ -165,7 +182,12 @@ fun FormularioLembrete(
                             .selectable(
                                 selected = ativo,
                                 role = Role.RadioButton,
-                                onClick = { atributo = opcao },
+                                onClick = {
+                                    atributo = opcao
+                                    // A partir daqui o título não mexe mais na escolha.
+                                    escolhaManual = true
+                                    veioDoTitulo = false
+                                },
                             )
                             .padding(vertical = 12.dp),
                     )
@@ -173,7 +195,8 @@ fun FormularioLembrete(
             }
             Spacer(Modifier.height(6.dp))
             Text(
-                atributo.nome,
+                // Dizer que veio do título é o que separa sugerir de decidir por alguém.
+                if (veioDoTitulo) atributo.nome + " · sugerido pelo título" else atributo.nome,
                 color = Ganho,
                 style = MaterialTheme.typography.bodySmall,
             )

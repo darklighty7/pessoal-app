@@ -2,6 +2,23 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.12.1] - 2026-10-27
+
+### Adicionado
+- **O título sugere o atributo.** Escrever "Correr" move o seletor para Força; "Ler a
+  Bíblia", para Espírito; "Estudar inglês", para Inteligência. `SugestaoAtributo` compara
+  começos de palavra, então "estud" cobre estudar, estudo e estudando sem uma entrada para
+  cada conjugação, e ignora acento e caixa.
+- Quando dois começos batem, vence o mais longo, que é o mais específico: em "Ler a Bíblia",
+  "bibli" ganha de "ler". Sem reconhecer nada, a sugestão não devolve nada — um palpite
+  fraco seria pior que silêncio, porque ela move a escolha da pessoa.
+- A linha abaixo dos atributos diz "sugerido pelo título" enquanto a sugestão estiver
+  valendo. É o que separa sugerir de decidir por alguém.
+- Tocar num atributo trava a escolha: dali em diante o título não mexe mais nela. Editar um
+  lembrete que já existe começa travado — quem escolheu Espírito para "Ler a Bíblia" não
+  quer ver isso mudar ao corrigir uma vírgula.
+- `SugestaoAtributoTest` cobre o óbvio de cada atributo, as sobreposições e o silêncio.
+
 ## [1.12.0] - 2026-10-27
 
 Lembretes e exercícios criados pela própria pessoa, e a separação entre o dono do app e
