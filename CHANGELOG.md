@@ -2,6 +2,20 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.12.2] - 2026-10-27
+
+Duas coisas que eu mesmo tinha deixado caras nas duas versões anteriores.
+
+### Corrigido
+- **Consulta repetida ao fechar os dias.** `fecharDia` buscava os lembretes do usuário a
+  cada dia fechado. Depois de uma ausência longa o laço roda até 60 vezes, e seriam 60
+  consultas idênticas — a lista é a mesma em todas elas. Agora busca uma vez só, antes do laço.
+- **Corrotina recriada a cada tecla** no formulário de lembrete. A sugestão de atributo
+  estava num `LaunchedEffect` com o título por chave, então cada letra digitada cancelava e
+  recriava uma corrotina para calcular uma função pura. Virou `remember(titulo)`, que
+  devolve o mesmo resultado sem corrotina nenhuma, e o atributo em uso passou a ser
+  derivado em vez de guardado — um estado a menos para sair de sincronia.
+
 ## [1.12.1] - 2026-10-27
 
 ### Adicionado

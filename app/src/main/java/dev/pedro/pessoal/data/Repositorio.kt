@@ -136,14 +136,20 @@ class Repositorio(
 
         val ultimo = registroDao.ultimoDiaFechado()?.let { LocalDate.parse(it) }
         val comeco = (ultimo?.plusDays(1) ?: hoje.minusDays(1)).coerceGe(hoje.minusDays(60))
+
+        // Os lembretes são os mesmos em todos os dias fechados nesta rodada. Buscar uma vez
+        // só: depois de uma viagem longa este laço pode rodar 60 vezes, e seriam 60
+        // consultas idênticas ao banco.
+        val lembretes = lembretesDoUsuario()
+
         var dia = comeco
         while (dia.isBefore(hoje)) {
-            if (registroDao.diaFechado(dia.toString()) == null) fecharDia(dia)
+            if (registroDao.diaFechado(dia.toString()) == null) fecharDia(dia, lembretes)
             dia = dia.plusDays(1)
         }
     }
 
-    private suspend fun fecharDia(data: LocalDate) {
+    private suspend fun fecharDia(data: LocalDate, lembretes: List<LembretePessoal>) {
         val atual = status()
         val registros = registroDao.buscarDia(data.toString()).associateBy { it.habito }
 
@@ -153,7 +159,7 @@ class Repositorio(
 
         // Os lembretes criados contam igual aos fixos. Sem isso, quem monta a própria rotina
         // teria um dia perfeito só com a Bíblia, e tudo o que escolheu fazer não valeria nada.
-        val criados = lembretesDoUsuario()
+        val criados = lembretes
             .filter { it.ocorreEm(data) }
             .map { lembrete ->
                 resultado(lembrete.atributo, lembrete.chaveRegistro, data, registros) { lembrete.ocorreEm(it) }

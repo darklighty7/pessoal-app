@@ -14,8 +14,8 @@ android {
         applicationId = "dev.pedro.pessoal"
         minSdk = 26
         targetSdk = 35
-        versionCode = 17
-        versionName = "1.12.1"
+        versionCode = 18
+        versionName = "1.12.2"
     }
 
     buildTypes {
