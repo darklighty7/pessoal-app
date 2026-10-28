@@ -127,6 +127,40 @@ class Repositorio(
         gravar(novo)
     }
 
+    /**
+     * Soma minutos de leitura ao dia. A recompensa é recalculada por diferença: o que já
+     * havia sido pago pelos minutos anteriores é descontado, então ler em várias sessões
+     * rende o mesmo que ler tudo de uma vez.
+     */
+    suspend fun registrarLeitura(data: LocalDate, minutos: Int) {
+        if (minutos <= 0) return
+        val chave = data.toString()
+        val atual = registroDao.buscarDia(chave).firstOrNull { it.habito == Habito.BIBLIA.name }
+        val antes = atual?.minutosLeitura ?: 0
+        val depois = antes + minutos
+
+        val pago = MotorPontuacao.recompensaLeitura(antes)
+        val total = MotorPontuacao.recompensaLeitura(depois)
+        val diferenca = Recompensa(
+            xp = total.xp - pago.xp,
+            ganhos = (total.ganhos.keys + pago.ganhos.keys)
+                .associateWith { (total.ganhos[it] ?: 0) - (pago.ganhos[it] ?: 0) }
+                .filterValues { it != 0 },
+        )
+
+        registroDao.gravar(
+            RegistroEntity(
+                data = chave,
+                habito = Habito.BIBLIA.name,
+                concluido = depois >= Regras.META_LEITURA_MIN,
+                minutosLeitura = depois,
+            ),
+        )
+        if (diferenca.xp != 0 || diferenca.ganhos.isNotEmpty()) {
+            gravar(MotorPontuacao.aplicar(status(), diferenca))
+        }
+    }
+
     // ----- Configurações -----
 
     /** Liga ou desliga um hábito fixo. Só o ADM tem o que desligar. */

@@ -2,6 +2,17 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.13.1] - 2026-10-27
+
+Dois erros de compilação que escaparam por nunca ter passado pelo compilador: a branch
+acumulou seis commits antes da primeira build.
+
+### Corrigido
+- `Repositorio.registrarLeitura` tinha sumido do arquivo na v1.12.0, numa substituição de
+  texto que comeu mais linhas do que devia. O cronômetro de leitura da Bíblia chamava uma
+  função que não existia mais. Restaurada igual ao original.
+- Faltava o import de `height` em `LembretesTela`.
+
 ## [1.13.0] - 2026-10-27
 
 O botão de configurações na tela de Status deixou de ser enfeite. Duas seções com donos
