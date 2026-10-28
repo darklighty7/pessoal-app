@@ -29,7 +29,7 @@ class ReceptorAcao : BroadcastReceiver() {
             try {
                 if (habito != Habito.BIBLIA) {
                     val banco = AppDatabase.obter(aplicacao)
-                    Repositorio(banco.statusDao(), banco.registroDao())
+                    Repositorio(banco.statusDao(), banco.registroDao(), banco.itensDao())
                         .marcar(habito, LocalDate.now(), concluido = true)
                 }
                 if (idNotificacao >= 0) Notificacoes.fechar(aplicacao, idNotificacao)

@@ -2,6 +2,20 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.13.2] - 2026-10-27
+
+### Corrigido
+- `ReceptorAcao` montava o `Repositorio` com dois argumentos; ele passou a exigir três na
+  v1.12.0, quando ganhou o `itensDao`. É o receptor que marca o hábito pelo botão da
+  notificação, sem abrir o app.
+
+### Adicionado
+- `ferramentas/checar_chamadas.py`: confere, sem compilador, se toda chamada bate com a
+  assinatura da função ou do construtor. Não substitui a build — pega só a família de erro
+  que aparece quando uma assinatura muda e uma chamada fica para trás, que foi exatamente
+  o que apareceu nestas três rodadas. Rodado contra o projeto inteiro: 259 funções e 62
+  classes, nada fora do lugar.
+
 ## [1.13.1] - 2026-10-27
 
 Dois erros de compilação que escaparam por nunca ter passado pelo compilador: a branch
