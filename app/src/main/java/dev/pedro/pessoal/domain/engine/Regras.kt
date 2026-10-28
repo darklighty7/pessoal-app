@@ -40,6 +40,12 @@ object Regras {
      */
     const val BONUS_CLASSE_INICIAL = 60       // +0,60
 
+    // Lembretes criados pela própria pessoa
+    /** O aviso sai antes da hora marcada, para dar tempo de se preparar — como o do karatê. */
+    const val AVISO_ANTES_MIN = 30L
+    const val XP_LEMBRETE_PESSOAL = 10
+    const val GANHO_LEMBRETE_PESSOAL = 10     // +0,10 no atributo escolhido
+
     // Leitura da Bíblia (por tempo, dividida entre Espírito e Inteligência)
     const val META_LEITURA_MIN = 10
     const val XP_META_LEITURA = 10

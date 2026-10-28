@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
         )
 
         val banco = AppDatabase.obter(this)
-        val repositorio = Repositorio(banco.statusDao(), banco.registroDao())
+        val repositorio = Repositorio(banco.statusDao(), banco.registroDao(), banco.itensDao())
         val biblia = BibliaRepositorio(banco.bibliaDao())
         val preferencias = PreferenciasLeitura(applicationContext)
         val autenticacao = AutenticacaoRepositorio()
@@ -60,7 +60,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             PessoalTema {
-                val app: AppViewModel = viewModel(factory = AppViewModel.fabrica(repositorio))
+                val app: AppViewModel = viewModel(
+                    factory = AppViewModel.fabrica(
+                        repositorio = repositorio,
+                        agendarLembretes = { Agendador.agendarPessoais(applicationContext, it) },
+                        cancelarLembrete = { Agendador.cancelarPessoal(applicationContext, it) },
+                    ),
+                )
                 val leitor: BibliaViewModel = viewModel(
                     factory = BibliaViewModel.fabrica(biblia, preferencias, app::registrarLeitura),
                 )

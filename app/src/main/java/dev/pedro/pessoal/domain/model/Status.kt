@@ -25,6 +25,11 @@ data class Status(
      */
     val classeEscolhida: Classe? = null,
     val diasCandidata: Int = 0,
+    /**
+     * Cópia local de `PerfilUsuario.admin`. Mora aqui porque o motor e o fechamento do dia
+     * precisam saber quais hábitos fixos valem, e nenhum dos dois fala com a nuvem.
+     */
+    val admin: Boolean = false,
 ) {
     val rank: Rank get() = Rank.doNivel(nivel)
     val xpNecessario: Int get() = Regras.xpParaProximoNivel(nivel)

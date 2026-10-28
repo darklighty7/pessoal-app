@@ -23,6 +23,7 @@ data class StatusEntity(
     val classeCandidata: String?,
     val diasCandidata: Int,
     val classeEscolhida: String? = null,
+    val admin: Boolean = false,
     val forca: Int,
     val inteligencia: Int,
     val disciplina: Int,
@@ -43,6 +44,7 @@ data class StatusEntity(
         classeCandidata = classeCandidata?.let { Classe.valueOf(it) },
         diasCandidata = diasCandidata,
         classeEscolhida = classeEscolhida?.let { Classe.valueOf(it) },
+        admin = admin,
     )
 
     companion object {
@@ -55,6 +57,7 @@ data class StatusEntity(
             classeCandidata = status.classeCandidata?.name,
             diasCandidata = status.diasCandidata,
             classeEscolhida = status.classeEscolhida?.name,
+            admin = status.admin,
             forca = status.valor(Atributo.FORCA),
             inteligencia = status.valor(Atributo.INTELIGENCIA),
             disciplina = status.valor(Atributo.DISCIPLINA),

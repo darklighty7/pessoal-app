@@ -16,14 +16,17 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         LivroEntity::class,
         VersiculoEntity::class,
         GrifoEntity::class,
+        LembreteEntity::class,
+        ExercicioEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun statusDao(): StatusDao
     abstract fun registroDao(): RegistroDao
     abstract fun bibliaDao(): BibliaDao
+    abstract fun itensDao(): ItensDao
 
     companion object {
         /** v1.3.0: cria a tabela de grifos sem tocar em nenhum dado existente. */
@@ -45,12 +48,37 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * v1.12.0: as tabelas dos lembretes e exercícios criados pela pessoa, mais a cópia
+         * local do `admin` — o fechamento do dia precisa saber quais hábitos fixos valem, e
+         * ele não fala com a nuvem.
+         */
+        private val MIGRACAO_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `lembrete` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`usuarioId` TEXT NOT NULL, `titulo` TEXT NOT NULL, `descricao` TEXT NOT NULL, " +
+                        "`minutoDoDia` INTEGER NOT NULL, `dias` TEXT NOT NULL, `atributo` TEXT NOT NULL, " +
+                        "`criadoEm` INTEGER NOT NULL)",
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `exercicio` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`usuarioId` TEXT NOT NULL, `nome` TEXT NOT NULL, `series` INTEGER NOT NULL, " +
+                        "`repeticoes` INTEGER NOT NULL, `porTempo` INTEGER NOT NULL, `dias` TEXT NOT NULL, " +
+                        "`criadoEm` INTEGER NOT NULL)",
+                )
+                db.execSQL("ALTER TABLE `status` ADD COLUMN `admin` INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         @Volatile private var instancia: AppDatabase? = null
 
         fun obter(contexto: Context): AppDatabase = instancia ?: synchronized(this) {
             instancia ?: Room
                 .databaseBuilder(contexto.applicationContext, AppDatabase::class.java, "pessoal.db")
-                .addMigrations(MIGRACAO_1_2, MIGRACAO_2_3)
+                .addMigrations(MIGRACAO_1_2, MIGRACAO_2_3, MIGRACAO_3_4)
                 .build()
                 .also { instancia = it }
         }

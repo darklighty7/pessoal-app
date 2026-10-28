@@ -185,7 +185,7 @@ private fun LembretesPreview() {
     PessoalTema {
         LembretesTela(
             data = hoje,
-            itens = Habito.doDia(hoje).map {
+            itens = Habito.doDia(hoje, admin = true).map {
                 ItemLembrete(it, concluido = it == Habito.ORACAO, minutosLeitura = if (it == Habito.BIBLIA) 4 else 0)
             },
             aoMarcar = { _, _ -> },

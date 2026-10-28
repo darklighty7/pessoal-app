@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,7 +72,14 @@ fun Raiz(
             aoSair = sessao::sair,
         )
 
-        is EstadoSessao.Pronto -> AppNavegacao(appViewModel, bibliaViewModel)
+        is EstadoSessao.Pronto -> {
+            // Só aqui o banco local descobre de quem ele é. Antes disso os lembretes criados
+            // não aparecem e os dias não fecham — nenhum dos dois sabe de quem é o dia.
+            LaunchedEffect(atual.perfil.uid, atual.perfil.admin) {
+                appViewModel.entrarComo(atual.perfil.uid, atual.perfil.admin)
+            }
+            AppNavegacao(appViewModel, bibliaViewModel)
+        }
     }
 }
 

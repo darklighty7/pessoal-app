@@ -108,7 +108,7 @@ fun AppNavegacao(appViewModel: AppViewModel, bibliaViewModel: BibliaViewModel) {
                 val porHabito = registros.associateBy { it.habito }
                 LembretesTela(
                     data = hoje,
-                    itens = Habito.doDia(hoje).map { habito ->
+                    itens = Habito.doDia(hoje, status.admin).map { habito ->
                         val registro = porHabito[habito.name]
                         ItemLembrete(
                             habito = habito,

@@ -17,6 +17,7 @@ enum class Habito(
     val hora: LocalTime,
     val obrigatorio: Boolean = true,
     val tipo: TipoTarefa? = null,
+    val doDono: Boolean = true,
 ) {
     BIBLIA(
         rotulo = "Ler a Bíblia",
@@ -24,6 +25,7 @@ enum class Habito(
         atributo = Atributo.ESPIRITO,
         dias = DayOfWeek.entries.toSet(),
         hora = LocalTime.of(7, 30),
+        doDono = false,
     ),
     ORACAO(
         rotulo = "Orar",
@@ -62,6 +64,11 @@ enum class Habito(
     fun ocorreEm(data: LocalDate): Boolean = data.dayOfWeek in dias
 
     companion object {
-        fun doDia(data: LocalDate): List<Habito> = entries.filter { it.ocorreEm(data) }
+        /**
+         * Os hábitos fixos do dia. Para o dono do app, todos; para os demais, só os que não
+         * são da rotina dele — hoje, só a Bíblia.
+         */
+        fun doDia(data: LocalDate, admin: Boolean): List<Habito> =
+            entries.filter { it.ocorreEm(data) && (admin || !it.doDono) }
     }
 }
