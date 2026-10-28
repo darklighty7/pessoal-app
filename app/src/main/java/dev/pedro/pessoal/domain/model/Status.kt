@@ -8,7 +8,7 @@ import java.util.Locale
  * Atributos em centésimos para evitar erros de ponto flutuante (0.1 + 0.2 != 0.3).
  */
 data class Status(
-    val nome: String = "Pedro",
+    val nome: String = "Jogador",
     val nivel: Int = 1,
     /** XP acumulado dentro do nível atual (nunca negativo). */
     val xp: Int = 0,
