@@ -19,6 +19,8 @@ data class EstadoConfiguracoes(
     val totalJogadores: Int? = null,
     /** Erro ou confirmação para mostrar embaixo da ação que acabou de rodar. */
     val recado: String? = null,
+    /** Erro ao apagar a conta, mostrado dentro da própria janela de confirmação. */
+    val erroApagar: String? = null,
 )
 
 class ConfiguracoesViewModel(
@@ -64,32 +66,39 @@ class ConfiguracoesViewModel(
         }
     }
 
+    fun limparErroApagar() {
+        _estado.value = _estado.value.copy(erroApagar = null)
+    }
+
     /**
      * Apaga a conta inteira: nuvem, aparelho e login.
      *
-     * A ordem importa e não é a óbvia. O Firebase exige um login recente para apagar a
-     * conta, e só diz isso depois da tentativa — perguntar antes evita o pior cenário, que
-     * é apagar os dados e descobrir que a conta continua de pé.
+     * A senha vem primeiro. O Firebase exige um login recente para apagar a conta e só
+     * avisa depois da tentativa; confirmando a senha antes, ele sempre aceita — e um erro
+     * aqui (senha errada, sem internet) para tudo antes de qualquer dado ser apagado.
      *
      * Depois disso, os dados saem antes do login, porque as regras do Firestore só deixam o
      * dono apagar o próprio perfil: sem usuário logado, o documento ficaria órfão para
      * sempre, sem ninguém com direito de removê-lo.
      */
-    fun apagarConta(uid: String) {
+    fun apagarConta(uid: String, senha: String) {
         if (_estado.value.ocupado) return
-        if (auth.precisaEntrarDeNovo()) {
-            _estado.value = _estado.value.copy(
-                recado = "Por segurança, saia e entre de novo antes de apagar a conta.",
-            )
+        if (senha.isBlank()) {
+            _estado.value = _estado.value.copy(erroApagar = "Digite a sua senha.")
             return
         }
 
-        _estado.value = _estado.value.copy(ocupado = true, recado = null)
+        _estado.value = _estado.value.copy(ocupado = true, erroApagar = null)
         viewModelScope.launch {
+            val erroSenha = auth.confirmarSenha(senha)
+            if (erroSenha != null) {
+                _estado.value = _estado.value.copy(ocupado = false, erroApagar = erroSenha)
+                return@launch
+            }
             runCatching { perfis.apagar(uid) }
             repositorio.apagarTudoLocal()
             val erro = auth.apagarConta()
-            _estado.value = _estado.value.copy(ocupado = false, recado = erro)
+            _estado.value = _estado.value.copy(ocupado = false, erroApagar = erro)
             // Deu certo: o ouvinte do Auth percebe que não há mais ninguém logado e a
             // Raiz volta sozinha para a tela de entrada.
         }

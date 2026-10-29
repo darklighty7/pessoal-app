@@ -78,7 +78,8 @@ fun ConfiguracoesTela(
     aoRenomear: (String) -> Unit,
     aoAlternarHabito: (Habito) -> Unit,
     aoZerarProgresso: () -> Unit,
-    aoApagarConta: () -> Unit,
+    aoApagarConta: (senha: String) -> Unit,
+    aoCancelarApagar: () -> Unit,
     aoSair: () -> Unit,
     aoPedirTotal: () -> Unit,
     aoLimparRecado: () -> Unit,
@@ -87,6 +88,7 @@ fun ConfiguracoesTela(
     val contexto = LocalContext.current
     var nome by remember(perfil.nomePersonagem) { mutableStateOf(perfil.nomePersonagem) }
     var confirmando by remember { mutableStateOf<Confirmacao?>(null) }
+    var apagandoConta by remember { mutableStateOf(false) }
 
     LaunchedEffect(perfil.admin) { if (perfil.admin) aoPedirTotal() }
 
@@ -158,7 +160,7 @@ fun ConfiguracoesTela(
             descricao = "Apaga o personagem, os lembretes e o acesso. Não tem volta.",
             cor = Alerta,
             habilitado = !estado.ocupado,
-            aoTocar = { confirmando = Confirmacao.APAGAR_CONTA },
+            aoTocar = { apagandoConta = true },
         )
 
         // ----- O sistema, do dono do app -----
@@ -238,7 +240,6 @@ fun ConfiguracoesTela(
                 TextButton(onClick = {
                     confirmando = null
                     when (qual) {
-                        Confirmacao.APAGAR_CONTA -> aoApagarConta()
                         Confirmacao.ZERAR -> aoZerarProgresso()
                     }
                 }) { Text(qual.confirmar, color = Alerta, fontWeight = FontWeight.SemiBold) }
@@ -248,15 +249,82 @@ fun ConfiguracoesTela(
             },
         )
     }
+
+    if (apagandoConta) {
+        ConfirmarApagarConta(
+            ocupado = estado.ocupado,
+            erro = estado.erroApagar,
+            aoConfirmar = aoApagarConta,
+            aoCancelar = {
+                apagandoConta = false
+                aoCancelarApagar()
+            },
+        )
+    }
+}
+
+/**
+ * Janela de apagar a conta. Pede a senha porque o Firebase só apaga com login recente, e
+ * confirmar a senha resolve isso na hora. A janela fica aberta durante o trabalho e mostra
+ * o erro dentro dela — antes ele aparecia no topo da tela, longe do botão, e parecia que
+ * nada tinha acontecido.
+ */
+@Composable
+private fun ConfirmarApagarConta(
+    ocupado: Boolean,
+    erro: String?,
+    aoConfirmar: (String) -> Unit,
+    aoCancelar: () -> Unit,
+) {
+    var senha by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = { if (!ocupado) aoCancelar() },
+        containerColor = Superficie,
+        title = { Text("Apagar a conta?", color = Texto, fontWeight = FontWeight.SemiBold) },
+        text = {
+            Column {
+                Text(
+                    "O personagem, o progresso, os lembretes e o acesso somem deste aparelho e da nuvem. " +
+                        "Não há como desfazer.",
+                    color = TextoSecundario,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(Modifier.height(16.dp))
+                CampoTexto(
+                    valor = senha,
+                    aoMudar = { senha = it },
+                    rotulo = "Sua senha",
+                    senha = true,
+                    ultimo = true,
+                    habilitado = !ocupado,
+                )
+                if (erro != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(erro, color = Alerta, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { aoConfirmar(senha) },
+                enabled = !ocupado && senha.isNotBlank(),
+            ) {
+                Text(
+                    if (ocupado) "Apagando…" else "Apagar tudo",
+                    color = Alerta,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = aoCancelar, enabled = !ocupado) {
+                Text("Cancelar", color = TextoSecundario)
+            }
+        },
+    )
 }
 
 private enum class Confirmacao(val titulo: String, val texto: String, val confirmar: String) {
-    APAGAR_CONTA(
-        "Apagar a conta?",
-        "O personagem, o progresso, os lembretes e o acesso somem deste aparelho e da nuvem. " +
-            "Não há como desfazer.",
-        "Apagar tudo",
-    ),
     ZERAR(
         "Zerar o progresso?",
         "O nível volta a 1 e o histórico de dias é apagado. O nome, a classe e os lembretes ficam.",

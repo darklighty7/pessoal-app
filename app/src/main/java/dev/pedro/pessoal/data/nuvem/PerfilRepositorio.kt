@@ -4,6 +4,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import dev.pedro.pessoal.domain.model.Classe
 import dev.pedro.pessoal.domain.model.PerfilUsuario
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -63,15 +64,41 @@ class PerfilRepositorio(
     }
 
     /**
-     * Apaga o perfil na nuvem. Os lembretes e exercícios vivem só no banco do aparelho,
-     * então não há subcoleção para limpar aqui — se um dia subirem para o Firestore, este
-     * é o lugar onde isso precisa entrar junto.
+     * Apaga o perfil na nuvem e, se ele era o último a chegar, devolve o número ao
+     * contador (ver [totalAposApagar]). As duas coisas vão na mesma transação: ou o perfil
+     * some e o número volta, ou nada muda — nunca dois jogadores com o mesmo número.
+     *
+     * A transação precisa de internet e das regras novas publicadas. Se falhar, o perfil
+     * é apagado do jeito antigo e o número só fica vago.
+     *
+     * Os lembretes e exercícios vivem só no banco do aparelho, então não há subcoleção
+     * para limpar aqui — se um dia subirem para o Firestore, este é o lugar onde isso
+     * precisa entrar junto.
      */
     suspend fun apagar(uid: String) {
-        documento(uid).delete().await()
+        val perfil = documento(uid)
+        val contador = db.collection(ContadorRepositorio.COLECAO)
+            .document(ContadorRepositorio.DOCUMENTO)
+        try {
+            db.runTransaction { transacao ->
+                // O Firestore exige todas as leituras antes da primeira escrita.
+                val numero = transacao.get(perfil).getLong(CAMPO_NUMERO)
+                val total = transacao.get(contador).getLong(ContadorRepositorio.CAMPO)
+                transacao.delete(perfil)
+                totalAposApagar(numero, total)?.let { novo ->
+                    transacao.update(contador, ContadorRepositorio.CAMPO, novo)
+                }
+                null
+            }.await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            perfil.delete().await()
+        }
     }
 
     private companion object {
         const val COLECAO = "usuarios"
+        const val CAMPO_NUMERO = "numeroJogador"
     }
 }

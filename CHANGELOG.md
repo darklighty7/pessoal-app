@@ -2,6 +2,28 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.13.3] - 2026-10-28
+
+### Corrigido
+- Apagar a conta e criar de novo dava um número de jogador novo, mesmo sem ninguém ter se
+  cadastrado no meio (o 2 voltava como 3). O contador só sabia somar. Agora, ao apagar a
+  conta, o perfil sai e o número volta ao contador na mesma transação — desde que ele seja
+  o último da fila. Se alguém já chegou depois, o número fica vago: renumerar os outros
+  mudaria quem não apagou nada.
+- `firestore.rules`: o contador pode descer um, mas só para quem tem o último número e só
+  junto com a exclusão do próprio perfil. **Republicar as regras.** Sem elas, o app apaga
+  a conta do jeito antigo (número fica vago) em vez de dar erro.
+- "Apagar a conta" não apagava quando o login tinha mais de 5 minutos: o app pedia para
+  sair e entrar de novo, e o aviso aparecia no topo da tela, longe do botão — parecia que
+  nada tinha acontecido. Agora a janela de confirmação pede a senha, confirma o login ali
+  mesmo (reautenticação do Firebase) e apaga. A janela fica aberta enquanto trabalha e
+  mostra o erro dentro dela (senha incorreta, sem internet, muitas tentativas). Uma senha
+  errada para tudo antes de qualquer dado ser apagado.
+
+### Adicionado
+- `NumeroJogadorTest`: regra de devolução do número (último da fila, alguém depois,
+  perfil sem número, contador inexistente).
+
 ## [1.13.2] - 2026-10-27
 
 ### Corrigido
