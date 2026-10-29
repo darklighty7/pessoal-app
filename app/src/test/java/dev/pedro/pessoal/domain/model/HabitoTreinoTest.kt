@@ -17,7 +17,7 @@ class HabitoTreinoTest {
     @Test
     fun `biblia e oracao aparecem todos os dias`() {
         listOf(segunda, terca, sabado, domingo).forEach { dia ->
-            val doDia = Habito.doDia(dia)
+            val doDia = Habito.doDia(dia, admin = true)
             assertTrue(Habito.BIBLIA in doDia)
             assertTrue(Habito.ORACAO in doDia)
         }
@@ -33,13 +33,27 @@ class HabitoTreinoTest {
     @Test
     fun `mobilidade de sabado nao conta para o dia perfeito`() {
         assertFalse(Habito.MOBILIDADE.obrigatorio)
-        assertEquals(2, Habito.doDia(sabado).count { it.obrigatorio })
+        assertEquals(2, Habito.doDia(sabado, admin = true).count { it.obrigatorio })
     }
 
     @Test
     fun `domingo so tem os habitos diarios`() {
-        assertEquals(listOf(Habito.BIBLIA, Habito.ORACAO), Habito.doDia(domingo))
+        assertEquals(listOf(Habito.BIBLIA, Habito.ORACAO), Habito.doDia(domingo, admin = true))
         assertNull(Treino.doDia(domingo))
+    }
+
+    @Test
+    fun `usuario comum so tem a biblia como habito fixo`() {
+        listOf(segunda, terca, sabado, domingo).forEach { dia ->
+            assertEquals(listOf(Habito.BIBLIA), Habito.doDia(dia, admin = false))
+        }
+    }
+
+    @Test
+    fun `habito desligado some do dia`() {
+        val doDia = Habito.doDia(terca, admin = true, desligados = setOf(Habito.KARATE))
+        assertFalse(Habito.KARATE in doDia)
+        assertTrue(Habito.BIBLIA in doDia)
     }
 
     @Test
