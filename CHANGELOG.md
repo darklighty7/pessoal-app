@@ -2,6 +2,29 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.14.0] - 2026-10-28
+
+As notificações passaram a saber de quem é o aparelho.
+
+### Alterado
+- O aviso da manhã chamava a pessoa de "Pedro", porque o nome estava escrito no código.
+  Agora o nome vem do personagem: "Bom dia, Ana". Sem nome gravado, a saudação sai sozinha,
+  sem ficar com um buraco no meio.
+- O nome aparece onde soa como alguém falando com você — a saudação da manhã, a pergunta
+  depois do karatê e o empurrão do treino. No aviso de sair para a aula e no versículo não:
+  repetir o nome em tudo cansa rápido, e no versículo ficaria no caminho do texto.
+- `Status.nome` vinha com "Pedro" de fábrica. Virou "Jogador": é o que aparece no instante
+  entre a tela abrir e o banco responder, e esse instante não é de ninguém em particular.
+
+### Corrigido
+- Os alarmes de karatê, treino e oração tocavam para todo mundo, mesmo para quem nem
+  enxerga esses hábitos na lista — eles são da rotina do dono do app. Quem não é
+  administrador recebia aviso de uma aula que não existe para ela.
+- Desligar um hábito fixo nas configurações não calava o aviso dele: o alarme continuava
+  tocando todo dia, o que fazia o interruptor novo da v1.13.0 parecer quebrado.
+- Sem ninguém logado, os avisos de hábito não aparecem mais. O versículo continua, que é
+  o mesmo texto para qualquer pessoa.
+
 ## [1.13.3] - 2026-10-28
 
 ### Corrigido
