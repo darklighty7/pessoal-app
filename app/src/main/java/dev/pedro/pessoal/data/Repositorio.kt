@@ -262,6 +262,9 @@ class Repositorio(
         ocorreEm: (LocalDate) -> Boolean,
     ): ResultadoHabito {
         val cumprido = registros[chave]?.concluido == true
+        // A falha precisa ficar gravada: contar() só soma dias com registro. Sem esta linha,
+        // um dia falhado seria igual a um dia em que a tarefa ainda nem existia.
+        if (registros[chave] == null) registroDao.gravar(RegistroEntity(data.toString(), chave, concluido = false))
         return ResultadoHabito(
             atributo = atributo,
             cumprido = cumprido,
@@ -272,8 +275,7 @@ class Repositorio(
 
     /**
      * Conta quantos dias seguidos, terminando em [data], a tarefa foi cumprida
-     * ([buscando] verdadeiro) ou falhada ([buscando] falso). Só conta os dias em que
-     * ela estava programada.
+     * ([buscando] verdadeiro) ou falhada ([buscando] falso). Ver [contarSeguidos].
      */
     private suspend fun contar(
         chave: String,
@@ -281,19 +283,9 @@ class Repositorio(
         buscando: Boolean,
         ocorreEm: (LocalDate) -> Boolean,
     ): Int {
-        val anteriores = registroDao.anteriores(chave, data.toString(), limite = 90)
+        val anteriores = registroDao.anteriores(chave, data.toString(), limite = LIMITE_DIAS_CONTAGEM)
             .associate { LocalDate.parse(it.data) to it.concluido }
-        var total = 1 // o próprio dia que está fechando
-        var dia = data.minusDays(1)
-        var restantes = 90
-        while (restantes-- > 0) {
-            if (ocorreEm(dia)) {
-                if ((anteriores[dia] ?: false) != buscando) break
-                total++
-            }
-            dia = dia.minusDays(1)
-        }
-        return total
+        return contarSeguidos(anteriores, data, buscando, ocorreEm)
     }
 
     // ----- Lembretes e exercícios criados pela pessoa -----
@@ -370,3 +362,35 @@ class Repositorio(
 }
 
 private fun LocalDate.coerceGe(minimo: LocalDate): LocalDate = if (isBefore(minimo)) minimo else this
+
+/** Até quantos dias para trás a contagem de sequências e falhas olha. */
+internal const val LIMITE_DIAS_CONTAGEM = 90
+
+/**
+ * Quantos dias seguidos, terminando em [data] (que já conta como 1), a tarefa ficou no
+ * estado [buscando]. Só olha os dias em que ela estava programada ([ocorreEm]).
+ *
+ * Para no primeiro dia programado sem registro. Esse dia pode ser de antes de a tarefa
+ * existir, de quando ela estava desligada, de antes de a conta ser criada, ou de antes
+ * de o fechamento passar a gravar as falhas. Antes, esse dia contava como falha, e a
+ * primeira falha real de um lembrete novo já punia como "3 ou mais".
+ */
+internal fun contarSeguidos(
+    anteriores: Map<LocalDate, Boolean>,
+    data: LocalDate,
+    buscando: Boolean,
+    ocorreEm: (LocalDate) -> Boolean,
+): Int {
+    var total = 1 // o próprio dia que está fechando
+    var dia = data.minusDays(1)
+    var restantes = LIMITE_DIAS_CONTAGEM
+    while (restantes-- > 0) {
+        if (ocorreEm(dia)) {
+            val concluido = anteriores[dia] ?: break
+            if (concluido != buscando) break
+            total++
+        }
+        dia = dia.minusDays(1)
+    }
+    return total
+}
