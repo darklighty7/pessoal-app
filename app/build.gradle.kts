@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     kapt(libs.androidx.room.compiler)
+    kapt(libs.kotlin.metadata.jvm)
 
     // Firebase: login por e-mail/senha e perfil do personagem na nuvem.
     // O BoM manda nas versões; as bibliotecas abaixo ficam sem versão de propósito.
