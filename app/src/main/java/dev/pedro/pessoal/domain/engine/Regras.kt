@@ -8,23 +8,24 @@ object Regras {
     const val VALOR_INICIAL_ATRIBUTO = 0   // tudo começa zerado
 
     // Níveis: nível 1 pede 100 XP, e cada nível seguinte pede 2 XP a mais que o anterior.
-    // Crescimento fixo e suave: fazendo tudo certo todos os dias (~55 XP/dia), dá para
-    // alcançar o rank S (nível 100) em torno de 1 ano; D em ~18 dias, C em ~2 meses,
-    // B em ~4 meses, A em ~7 meses.
+    // Crescimento fixo e suave: fazendo tudo certo todos os dias (~75 XP/dia desde o
+    // rebalanceamento de nov/2026; antes ~55), dá para alcançar o rank S (nível 100) em
+    // torno de 9 meses; D em ~2 semanas, C em ~6 semanas, B em ~3 meses, A em ~5 meses.
     const val XP_BASE = 100
     const val XP_INCREMENTO_POR_NIVEL = 2
     fun xpParaProximoNivel(nivel: Int): Int = XP_BASE + XP_INCREMENTO_POR_NIVEL * (nivel - 1)
 
     // Desgaste constante
-    const val DESGASTE_DIARIO_XP = 2
+    const val DESGASTE_DIARIO_XP = 1
 
-    // Perdas por falhas seguidas de um mesmo hábito
-    const val PERDA_DUAS_FALHAS = 10          // −0,10
-    const val PERDA_TRES_OU_MAIS_FALHAS = 20  // −0,20 por dia
+    // Perdas por falhas seguidas de um mesmo hábito (reduzidas em nov/2026: Espírito,
+    // com dois hábitos diários, caía mais rápido do que a leitura conseguia repor).
+    const val PERDA_DUAS_FALHAS = 6           // −0,06
+    const val PERDA_TRES_OU_MAIS_FALHAS = 12  // −0,12 por dia
     const val PERDA_DISCIPLINA_SEQUENCIA = 5  // −0,05 por dia, se algum hábito estiver com 3+ falhas
 
     // Bônus
-    const val BONUS_DIA_PERFEITO_XP = 15
+    const val BONUS_DIA_PERFEITO_XP = 25
     const val BONUS_DIA_PERFEITO_DISCIPLINA = 10
     const val BONUS_SEQUENCIA_7 = 30          // +0,30
     const val BONUS_SEQUENCIA_30 = 100        // +1,00 a cada 30 dias
@@ -43,14 +44,14 @@ object Regras {
     // Lembretes criados pela própria pessoa
     /** O aviso sai antes da hora marcada, para dar tempo de se preparar — como o do karatê. */
     const val AVISO_ANTES_MIN = 30L
-    const val XP_LEMBRETE_PESSOAL = 10
+    const val XP_LEMBRETE_PESSOAL = 15
     const val GANHO_LEMBRETE_PESSOAL = 10     // +0,10 no atributo escolhido
 
     // Leitura da Bíblia (por tempo, dividida entre Espírito e Inteligência)
     const val META_LEITURA_MIN = 10
-    const val XP_META_LEITURA = 10
+    const val XP_META_LEITURA = 15
     const val ESPIRITO_META_LEITURA = 10          // +0,10 ao atingir a meta
     const val INTELIGENCIA_META_LEITURA = 5       // +0,05 exatamente nos 10 minutos
     const val INTELIGENCIA_ACIMA_META_LEITURA = 10 // +0,10 a partir de 11 minutos
-    const val XP_MAX_LEITURA_DIA = 30
+    const val XP_MAX_LEITURA_DIA = 40
 }

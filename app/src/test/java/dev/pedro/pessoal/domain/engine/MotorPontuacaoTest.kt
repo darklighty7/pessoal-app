@@ -75,9 +75,9 @@ class MotorPontuacaoTest {
 
     @Test
     fun `leitura rende por minuto extra ate o teto`() {
-        assertEquals(10, motor.recompensaLeitura(10).xp)
-        assertEquals(18, motor.recompensaLeitura(18).xp)
-        assertEquals(30, motor.recompensaLeitura(90).xp)
+        assertEquals(15, motor.recompensaLeitura(10).xp)
+        assertEquals(23, motor.recompensaLeitura(18).xp)
+        assertEquals(40, motor.recompensaLeitura(90).xp)
     }
 
     @Test
@@ -106,17 +106,17 @@ class MotorPontuacaoTest {
         var s = motor.ajustarAtributo(Status(), Atributo.FORCA, 100)
         s = motor.ajustarAtributo(s, Atributo.DISCIPLINA, 100)
         s = motor.fecharDia(s, listOf(ResultadoHabito(Atributo.FORCA, false, 2, 0)))
-        assertEquals(90, s.valor(Atributo.FORCA))
+        assertEquals(94, s.valor(Atributo.FORCA))
         assertEquals(100, s.valor(Atributo.DISCIPLINA))
         s = motor.fecharDia(s, listOf(ResultadoHabito(Atributo.FORCA, false, 3, 0)))
-        assertEquals(70, s.valor(Atributo.FORCA))
+        assertEquals(82, s.valor(Atributo.FORCA))
         assertEquals(95, s.valor(Atributo.DISCIPLINA))
     }
 
     @Test
     fun `dia perfeito da bonus e o desgaste e descontado`() {
         val s = motor.fecharDia(Status(), listOf(ResultadoHabito(Atributo.ESPIRITO, true, 0, 1)))
-        assertEquals(15 - 2, s.xp)
+        assertEquals(25 - 1, s.xp)
         assertEquals(10, s.valor(Atributo.DISCIPLINA))
     }
 
