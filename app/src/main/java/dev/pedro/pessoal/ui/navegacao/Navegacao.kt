@@ -196,6 +196,7 @@ fun AppNavegacao(
                     aoSalvarTamanho = bibliaViewModel::salvarTamanhoFonte,
                     aoZoom = bibliaViewModel::aplicarZoom,
                     aoAlvoAtingido = bibliaViewModel::alvoAtingido,
+                    aoTentarDeNovo = bibliaViewModel::preparar,
                 )
             }
         }

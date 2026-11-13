@@ -38,8 +38,14 @@ class PreferenciasLeitura(contexto: Context) {
     /** Livro e capítulo onde a leitura parou. */
     data class Posicao(val livro: Int, val capitulo: Int)
 
+    /** Aviso de copyright e marca da NVI, como a YouVersion entrega (não é texto bíblico). */
+    fun lerAvisoCopyright(): String? = prefs.getString(CHAVE_COPYRIGHT, null)
+
+    fun salvarAvisoCopyright(aviso: String) = prefs.edit { putString(CHAVE_COPYRIGHT, aviso) }
+
     private companion object {
         const val ARQUIVO = "leitura"
+        const val CHAVE_COPYRIGHT = "aviso_copyright"
         const val CHAVE_TAMANHO = "tamanho_fonte"
         const val CHAVE_LIVRO = "ultimo_livro"
         const val CHAVE_CAPITULO = "ultimo_capitulo"

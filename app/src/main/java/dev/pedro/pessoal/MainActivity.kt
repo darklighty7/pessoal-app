@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.pedro.pessoal.data.AppDatabase
 import dev.pedro.pessoal.data.BibliaRepositorio
+import dev.pedro.pessoal.data.Escrituras
 import dev.pedro.pessoal.data.PreferenciasLeitura
 import dev.pedro.pessoal.data.Repositorio
 import dev.pedro.pessoal.data.auth.AutenticacaoRepositorio
@@ -49,8 +50,10 @@ class MainActivity : ComponentActivity() {
 
         val banco = AppDatabase.obter(this)
         val repositorio = Repositorio(banco.statusDao(), banco.registroDao(), banco.itensDao())
-        val biblia = BibliaRepositorio(banco.bibliaDao())
         val preferencias = PreferenciasLeitura(applicationContext)
+        // A Bíblia (NVI) vem do SDK da YouVersion; ele precisa estar ligado antes da primeira tela.
+        Escrituras.configurar(applicationContext)
+        val biblia = BibliaRepositorio(banco.bibliaDao(), preferencias)
         val autenticacao = AutenticacaoRepositorio()
         val perfis = PerfilRepositorio()
         val contadores = ContadorRepositorio()

@@ -1,4 +1,13 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+// A chave do app na YouVersion Platform fica no local.properties (fora do Git, o repositório é
+// público): YVP_APP_KEY=... Sem ela o app compila, mas o leitor da Bíblia não carrega o texto.
+val propriedadesLocais = Properties().apply {
+    val arquivo = rootProject.file("local.properties")
+    if (arquivo.exists()) arquivo.inputStream().use { load(it) }
+}
+val chaveYouVersion: String = propriedadesLocais.getProperty("YVP_APP_KEY", "")
 
 plugins {
     alias(libs.plugins.android.application)
@@ -18,6 +27,7 @@ android {
         targetSdk = 36
         versionCode = 24
         versionName = "1.14.0"
+        buildConfigField("String", "YVP_APP_KEY", "\"$chaveYouVersion\"")
     }
 
     buildTypes {
@@ -84,6 +94,10 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.kotlinx.coroutines.play.services)
+
+    // Bíblia: texto, notas de rodapé e cache vêm do SDK da YouVersion (licença da Biblica).
+    implementation(libs.youversion.platform.core)
+    implementation(libs.youversion.platform.ui)
     debugImplementation(libs.androidx.ui.tooling)
 
     testImplementation(libs.junit)

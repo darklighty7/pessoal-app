@@ -7,7 +7,6 @@ import dev.pedro.pessoal.data.BibliaRepositorio
 import dev.pedro.pessoal.data.GrifoListado
 import dev.pedro.pessoal.data.LivroEntity
 import dev.pedro.pessoal.data.PreferenciasLeitura
-import dev.pedro.pessoal.data.VersiculoEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -20,11 +19,17 @@ import kotlinx.coroutines.withContext
 
 /** Tudo que a tela da Bíblia mostra de uma vez. */
 data class EstadoBiblia(
-    val download: BibliaRepositorio.Estado = BibliaRepositorio.Estado.Baixando,
+    val download: BibliaRepositorio.Estado = BibliaRepositorio.Estado.Preparando,
     val livros: List<LivroEntity> = emptyList(),
     val livroAberto: LivroEntity? = null,
     val capitulo: Int = 1,
-    val versiculos: List<VersiculoEntity> = emptyList(),
+    /**
+     * Quantos versículos o capítulo aberto tem (1 até este número). O texto de cada um é
+     * desenhado pelo SDK da YouVersion na própria tela.
+     */
+    val quantidadeVersiculos: Int = 0,
+    /** Aviso de copyright e marca da NVI, mostrado no fim de cada capítulo. */
+    val avisoCopyright: String = "",
     /** Segundos já cronometrados nesta sessão de leitura. */
     val segundos: Int = 0,
     val cronometroLigado: Boolean = false,
@@ -44,7 +49,7 @@ data class EstadoBiblia(
 )
 
 /**
- * Cuida do download da Bíblia, da navegação por livro e capítulo, e do cronômetro.
+ * Cuida da preparação da Bíblia (estrutura vinda da YouVersion), da navegação por livro e capítulo, e do cronômetro.
  * O cronômetro só conta enquanto a leitura está em andamento; ao sair da tela, os
  * minutos inteiros são entregues ao repositório principal e viram XP.
  */
@@ -64,11 +69,19 @@ class BibliaViewModel(
             val salvo = withContext(Dispatchers.IO) { preferencias.lerTamanhoFonte() }
             if (salvo != null) _estado.update { it.copy(tamanhoFonte = TamanhoFonte.limitar(salvo)) }
         }
+        preparar()
+    }
+
+    /** Busca a estrutura da Bíblia se faltar; a tela chama de novo pelo "Tentar de novo". */
+    fun preparar() {
         viewModelScope.launch {
-            repositorio.baixarSeFaltar { situacao ->
+            repositorio.prepararSeFaltar { situacao ->
                 _estado.update { it.copy(download = situacao) }
             }
-            if (repositorio.jaImportada()) carregarLivros()
+            if (repositorio.jaPreparada()) {
+                _estado.update { it.copy(avisoCopyright = repositorio.avisoCopyright()) }
+                carregarLivros()
+            }
         }
     }
 
@@ -91,13 +104,13 @@ class BibliaViewModel(
     /** Abre um capítulo. [versiculo] faz a tela rolar até ele, quando veio de uma busca. */
     fun abrir(livro: LivroEntity, capitulo: Int, versiculo: Int? = null) {
         viewModelScope.launch {
-            val versos = repositorio.capitulo(livro.numero, capitulo)
+            val quantidade = repositorio.versiculos(livro, capitulo)
             val grifos = repositorio.grifos(livro.numero, capitulo)
             _estado.update {
                 it.copy(
-                    livroAberto = livro, capitulo = capitulo, versiculos = versos,
+                    livroAberto = livro, capitulo = capitulo, quantidadeVersiculos = quantidade,
                     grifos = grifos, selecionados = emptySet(),
-                    versiculoAlvo = versiculo?.takeIf { alvo -> versos.any { v -> v.numero == alvo } },
+                    versiculoAlvo = versiculo?.takeIf { alvo -> alvo in 1..quantidade },
                 )
             }
             withContext(Dispatchers.IO) { preferencias.salvarUltimaPosicao(livro.numero, capitulo) }
