@@ -100,9 +100,15 @@ private fun CartaoPerfil(status: Status) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                SeloRank(status.rank, tamanho = 68.dp)
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            // O selo e o nome encostam na borda esquerda do cartão; os três blocos abaixo é que
+            // são simétricos. Centralizar esta linha deixava um vão à esquerda do selo.
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                SeloRank(status.rank, tamanho = 80.dp)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         status.nome,
                         style = MaterialTheme.typography.titleLarge,
