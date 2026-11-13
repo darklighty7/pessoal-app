@@ -67,6 +67,9 @@ private fun materialDo(rank: Rank): Material = when (rank) {
 
 fun nomeMaterial(rank: Rank): String = materialDo(rank).nome
 
+/** Cor clara do material, para textos que acompanham o selo (ex.: "RANK D · BRONZE"). */
+fun corMaterial(rank: Rank): Color = materialDo(rank).claro
+
 /**
  * Selo no estilo "materiais de jogo ranqueado": um escudo que muda de material a cada rank,
  * com um reflexo de luz passando o tempo todo. Os enfeites vão se somando:
