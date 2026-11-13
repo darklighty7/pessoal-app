@@ -14,12 +14,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         DiaFechadoEntity::class,
         ProgressoExercicioEntity::class,
         LivroEntity::class,
-        VersiculoEntity::class,
         GrifoEntity::class,
         LembreteEntity::class,
         ExercicioEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -80,12 +79,27 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Bíblia pela YouVersion: o texto da NVI baixado do JSON antigo (edição antiga e sem
+         * licença) sai do aparelho. Os livros são refeitos a partir da YouVersion, agora com o
+         * código USFM e a contagem de versículos. Os grifos ficam: a numeração dos livros
+         * (1 = Gênesis ... 66 = Apocalipse) é a mesma.
+         */
+        private val MIGRACAO_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS `versiculo`")
+                db.execSQL("DELETE FROM `livro`")
+                db.execSQL("ALTER TABLE `livro` ADD COLUMN `usfm` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `livro` ADD COLUMN `versiculos` TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         @Volatile private var instancia: AppDatabase? = null
 
         fun obter(contexto: Context): AppDatabase = instancia ?: synchronized(this) {
             instancia ?: Room
                 .databaseBuilder(contexto.applicationContext, AppDatabase::class.java, "pessoal.db")
-                .addMigrations(MIGRACAO_1_2, MIGRACAO_2_3, MIGRACAO_3_4, MIGRACAO_4_5)
+                .addMigrations(MIGRACAO_1_2, MIGRACAO_2_3, MIGRACAO_3_4, MIGRACAO_4_5, MIGRACAO_5_6)
                 .build()
                 .also { instancia = it }
         }

@@ -1,3 +1,14 @@
+import java.util.Properties
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+// A chave do app na YouVersion Platform fica no local.properties (fora do Git, o repositório é
+// público): YVP_APP_KEY=... Sem ela o app compila, mas o leitor da Bíblia não carrega o texto.
+val propriedadesLocais = Properties().apply {
+    val arquivo = rootProject.file("local.properties")
+    if (arquivo.exists()) arquivo.inputStream().use { load(it) }
+}
+val chaveYouVersion: String = propriedadesLocais.getProperty("YVP_APP_KEY", "")
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -8,14 +19,15 @@ plugins {
 
 android {
     namespace = "dev.pedro.pessoal"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "dev.pedro.pessoal"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 24
         versionName = "1.14.0"
+        buildConfigField("String", "YVP_APP_KEY", "\"$chaveYouVersion\"")
     }
 
     buildTypes {
@@ -37,13 +49,17 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     buildFeatures {
         compose = true
         // A tela de configurações mostra a versão; sem isto, BuildConfig nem é gerado.
         buildConfig = true
+    }
+}
+
+// O Kotlin 2.2 transformou o antigo kotlinOptions { jvmTarget } em erro; este é o substituto.
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
@@ -71,6 +87,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     kapt(libs.androidx.room.compiler)
+    kapt(libs.kotlin.metadata.jvm)
 
     // Firebase: login por e-mail/senha e perfil do personagem na nuvem.
     // O BoM manda nas versões; as bibliotecas abaixo ficam sem versão de propósito.
@@ -78,6 +95,10 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.kotlinx.coroutines.play.services)
+
+    // Bíblia: texto, notas de rodapé e cache vêm do SDK da YouVersion (licença da Biblica).
+    implementation(libs.youversion.platform.core)
+    implementation(libs.youversion.platform.ui)
     debugImplementation(libs.androidx.ui.tooling)
 
     testImplementation(libs.junit)
