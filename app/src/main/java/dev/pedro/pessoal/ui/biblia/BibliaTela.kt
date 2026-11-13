@@ -282,6 +282,12 @@ private fun Leitor(
         if (posicao >= 0) lista.scrollToItem(posicao)
         aoAlvoAtingido()
     }
+    // Ao trocar de livro ou capítulo, a leitura volta ao versículo 1. Sem isto a LazyColumn
+    // mantém a rolagem anterior pela key do versículo, e o capítulo novo abre no meio ou no fim.
+    // Não vale quando a busca pediu um versículo: aí o efeito acima rola até ele.
+    LaunchedEffect(estado.livroAberto?.numero, estado.capitulo) {
+        if (estado.versiculoAlvo == null) lista.scrollToItem(0)
+    }
 
     val tamanho = estado.tamanhoFonte
     val densidade = LocalDensity.current

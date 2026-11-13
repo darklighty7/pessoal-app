@@ -18,7 +18,6 @@ Melhorias futuras para o app Forja, sem compromisso de prazo.
   - O cronômetro da leitura emite um `EstadoBiblia` novo a cada segundo (tirar `segundos` do estado e coletar em um painel próprio).
   - `MainActivity.onCreate` faz cerca de 17 chamadas de Binder (canais e 5 alarmes) antes do primeiro frame; mover para fora da thread principal.
   - Estado inicial "falso" (nível 1, tudo pendente) até o banco responder na abertura do app.
-- A importação da Bíblia não é atômica: se o app fechar no meio, `COUNT(*) > 0` marca como pronta uma Bíblia incompleta. Envolver livros e versículos em uma única transação.
 - Possível: ao trocar de capítulo a lista pode abrir na mesma posição de rolagem (a chave dos itens é só o número do versículo); rolar ao topo ao mudar de capítulo.
 - Compilar e testar no celular o redesign v1.2.0, os grifos v1.3.0 e o tamanho/zoom do texto v1.4.0 e os ajustes de desempenho v1.4.1, e ajustar detalhes (nada disso foi compilado nem testado antes do pull request).
 

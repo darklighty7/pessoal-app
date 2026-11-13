@@ -21,7 +21,16 @@ class BibliaRepositorio(private val dao: BibliaDao) {
         data class Falhou(val motivo: String) : Estado
     }
 
-    suspend fun jaImportada(): Boolean = withContext(Dispatchers.IO) { dao.totalVersiculos() > 0 }
+    suspend fun jaImportada(): Boolean = withContext(Dispatchers.IO) { completa() }
+
+    /**
+     * Pronta só se todo livro tiver versículos. Antes bastava ter algum versículo, e uma
+     * importação interrompida (app fechado no meio) ficava marcada como pronta pela metade.
+     */
+    private suspend fun completa(): Boolean {
+        val livros = dao.totalLivros()
+        return livros > 0 && dao.livrosComVersiculos() == livros
+    }
 
     suspend fun livros(): List<LivroEntity> = withContext(Dispatchers.IO) { dao.livros() }
 
@@ -47,7 +56,7 @@ class BibliaRepositorio(private val dao: BibliaDao) {
      * Se já estiver importada, não faz nada.
      */
     suspend fun baixarSeFaltar(aoProgredir: (Estado) -> Unit) = withContext(Dispatchers.IO) {
-        if (dao.totalVersiculos() > 0) {
+        if (completa()) {
             aoProgredir(Estado.Pronta)
             return@withContext
         }
@@ -66,11 +75,11 @@ class BibliaRepositorio(private val dao: BibliaDao) {
                     capitulos = obj.getJSONArray("chapters").length(),
                 )
             }
-            dao.inserirLivros(livros)
-
+            // Primeiro lê tudo para a memória (~31 mil versículos); só no fim grava, numa
+            // transação única. O progresso mostra a leitura, que é a parte demorada.
+            val versiculos = ArrayList<VersiculoEntity>(32_000)
             for (i in 0 until json.length()) {
                 val capitulos = json.getJSONObject(i).getJSONArray("chapters")
-                val versiculos = mutableListOf<VersiculoEntity>()
                 for (c in 0 until capitulos.length()) {
                     val versos = capitulos.getJSONArray(c)
                     for (v in 0 until versos.length()) {
@@ -82,9 +91,9 @@ class BibliaRepositorio(private val dao: BibliaDao) {
                         )
                     }
                 }
-                dao.inserirVersiculos(versiculos)
                 aoProgredir(Estado.Importando(i + 1, json.length()))
             }
+            dao.importar(livros, versiculos)
             aoProgredir(Estado.Pronta)
         } catch (e: Exception) {
             aoProgredir(Estado.Falhou(e.message ?: "não foi possível baixar"))
