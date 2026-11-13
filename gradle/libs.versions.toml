@@ -1,6 +1,6 @@
 [versions]
-agp = "8.7.3"
-kotlin = "2.1.0"
+agp = "8.13.2"
+kotlin = "2.2.21"
 coreKtx = "1.15.0"
 lifecycle = "2.8.7"
 activityCompose = "1.9.3"
@@ -11,8 +11,8 @@ navigation = "2.8.5"
 room = "2.7.2"
 coroutines = "1.9.0"
 junit = "4.13.2"
-# Firebase: a série 33.x é a última que compila com compileSdk 35 e AGP 8.7.
-# Para subir ao BoM 34.x é preciso ir para compileSdk 36, o que exige AGP mais novo.
+# Firebase: a série 33.x foi mantida na subida para compileSdk 36 para mudar uma coisa de cada vez.
+# Com compileSdk 36 e AGP 8.13 já dá para ir ao BoM 34.x, numa mudança à parte.
 firebaseBom = "33.16.0"
 googleServices = "4.4.2"
 

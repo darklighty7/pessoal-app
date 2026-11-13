@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -8,12 +10,12 @@ plugins {
 
 android {
     namespace = "dev.pedro.pessoal"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "dev.pedro.pessoal"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 24
         versionName = "1.14.0"
     }
@@ -37,13 +39,17 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     buildFeatures {
         compose = true
         // A tela de configurações mostra a versão; sem isto, BuildConfig nem é gerado.
         buildConfig = true
+    }
+}
+
+// O Kotlin 2.2 transformou o antigo kotlinOptions { jvmTarget } em erro; este é o substituto.
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
