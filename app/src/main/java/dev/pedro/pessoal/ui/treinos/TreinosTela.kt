@@ -75,6 +75,8 @@ fun TreinosTela(
     aoSalvarExercicio: (ExercicioPessoal) -> Unit,
     aoApagarExercicio: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    /** Se a pessoa já cadastrou algum exercício, em qualquer dia; [pessoais] traz só os de hoje. */
+    temExercicios: Boolean = pessoais.isNotEmpty(),
 ) {
     // Nulo = formulário fechado. Um exercício de id zero é novo; com id, é edição.
     var emEdicao by remember { mutableStateOf<ExercicioPessoal?>(null) }
@@ -103,7 +105,12 @@ fun TreinosTela(
         Column(modifier.fillMaxSize().padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp)) {
             Text("Treinos", style = MaterialTheme.typography.headlineMedium, color = Texto)
             Text(
-                if (pessoais.isEmpty()) "Hoje é dia de descanso." else "Os seus exercícios de hoje.",
+                when {
+                    // Conta nova: nada cadastrado ainda. Não é descanso, é treino por montar.
+                    !temExercicios -> "Monte o seu treino: cadastre os exercícios e os dias de cada um."
+                    pessoais.isEmpty() -> "Hoje é dia de descanso."
+                    else -> "Os seus exercícios de hoje."
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextoSecundario,
                 modifier = Modifier.padding(top = 4.dp),

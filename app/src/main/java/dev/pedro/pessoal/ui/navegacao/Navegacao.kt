@@ -146,13 +146,16 @@ fun AppNavegacao(
             }
 
             composable(Aba.TREINOS.rota) {
-                val treino = Treino.doDia(hoje)
+                // Os treinos fixos (A, B e mobilidade) são a rotina do dono, como o karatê.
+                // Os demais começam sem nenhum treino e cadastram os próprios exercícios.
+                val treino = if (status.admin) Treino.doDia(hoje) else null
                 val habito = if (treino == Treino.MOBILIDADE) Habito.MOBILIDADE else Habito.TREINO_CASA
                 TreinosTela(
                     treino = treino,
                     progresso = progresso.mapValues { (_, p) -> ProgressoExercicio(p.nivel, p.treinosCompletos) },
                     concluido = registros.any { it.habito == habito.name && it.concluido },
                     pessoais = exerciciosPessoais.filter { it.ocorreEm(hoje) },
+                    temExercicios = exerciciosPessoais.isNotEmpty(),
                     aoConcluir = { treino?.let(appViewModel::concluirTreino) },
                     aoSalvarExercicio = appViewModel::salvarExercicio,
                     aoApagarExercicio = appViewModel::apagarExercicio,
