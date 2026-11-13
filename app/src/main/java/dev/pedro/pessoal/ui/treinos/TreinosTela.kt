@@ -75,7 +75,10 @@ fun TreinosTela(
     aoSalvarExercicio: (ExercicioPessoal) -> Unit,
     aoApagarExercicio: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    /** Se a pessoa já cadastrou algum exercício, em qualquer dia; [pessoais] traz só os de hoje. */
+    /**
+     * Se a pessoa já tem algum treino montado, em qualquer dia: exercícios cadastrados ou,
+     * para o admin, os treinos fixos. [pessoais] traz só os de hoje.
+     */
     temExercicios: Boolean = pessoais.isNotEmpty(),
 ) {
     // Nulo = formulário fechado. Um exercício de id zero é novo; com id, é edição.
