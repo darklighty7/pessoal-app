@@ -25,8 +25,8 @@ android {
         applicationId = "dev.pedro.pessoal"
         minSdk = 26
         targetSdk = 36
-        versionCode = 24
-        versionName = "1.14.0"
+        versionCode = 25
+        versionName = "1.15.0"
         buildConfigField("String", "YVP_APP_KEY", "\"$chaveYouVersion\"")
     }
 

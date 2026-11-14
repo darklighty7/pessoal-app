@@ -2,6 +2,48 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionamento semântico.
 
+## [1.15.0] - 2026-11-13
+
+A Bíblia passou a vir da YouVersion, com licença, e o app subiu para o Android 16.
+
+### Alterado
+- O texto da Bíblia vinha de um JSON baixado de um repositório público: era uma edição
+  antiga da NVI e sem licença para distribuir. Agora vem do SDK oficial da YouVersion,
+  sob a licença Fast-track da Biblica. O app não guarda mais texto bíblico nenhum — só a
+  estrutura (livros, código USFM e quantos versículos cada capítulo tem), que não é texto.
+- Cada versículo é desenhado pelo SDK dentro da linha do app, então o número em neon, o
+  grifo, a seleção, o zoom por pinça e a rolagem continuam sendo do app, como antes.
+- A lista de grifos mostra só a referência, sem o texto: a licença limita quantos
+  versículos podem estar na tela ao mesmo tempo.
+- O cartão de perfil na tela de Status virou um placar, e o selo ficou maior e encostado
+  à esquerda, junto do nome.
+- Falhar custa menos e concluir rende mais XP. A progressão estava punindo mais do que
+  recompensando, o que fazia um dia ruim parecer irrecuperável.
+- Android 16: `compileSdk` e `targetSdk` em 36, AGP 8.13.2, Kotlin 2.2.21 e Gradle 8.14.3.
+
+### Adicionado
+- As notas de rodapé da tradução aparecem como um marcador tocável no versículo e abrem
+  numa folha própria. A licença exige que fiquem acessíveis.
+- O crédito "NVI® · Biblica" fica sempre visível na barra de baixo e leva ao site da
+  Biblica, e o aviso de copyright da tradução fecha cada capítulo.
+- Os dois capítulos seguintes são pré-carregados no cache do SDK enquanto há internet, para
+  a leitura seguir sem conexão. Um capítulo que ainda não passou pelo cache mostra um aviso
+  em vez de uma tela vazia.
+- O README diz onde pôr a chave da YouVersion (`YVP_APP_KEY`, no `local.properties`).
+
+### Corrigido
+- Trocar de capítulo deixava a leitura na mesma altura da rolagem, no meio do texto novo.
+  Agora volta ao versículo 1.
+- A importação da Bíblia podia parar no meio e deixar o banco com parte dos livros, o que
+  fazia a tela de leitura abrir quebrada. Agora ou entra tudo, ou nada.
+- Contas novas começavam com os treinos fixos do dono do app (A, B e mobilidade), que não
+  são de todo mundo. Agora começam sem treino, e a tela convida a montar o seu.
+- Para quem tem a rotina fixa, um dia sem treino aparecia como "monte o seu treino" em vez
+  de descanso, porque a mensagem só olhava os exercícios cadastrados à mão.
+- O `kapt` do Room não conseguia ler os metadados do Kotlin 2.2.21 e quebrava sem dizer o
+  motivo. A biblioteca `kotlin-metadata-jvm` passou a entrar no classpath do kapt na mesma
+  versão do compilador.
+
 ## [1.14.0] - 2026-10-28
 
 As notificações passaram a saber de quem é o aparelho.
