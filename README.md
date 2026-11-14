@@ -31,6 +31,22 @@ O arquivo `app/google-services.json` **não vai para o repositório**: ele carre
 projeto e cada um usa o seu. Para rodar o app, baixe o seu no console do Firebase e coloque em
 `app/`. As regras do Firestore estão em `firestore.rules` — republique sempre que o arquivo mudar.
 
+## Bíblia (YouVersion)
+
+O texto da NVI vem da YouVersion Platform, sob a licença Fast-track da Biblica. O app não guarda
+texto bíblico: só a estrutura (livros, código USFM e quantos versículos cada capítulo tem). A
+chave do app na plataforma **não vai para o repositório** — ponha a sua em `local.properties`,
+que também fica fora do Git:
+
+```
+YVP_APP_KEY=a-sua-chave
+```
+
+Sem ela o app compila e abre, mas o leitor não carrega o texto: a preparação para em "Falta a
+chave da YouVersion". O `local.properties` precisa ainda do `sdk.dir`, que o Android Studio
+escreve sozinho ao abrir o projeto; num clone novo pela linha de comando ele não existe e o
+Gradle para em "SDK location not found".
+
 ## Testes
 
 Clique com o botão direito em `app/src/test/.../MotorPontuacaoTest.kt` → Run.
