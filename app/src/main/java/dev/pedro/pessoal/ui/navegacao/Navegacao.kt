@@ -155,7 +155,8 @@ fun AppNavegacao(
                     progresso = progresso.mapValues { (_, p) -> ProgressoExercicio(p.nivel, p.treinosCompletos) },
                     concluido = registros.any { it.habito == habito.name && it.concluido },
                     pessoais = exerciciosPessoais.filter { it.ocorreEm(hoje) },
-                    temExercicios = exerciciosPessoais.isNotEmpty(),
+                    // O dono sempre tem os treinos fixos: dia sem treino para ele é descanso.
+                    temExercicios = status.admin || exerciciosPessoais.isNotEmpty(),
                     aoConcluir = { treino?.let(appViewModel::concluirTreino) },
                     aoSalvarExercicio = appViewModel::salvarExercicio,
                     aoApagarExercicio = appViewModel::apagarExercicio,
