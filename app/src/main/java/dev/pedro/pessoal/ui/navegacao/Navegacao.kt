@@ -156,7 +156,6 @@ fun AppNavegacao(
                     concluido = registros.any { it.habito == habito.name && it.concluido },
                     pessoais = exerciciosPessoais.filter { it.ocorreEm(hoje) },
                     temExercicios = exerciciosPessoais.isNotEmpty(),
-                    temRotinaFixa = status.admin,
                     aoConcluir = { treino?.let(appViewModel::concluirTreino) },
                     aoSalvarExercicio = appViewModel::salvarExercicio,
                     aoApagarExercicio = appViewModel::apagarExercicio,

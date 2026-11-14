@@ -77,11 +77,6 @@ fun TreinosTela(
     modifier: Modifier = Modifier,
     /** Se a pessoa já cadastrou algum exercício, em qualquer dia; [pessoais] traz só os de hoje. */
     temExercicios: Boolean = pessoais.isNotEmpty(),
-    /**
-     * Se a pessoa tem a rotina fixa do dono (A, B e mobilidade). Para ela, um dia sem treino
-     * é descanso, e não uma conta por montar — mesmo sem nenhum exercício próprio cadastrado.
-     */
-    temRotinaFixa: Boolean = false,
 ) {
     // Nulo = formulário fechado. Um exercício de id zero é novo; com id, é edição.
     var emEdicao by remember { mutableStateOf<ExercicioPessoal?>(null) }
@@ -112,8 +107,7 @@ fun TreinosTela(
             Text(
                 when {
                     // Conta nova: nada cadastrado ainda. Não é descanso, é treino por montar.
-                    !temExercicios && !temRotinaFixa ->
-                        "Monte o seu treino: cadastre os exercícios e os dias de cada um."
+                    !temExercicios -> "Monte o seu treino: cadastre os exercícios e os dias de cada um."
                     pessoais.isEmpty() -> "Hoje é dia de descanso."
                     else -> "Os seus exercícios de hoje."
                 },
