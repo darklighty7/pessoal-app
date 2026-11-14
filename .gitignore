@@ -35,3 +35,7 @@ Thumbs.db
 
 # Firebase: chaves do projeto, cada um usa o seu
 app/google-services.json
+
+# Chave de publicacao: o keystore e as senhas ficam no local.properties
+*.jks
+*.keystore

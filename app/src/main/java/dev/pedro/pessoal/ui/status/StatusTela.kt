@@ -1,13 +1,18 @@
 package dev.pedro.pessoal.ui.status
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -20,10 +25,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,10 +45,14 @@ import dev.pedro.pessoal.domain.model.Status
 import dev.pedro.pessoal.domain.model.formatarAtributo
 import dev.pedro.pessoal.ui.componentes.BarraNeon
 import dev.pedro.pessoal.ui.componentes.BotaoIcone
+import dev.pedro.pessoal.ui.componentes.Brasa
 import dev.pedro.pessoal.ui.componentes.Cartao
 import dev.pedro.pessoal.ui.componentes.Icones
 import dev.pedro.pessoal.ui.theme.Alerta
+import dev.pedro.pessoal.ui.theme.BordaForte
 import dev.pedro.pessoal.ui.theme.ChakraPetch
+import dev.pedro.pessoal.ui.theme.Fundo
+import dev.pedro.pessoal.ui.theme.Ganho
 import dev.pedro.pessoal.ui.theme.Neon
 import dev.pedro.pessoal.ui.theme.PessoalTema
 import dev.pedro.pessoal.ui.theme.Texto
@@ -56,7 +70,6 @@ fun StatusTela(status: Status, aoAbrirConfiguracoes: () -> Unit, modifier: Modif
     ) {
         Cabecalho(aoAbrirConfiguracoes)
         CartaoPerfil(status)
-        BarraExperiencia(status)
         GradeAtributos(status)
         Cartao(Modifier.fillMaxWidth()) {
             GraficoRadar(status.atributos, Modifier.align(Alignment.Center).padding(vertical = 8.dp))
@@ -74,45 +87,123 @@ private fun Cabecalho(aoAbrirConfiguracoes: () -> Unit) {
     }
 }
 
+/**
+ * Cartão de perfil em formato de placar: o selo e o nome no topo, e nível, classe e título
+ * em três blocos iguais, cada um com a sua cor (azul = progresso, verde = conquista).
+ * A barra de XP fica dentro do cartão, junto do nível que ela faz subir.
+ */
 @Composable
 private fun CartaoPerfil(status: Status) {
-    Cartao(Modifier.fillMaxWidth()) {
-        Row(
-            Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
+    Cartao(Modifier.fillMaxWidth(), cantos = 22.dp) {
+        Column(
+            Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            SeloRank(status.rank, tamanho = 68.dp)
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(status.nome, style = MaterialTheme.typography.titleLarge, color = Texto)
-                Text(
-                    "Nível ${status.nivel} · ${status.classe.nome}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextoSecundario,
-                )
-                Text(status.titulo.nome, style = MaterialTheme.typography.bodyMedium, color = TextoSecundario)
+            // O selo e o nome encostam na borda esquerda do cartão; os três blocos abaixo é que
+            // são simétricos. Centralizar esta linha deixava um vão à esquerda do selo.
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                SeloRank(status.rank, tamanho = 80.dp)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        status.nome,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Texto,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        "RANK ${status.rank.name} · ${nomeMaterial(status.rank).uppercase()}",
+                        fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = 12.sp,
+                        letterSpacing = 1.2.sp,
+                        color = corMaterial(status.rank),
+                    )
+                }
             }
-            EtiquetaRank(status.rank, Modifier.align(Alignment.Top))
+
+            Row(
+                Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                BlocoPlacar("NÍVEL", Neon.copy(alpha = 0.35f), Modifier.weight(1f).fillMaxHeight()) {
+                    Text(
+                        "${status.nivel}",
+                        fontFamily = ChakraPetch, fontWeight = FontWeight.Bold, fontSize = 30.sp,
+                        color = Neon,
+                        style = TextStyle(shadow = Shadow(Neon.copy(alpha = 0.55f), blurRadius = 28f)),
+                    )
+                }
+                BlocoPlacar("CLASSE", BordaForte, Modifier.weight(1f).fillMaxHeight()) {
+                    Icon(iconeDaClasse(status.classe), contentDescription = null, tint = Neon, modifier = Modifier.size(20.dp))
+                    Text(
+                        status.classe.nome,
+                        fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
+                        color = Texto,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                    )
+                }
+                BlocoPlacar("TÍTULO", Ganho.copy(alpha = 0.30f), Modifier.weight(1f).fillMaxHeight()) {
+                    Brasa(12.dp, Modifier.padding(vertical = 4.dp))
+                    Text(
+                        status.titulo.nome,
+                        fontWeight = FontWeight.SemiBold, fontSize = 13.sp, lineHeight = 16.sp,
+                        color = Ganho,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                    )
+                }
+            }
+
+            BarraExperiencia(status)
         }
     }
 }
 
-/** Etiqueta pequena com o material do rank (FERRO, BRONZE...). */
+/** Um dos três blocos do placar: rótulo pequeno em cima e o valor embaixo, com borda colorida. */
 @Composable
-private fun EtiquetaRank(rank: dev.pedro.pessoal.domain.model.Rank, modifier: Modifier = Modifier) {
-    Text(
-        nomeMaterial(rank).uppercase(),
-        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.9.sp),
-        color = TextoSecundario,
-        modifier = modifier
-            .background(Trilho, RoundedCornerShape(50))
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-    )
+private fun BlocoPlacar(
+    rotulo: String,
+    corBorda: Color,
+    modifier: Modifier = Modifier,
+    conteudo: @Composable ColumnScope.() -> Unit,
+) {
+    val forma = RoundedCornerShape(16.dp)
+    Column(
+        modifier
+            .background(Fundo, forma)
+            .border(1.dp, corBorda, forma)
+            .padding(horizontal = 6.dp, vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            rotulo,
+            fontWeight = FontWeight.SemiBold, fontSize = 10.sp, letterSpacing = 1.2.sp,
+            color = TextoSecundario,
+        )
+        conteudo()
+    }
+}
+
+/** Ícone do atributo principal da classe; Aprendiz, sem inclinação, fica com o escudo. */
+private fun iconeDaClasse(classe: Classe): ImageVector =
+    Classe.atributosDe(classe).firstOrNull()?.let(::iconeDoAtributo) ?: Icones.Escudo
+
+private fun iconeDoAtributo(atributo: Atributo): ImageVector = when (atributo) {
+    Atributo.FORCA -> Icones.Halter
+    Atributo.INTELIGENCIA -> Icones.Lampada
+    Atributo.DISCIPLINA -> Icones.Alvo
+    Atributo.ESPIRITO -> Icones.Cruz
 }
 
 @Composable
 private fun BarraExperiencia(status: Status) {
-    Column(Modifier.padding(horizontal = 2.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(Modifier.fillMaxWidth().padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Text("Experiência", style = MaterialTheme.typography.labelMedium, color = TextoSecundario)
             Spacer(Modifier.weight(1f))
@@ -130,12 +221,6 @@ private fun BarraExperiencia(status: Status) {
 
 @Composable
 private fun GradeAtributos(status: Status) {
-    val icones: Map<Atributo, ImageVector> = mapOf(
-        Atributo.FORCA to Icones.Halter,
-        Atributo.INTELIGENCIA to Icones.Lampada,
-        Atributo.DISCIPLINA to Icones.Alvo,
-        Atributo.ESPIRITO to Icones.Cruz,
-    )
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Atributo.entries.chunked(2).forEach { linha ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -147,7 +232,7 @@ private fun GradeAtributos(status: Status) {
                                     Modifier.size(32.dp).background(Neon.copy(alpha = 0.12f), RoundedCornerShape(10.dp)),
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    Icon(icones.getValue(atributo), contentDescription = null, tint = Neon, modifier = Modifier.size(18.dp))
+                                    Icon(iconeDoAtributo(atributo), contentDescription = null, tint = Neon, modifier = Modifier.size(18.dp))
                                 }
                                 Text(atributo.nome, style = MaterialTheme.typography.labelMedium, color = TextoSecundario)
                             }

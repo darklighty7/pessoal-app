@@ -1,32 +1,52 @@
 package dev.pedro.pessoal.data
 
+import androidx.core.text.HtmlCompat
+import com.youversion.platform.core.api.YouVersionApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import java.net.HttpURLConnection
-import java.net.URL
 
 /**
- * Baixa a Bíblia uma única vez, na primeira abertura, e guarda no banco.
- * A fonte é o projeto thiagobodruk/biblia, que publica a Nova Versão Internacional
- * em JSON. Depois de importada, o app funciona sem internet.
+ * A estrutura da Bíblia (livros, capítulos e versículos por capítulo) e os grifos.
+ *
+ * O texto não passa por aqui: cada versículo é desenhado pelo `BibleText` do SDK da YouVersion,
+ * que busca e guarda em cache o texto conforme a licença (ver [Escrituras]). A estrutura vem
+ * uma vez da YouVersion e fica no banco, para o índice e a navegação funcionarem sem internet.
  */
-class BibliaRepositorio(private val dao: BibliaDao) {
+class BibliaRepositorio(
+    private val dao: BibliaDao,
+    private val preferencias: PreferenciasLeitura,
+) {
 
-    /** Em que pé está o download, para a tela mostrar. */
+    /** Em que pé está a preparação, para a tela mostrar. */
     sealed interface Estado {
         data object Pronta : Estado
-        data object Baixando : Estado
-        data class Importando(val livrosFeitos: Int, val livrosTotal: Int) : Estado
+        data object Preparando : Estado
         data class Falhou(val motivo: String) : Estado
     }
 
-    suspend fun jaImportada(): Boolean = withContext(Dispatchers.IO) { dao.totalVersiculos() > 0 }
+    /** Pronta se os 66 livros tiverem código e contagem de versículos. */
+    suspend fun jaPreparada(): Boolean = withContext(Dispatchers.IO) { completa() }
+
+    private suspend fun completa(): Boolean {
+        val livros = dao.totalLivros()
+        return livros == TOTAL_LIVROS && dao.livrosCompletos() == livros
+    }
 
     suspend fun livros(): List<LivroEntity> = withContext(Dispatchers.IO) { dao.livros() }
 
-    suspend fun capitulo(livro: Int, capitulo: Int): List<VersiculoEntity> =
-        withContext(Dispatchers.IO) { dao.capitulo(livro, capitulo) }
+    /**
+     * Quantos versículos o capítulo tem. Normalmente já vem da estrutura; se o índice da
+     * YouVersion não tiver trazido a contagem, busca só a lista de versículos (sem texto).
+     */
+    suspend fun versiculos(livro: LivroEntity, capitulo: Int): Int = withContext(Dispatchers.IO) {
+        livro.versiculosDo(capitulo).takeIf { it > 0 }?.let { return@withContext it }
+        runCatching {
+            YouVersionApi.bible.verses(Escrituras.VERSAO_NVI, livro.usfm, capitulo.toString()).size
+        }.getOrDefault(0)
+    }
+
+    /** Aviso de copyright e de marca da NVI, como a YouVersion entrega; vazio se ainda não veio. */
+    fun avisoCopyright(): String = preferencias.lerAvisoCopyright().orEmpty()
 
     suspend fun grifos(livro: Int, capitulo: Int): Map<Int, Int> =
         withContext(Dispatchers.IO) { dao.grifos(livro, capitulo).associate { it.numero to it.cor } }
@@ -43,73 +63,58 @@ class BibliaRepositorio(private val dao: BibliaDao) {
     suspend fun todosGrifos(): List<GrifoListado> = withContext(Dispatchers.IO) { dao.todosGrifos() }
 
     /**
-     * Baixa e importa. [aoProgredir] é chamado a cada etapa para a tela acompanhar.
-     * Se já estiver importada, não faz nada.
+     * Busca a estrutura da NVI na YouVersion e guarda, se ainda não estiver no aparelho.
+     * Também guarda o aviso de copyright. Precisa de internet só nesta primeira vez.
      */
-    suspend fun baixarSeFaltar(aoProgredir: (Estado) -> Unit) = withContext(Dispatchers.IO) {
-        if (dao.totalVersiculos() > 0) {
+    suspend fun prepararSeFaltar(aoProgredir: (Estado) -> Unit) = withContext(Dispatchers.IO) {
+        if (completa()) {
             aoProgredir(Estado.Pronta)
+            atualizarAvisoSeFaltar()
+            return@withContext
+        }
+        if (!Escrituras.temChave) {
+            aoProgredir(Estado.Falhou("Falta a chave da YouVersion (YVP_APP_KEY no local.properties)"))
             return@withContext
         }
         try {
-            aoProgredir(Estado.Baixando)
-            val texto = baixar(FONTE)
-            val json = JSONArray(texto.removePrefix("\uFEFF"))
-
-            val livros = mutableListOf<LivroEntity>()
-            for (i in 0 until json.length()) {
-                val obj = json.getJSONObject(i)
-                livros += LivroEntity(
-                    numero = i + 1,
-                    abreviacao = obj.getString("abbrev"),
-                    nome = obj.optString("name", obj.getString("abbrev")),
-                    capitulos = obj.getJSONArray("chapters").length(),
-                )
-            }
-            dao.inserirLivros(livros)
-
-            for (i in 0 until json.length()) {
-                val capitulos = json.getJSONObject(i).getJSONArray("chapters")
-                val versiculos = mutableListOf<VersiculoEntity>()
-                for (c in 0 until capitulos.length()) {
-                    val versos = capitulos.getJSONArray(c)
-                    for (v in 0 until versos.length()) {
-                        versiculos += VersiculoEntity(
-                            livro = i + 1,
-                            capitulo = c + 1,
-                            numero = v + 1,
-                            texto = versos.getString(v),
-                        )
-                    }
+            aoProgredir(Estado.Preparando)
+            val indice = YouVersionApi.bible.versionIndex(Escrituras.VERSAO_NVI)
+            val livros = indice.books.orEmpty()
+                .filter { it.isCanonical && !it.usfm.isNullOrBlank() }
+                .mapIndexed { i, livro ->
+                    val capitulos = livro.chapters.orEmpty().filter { it.isCanonical }
+                    val usfm = livro.usfm.orEmpty()
+                    LivroEntity(
+                        numero = i + 1,
+                        abreviacao = (livro.abbreviation ?: usfm).lowercase(),
+                        nome = livro.title ?: livro.fullTitle ?: usfm,
+                        capitulos = capitulos.size,
+                        usfm = usfm,
+                        versiculos = capitulos.joinToString(",") { (it.verses?.size ?: 0).toString() },
+                    )
                 }
-                dao.inserirVersiculos(versiculos)
-                aoProgredir(Estado.Importando(i + 1, json.length()))
-            }
+            // A numeração dos grifos é a ordem canônica de 66 livros; outra contagem é sinal de erro.
+            check(livros.size == TOTAL_LIVROS) { "a YouVersion trouxe ${livros.size} livros" }
+            dao.substituirLivros(livros)
+            atualizarAvisoSeFaltar()
             aoProgredir(Estado.Pronta)
         } catch (e: Exception) {
-            aoProgredir(Estado.Falhou(e.message ?: "não foi possível baixar"))
+            aoProgredir(Estado.Falhou(e.message ?: "não foi possível falar com a YouVersion"))
         }
     }
 
-    private fun baixar(endereco: String): String {
-        val conexao = (URL(endereco).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 20_000
-            readTimeout = 60_000
-            instanceFollowRedirects = true
-        }
-        try {
-            if (conexao.responseCode != HttpURLConnection.HTTP_OK) {
-                error("servidor respondeu ${conexao.responseCode}")
+    private suspend fun atualizarAvisoSeFaltar() {
+        if (!preferencias.lerAvisoCopyright().isNullOrBlank()) return
+        runCatching {
+            val versao = YouVersionApi.bible.version(Escrituras.VERSAO_NVI)
+            val aviso = versao.copyright?.let {
+                HtmlCompat.fromHtml(it, HtmlCompat.FROM_HTML_MODE_COMPACT).toString().trim()
             }
-            return conexao.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-        } finally {
-            conexao.disconnect()
+            if (!aviso.isNullOrBlank()) preferencias.salvarAvisoCopyright(aviso)
         }
     }
 
     companion object {
-        /** Nova Versão Internacional, ~4 MB, baixada uma vez só. */
-        const val FONTE = "https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/nvi.json"
-        const val NOME_VERSAO = "Nova Versão Internacional"
+        const val TOTAL_LIVROS = 66
     }
 }

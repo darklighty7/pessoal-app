@@ -1,20 +1,22 @@
 [versions]
-agp = "8.7.3"
-kotlin = "2.1.0"
+agp = "8.13.2"
+kotlin = "2.2.21"
 coreKtx = "1.15.0"
 lifecycle = "2.8.7"
 activityCompose = "1.9.3"
 coreSplashscreen = "1.0.1"
 fragment = "1.8.5"
-composeBom = "2024.12.01"
+composeBom = "2026.06.01"
 navigation = "2.8.5"
 room = "2.7.2"
 coroutines = "1.9.0"
 junit = "4.13.2"
-# Firebase: a série 33.x é a última que compila com compileSdk 35 e AGP 8.7.
-# Para subir ao BoM 34.x é preciso ir para compileSdk 36, o que exige AGP mais novo.
+# Firebase: a série 33.x foi mantida na subida para compileSdk 36 para mudar uma coisa de cada vez.
+# Com compileSdk 36 e AGP 8.13 já dá para ir ao BoM 34.x, numa mudança à parte.
 firebaseBom = "33.16.0"
 googleServices = "4.4.2"
+# Bíblia (NVI, licença da Biblica): SDK oficial da YouVersion. Exige compileSdk 36, AGP 8.13.2+ e Kotlin 2.2+.
+youversionPlatform = "3.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,6 +34,10 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+# O room-compiler 2.7.2 traz kotlin-metadata-jvm 2.1.10, que lê metadados até a versão 2.2.0;
+# o Kotlin 2.2.21 já grava 2.3.0 e o kapt do Room quebra. Esta linha alinha a biblioteca ao
+# compilador no classpath do kapt. Sai quando o Room passar a trazer uma versão 2.2+ sozinho.
+kotlin-metadata-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-metadata-jvm", version.ref = "kotlin" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
@@ -41,6 +47,8 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+youversion-platform-core = { group = "com.youversion.platform", name = "platform-core", version.ref = "youversionPlatform" }
+youversion-platform-ui = { group = "com.youversion.platform", name = "platform-ui", version.ref = "youversionPlatform" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

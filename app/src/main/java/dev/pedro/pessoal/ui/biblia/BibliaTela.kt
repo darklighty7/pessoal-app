@@ -85,6 +85,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -96,7 +97,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.pedro.pessoal.data.BibliaRepositorio
 import dev.pedro.pessoal.data.LivroEntity
-import dev.pedro.pessoal.data.VersiculoEntity
+import dev.pedro.pessoal.data.Escrituras
+import com.youversion.platform.core.bibles.domain.BibleReference
+import com.youversion.platform.ui.views.BibleText
+import com.youversion.platform.ui.views.BibleTextFootnoteMode
+import com.youversion.platform.ui.views.BibleTextLoadingPhase
+import com.youversion.platform.ui.views.BibleTextOptions
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import dev.pedro.pessoal.domain.engine.Regras
 import dev.pedro.pessoal.ui.componentes.BarraNeon
 import dev.pedro.pessoal.ui.componentes.Cartao
@@ -135,6 +146,7 @@ fun BibliaTela(
     aoSalvarTamanho: () -> Unit = {},
     aoZoom: (Float) -> Unit = {},
     aoAlvoAtingido: () -> Unit = {},
+    aoTentarDeNovo: () -> Unit = {},
 ) {
     // Ao deixar a tela, fecha a leitura e entrega os minutos.
     DisposableEffect(Unit) { onDispose { aoSair() } }
@@ -147,19 +159,16 @@ fun BibliaTela(
     val estadoFolha = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     when (val situacao = estado.download) {
-        is BibliaRepositorio.Estado.Baixando ->
-            Aviso("Baixando a Bíblia", "Isso acontece só na primeira vez. Precisa de internet agora.", modifier)
-
-        is BibliaRepositorio.Estado.Importando ->
-            Aviso(
-                "Preparando a Bíblia",
-                "${situacao.livrosFeitos} de ${situacao.livrosTotal} livros",
-                modifier,
-                progresso = situacao.livrosFeitos.toFloat() / situacao.livrosTotal,
-            )
+        is BibliaRepositorio.Estado.Preparando ->
+            Aviso("Preparando a Bíblia", "Buscando os livros na YouVersion. Precisa de internet só nesta primeira vez.", modifier)
 
         is BibliaRepositorio.Estado.Falhou ->
-            Aviso("Não deu para baixar", "${situacao.motivo}. Confira a internet e abra a tela de novo.", modifier)
+            Aviso(
+                "Não deu para preparar",
+                "${situacao.motivo}. Confira a internet.",
+                modifier,
+                acao = "Tentar de novo" to aoTentarDeNovo,
+            )
 
         is BibliaRepositorio.Estado.Pronta -> Leitor(
             estado = estado,
@@ -277,16 +286,23 @@ private fun Leitor(
     // a lista inteira a cada tique do cronômetro seria trabalho à toa.
     LaunchedEffect(estado.versiculoAlvo) {
         val alvo = estado.versiculoAlvo ?: return@LaunchedEffect
-        val posicao = estado.versiculos.indexOfFirst { it.numero == alvo }
+        // Os versículos são 1..quantidade, um por item: o versículo N é o item N - 1.
+        val posicao = (alvo - 1).takeIf { alvo in 1..estado.quantidadeVersiculos } ?: -1
         // Salto direto, não animado: em Salmo 119 a animação percorreria 176 versículos.
         if (posicao >= 0) lista.scrollToItem(posicao)
         aoAlvoAtingido()
+    }
+    // Ao trocar de livro ou capítulo, a leitura volta ao versículo 1. Sem isto a LazyColumn
+    // mantém a rolagem anterior pela key do versículo, e o capítulo novo abre no meio ou no fim.
+    // Não vale quando a busca pediu um versículo: aí o efeito acima rola até ele.
+    LaunchedEffect(estado.livroAberto?.numero, estado.capitulo) {
+        if (estado.versiculoAlvo == null) lista.scrollToItem(0)
     }
 
     val tamanho = estado.tamanhoFonte
     val densidade = LocalDensity.current
     val estiloBase = MaterialTheme.typography.bodyLarge
-    val digitos = remember(estado.versiculos) { (estado.versiculos.maxOfOrNull { it.numero } ?: 1).toString().length }
+    val digitos = remember(estado.quantidadeVersiculos) { estado.quantidadeVersiculos.coerceAtLeast(1).toString().length }
     val medidas = remember(tamanho, digitos, estiloBase, densidade) {
         val numero = TamanhoFonte.numero(tamanho)
         MedidasVerso(
@@ -295,8 +311,27 @@ private fun Leitor(
             // 0,77 em por dígito dá os 20dp de sempre (13sp, 2 dígitos); com 3 dígitos (Salmo 119) a coluna cresce.
             larguraNumero = with(densidade) { (numero.sp * 0.77f * digitos.coerceAtLeast(2).toFloat()).toDp() },
             topoNumero = (6f * tamanho / TamanhoFonte.PADRAO).dp,
+            // O texto é desenhado pelo SDK da YouVersion, com a fonte e as cores do app. O número
+            // do versículo fica de fora (o app desenha o seu, em neon); as notas de rodapé viram
+            // um marcador tocável, como a licença exige que fiquem acessíveis.
+            opcoes = BibleTextOptions(
+                fontFamily = estiloBase.fontFamily ?: FontFamily.Default,
+                fontSize = tamanho.sp,
+                lineSpacingFraction = (TamanhoFonte.entrelinha(tamanho) - tamanho) / tamanho,
+                textColor = Texto,
+                wocColor = Texto,
+                renderHeadlines = true,
+                renderVerseNumbers = false,
+                footnoteMode = BibleTextFootnoteMode.MARKER,
+            ),
         )
     }
+
+    // Notas de rodapé do versículo tocado; a folha abre enquanto não for nula.
+    var notas by remember { mutableStateOf<List<AnnotatedString>?>(null) }
+    // Algum versículo do capítulo não carregou (sem internet e fora do cache).
+    var semTexto by remember(estado.livroAberto?.numero, estado.capitulo) { mutableStateOf(false) }
+    val abrirLink = LocalUriHandler.current
 
     Column(modifier.fillMaxSize()) {
         // Lendo, o topo inteiro é moldura: ao descer, sobra só a linha do cronômetro, e
@@ -338,15 +373,40 @@ private fun Leitor(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(estado.versiculos, key = { it.numero }) { verso ->
-                Versiculo(
-                    verso = verso,
-                    cor = estado.grifos[verso.numero]?.let { CorGrifo.deIndice(it) },
-                    selecionado = verso.numero in estado.selecionados,
-                    medidas = medidas,
-                    aoTocar = { aoAlternarSelecao(verso.numero) },
-                )
+            val livro = estado.livroAberto
+            if (semTexto) {
+                item(key = "sem-texto") { AvisoSemTexto() }
             }
+            if (livro != null) {
+                items(
+                    (1..estado.quantidadeVersiculos).toList(),
+                    key = { "${livro.numero}:${estado.capitulo}:$it" },
+                ) { numero ->
+                    Versiculo(
+                        referencia = Escrituras.versiculo(livro, estado.capitulo, numero),
+                        numero = numero,
+                        cor = estado.grifos[numero]?.let { CorGrifo.deIndice(it) },
+                        selecionado = numero in estado.selecionados,
+                        medidas = medidas,
+                        aoTocar = { aoAlternarSelecao(numero) },
+                        aoTocarNota = { notas = it },
+                        aoMudarFase = { fase ->
+                            if (fase == BibleTextLoadingPhase.FAILED || fase == BibleTextLoadingPhase.NOT_PERMITTED) {
+                                semTexto = true
+                            }
+                        },
+                    )
+                }
+                item(key = "rodape") {
+                    RodapeCapitulo(estado.avisoCopyright, aoAbrirBiblica = { abrirLink.openUri(Escrituras.LINK_BIBLICA) })
+                }
+            }
+        }
+
+        // Deixa os próximos capítulos no cache do SDK enquanto há internet, para a leitura
+        // seguir mesmo se a conexão cair. Compõe sem desenhar nada.
+        estado.livroAberto?.let { livro ->
+            PreCarregar(proximosCapitulos(livro, estado.capitulo, estado.livros))
         }
 
         if (estado.selecionados.isNotEmpty()) {
@@ -369,19 +429,27 @@ private fun Leitor(
             BotaoRedondo(Icones.Voltar, "Capítulo anterior", aoTocar = aoVoltar, cor = Neon)
             // O nome da versão encolhe com reticências se faltar espaço (telas estreitas
             // ou fonte grande do sistema); os círculos nunca são espremidos.
+            // Crédito da licença: precisa estar sempre visível junto do texto e levar à Biblica.
             Text(
-                BibliaRepositorio.NOME_VERSAO.uppercase(),
+                Escrituras.CREDITO,
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, letterSpacing = 0.6.sp),
                 color = TextoSecundario,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 44.dp)
+                    .clickable(onClickLabel = "Abrir o site da Biblica") { abrirLink.openUri(Escrituras.LINK_BIBLICA) }
+                    .semantics { role = Role.Button }
+                    .wrapContentHeight(Alignment.CenterVertically),
             )
             BotaoRedondo(Icones.Fonte, "Tamanho do texto", aoTocar = aoAbrirTamanho, cor = Neon)
             BotaoRedondo(Icones.Avancar, "Próximo capítulo", aoTocar = aoAvancar, cor = Neon)
         }
     }
+
+    notas?.let { FolhaNotas(it, aoFechar = { notas = null }) }
 }
 
 /** Medidas do texto dos versículos para o tamanho escolhido; calculadas uma vez por tamanho. */
@@ -391,7 +459,97 @@ private data class MedidasVerso(
     val numero: TextUnit,
     val larguraNumero: Dp,
     val topoNumero: Dp,
+    val opcoes: BibleTextOptions,
 )
+
+/** Folha com as notas de rodapé de um versículo, como a tradução as traz. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun FolhaNotas(notas: List<AnnotatedString>, aoFechar: () -> Unit) {
+    ModalBottomSheet(
+        onDismissRequest = aoFechar,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = Superficie,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+    ) {
+        Column(
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                "NOTAS",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp),
+                color = TextoSecundario,
+            )
+            notas.forEach { nota ->
+                Text(nota, style = MaterialTheme.typography.bodyMedium, color = Texto)
+            }
+        }
+    }
+}
+
+/** Aviso no topo do capítulo quando parte do texto não carregou. */
+@Composable
+private fun AvisoSemTexto() {
+    Cartao(Modifier.fillMaxWidth()) {
+        Text(
+            "Sem internet: este capítulo ainda não está salvo no aparelho. Os capítulos que você já abriu continuam disponíveis.",
+            style = MaterialTheme.typography.bodySmall,
+            color = TextoSecundario,
+            modifier = Modifier.padding(16.dp),
+        )
+    }
+}
+
+/** Fim do capítulo: o aviso de copyright e de marca da NVI, e o link para a Biblica. */
+@Composable
+private fun RodapeCapitulo(aviso: String, aoAbrirBiblica: () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().padding(top = 16.dp, start = 8.dp, end = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (aviso.isNotBlank()) {
+            Text(aviso, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, lineHeight = 15.sp), color = TextoSecundario)
+        }
+        Text(
+            "biblica.com",
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+            color = TextoSecundario,
+            modifier = Modifier
+                .heightIn(min = 44.dp)
+                .clickable(onClickLabel = "Abrir o site da Biblica", onClick = aoAbrirBiblica)
+                .wrapContentHeight(Alignment.CenterVertically),
+        )
+    }
+}
+
+/**
+ * Compõe o texto de [referencias] sem medir nem desenhar: o SDK busca e guarda no cache dele,
+ * e o capítulo seguinte abre mesmo sem internet. Nada disso aparece na tela.
+ */
+@Composable
+private fun PreCarregar(referencias: List<BibleReference>) {
+    Layout(content = { referencias.forEach { key(it.toString()) { BibleText(reference = it) } } }) { _, _ ->
+        layout(0, 0) {}
+    }
+}
+
+/** Os dois capítulos seguintes, passando para o próximo livro se precisar. */
+private fun proximosCapitulos(livro: LivroEntity, capitulo: Int, livros: List<LivroEntity>): List<BibleReference> {
+    val proximos = mutableListOf<BibleReference>()
+    var l = livro
+    var c = capitulo
+    repeat(2) {
+        if (c < l.capitulos) {
+            c += 1
+        } else {
+            l = livros.getOrNull(l.numero) ?: return proximos
+            c = 1
+        }
+        proximos += Escrituras.capitulo(l, c)
+    }
+    return proximos
+}
 
 /**
  * Cabeçalho aberto: o nome do capítulo (toque abre o índice), os três botões, e uma linha
@@ -550,11 +708,14 @@ private fun LazyListState.rolandoParaBaixo(): State<Boolean> {
 
 @Composable
 private fun Versiculo(
-    verso: VersiculoEntity,
+    referencia: BibleReference,
+    numero: Int,
     cor: CorGrifo?,
     selecionado: Boolean,
     medidas: MedidasVerso,
     aoTocar: () -> Unit,
+    aoTocarNota: (List<AnnotatedString>) -> Unit,
+    aoMudarFase: (BibleTextLoadingPhase) -> Unit,
 ) {
     val forma = RoundedCornerShape(12.dp)
     Row(
@@ -563,22 +724,35 @@ private fun Versiculo(
             .clip(forma)
             .background(cor?.fundo ?: Color.Transparent)
             .border(1.5.dp, if (selecionado) Neon else Color.Transparent, forma)
-            .clickable(onClickLabel = "Selecionar versículo ${verso.numero}", onClick = aoTocar)
+            .clickable(onClickLabel = "Selecionar versículo $numero", onClick = aoTocar)
             .padding(horizontal = 8.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
-            "${verso.numero}",
+            "$numero",
             fontFamily = ChakraPetch, fontWeight = FontWeight.SemiBold, fontSize = medidas.numero,
             color = Neon,
             softWrap = false,
             modifier = Modifier.width(medidas.larguraNumero).padding(top = medidas.topoNumero),
         )
-        Text(
-            verso.texto,
-            style = medidas.estilo,
-            color = Texto,
-        )
+        // O texto vem do SDK da YouVersion (licença da Biblica). Tocar no texto também seleciona
+        // o versículo; tocar no marcador de nota abre a nota.
+        Box(Modifier.weight(1f)) {
+            BibleText(
+                reference = referencia,
+                textOptions = medidas.opcoes,
+                onVerseTap = { _, _ -> aoTocar() },
+                onFootnoteTap = { _, notas -> aoTocarNota(notas) },
+                placeholder = { fase ->
+                    Text(
+                        if (fase == BibleTextLoadingPhase.FAILED || fase == BibleTextLoadingPhase.NOT_PERMITTED) "—" else "…",
+                        style = medidas.estilo,
+                        color = TextoSecundario,
+                    )
+                },
+                onStateChange = aoMudarFase,
+            )
+        }
     }
 }
 
@@ -833,13 +1007,6 @@ private fun ListaGrifos(grifos: List<GrifoListado>, aoEscolher: (GrifoListado) -
                                     color = TextoSecundario,
                                 )
                             }
-                            Text(
-                                grifo.texto,
-                                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 24.sp),
-                                color = Texto,
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis,
-                            )
                         }
                         Box(Modifier.fillMaxWidth().height(1.dp).background(Borda))
                     }
@@ -987,7 +1154,13 @@ private fun CampoBusca(valor: String, aoMudar: (String) -> Unit, focar: Boolean)
 }
 
 @Composable
-private fun Aviso(titulo: String, texto: String, modifier: Modifier, progresso: Float? = null) {
+private fun Aviso(
+    titulo: String,
+    texto: String,
+    modifier: Modifier,
+    progresso: Float? = null,
+    acao: Pair<String, () -> Unit>? = null,
+) {
     Box(modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -997,6 +1170,19 @@ private fun Aviso(titulo: String, texto: String, modifier: Modifier, progresso: 
             Text(titulo, style = MaterialTheme.typography.headlineMedium, color = Neon, fontWeight = FontWeight.Bold)
             Text(texto, style = MaterialTheme.typography.bodyMedium, color = TextoSecundario, textAlign = TextAlign.Center)
             if (progresso != null) BarraNeon(progresso, Modifier.padding(top = 4.dp))
+            if (acao != null) {
+                Text(
+                    acao.first,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Neon,
+                    modifier = Modifier
+                        .heightIn(min = 44.dp)
+                        .clickable(role = Role.Button, onClick = acao.second)
+                        .padding(horizontal = 12.dp)
+                        .wrapContentHeight(Alignment.CenterVertically),
+                )
+            }
         }
     }
 }
@@ -1010,10 +1196,8 @@ private fun BibliaPreview() {
                 download = BibliaRepositorio.Estado.Pronta,
                 livroAberto = LivroEntity(1, "gn", "Gênesis", 50),
                 capitulo = 1,
-                versiculos = listOf(
-                    VersiculoEntity(1, 1, 1, "No princípio Deus criou os céus e a terra."),
-                    VersiculoEntity(1, 1, 2, "Era a terra sem forma e vazia; trevas cobriam a face do abismo."),
-                ),
+                // O texto vem do SDK, que não roda no preview: só a moldura aparece.
+                quantidadeVersiculos = 0,
                 segundos = 185,
                 cronometroLigado = true,
                 grifos = mapOf(2 to CorGrifo.AMARELO.ordinal),
