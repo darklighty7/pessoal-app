@@ -47,6 +47,52 @@ chave da YouVersion". O `local.properties` precisa ainda do `sdk.dir`, que o And
 escreve sozinho ao abrir o projeto; num clone novo pela linha de comando ele não existe e o
 Gradle para em "SDK location not found".
 
+## Publicação
+
+O `release` sai minificado pelo R8 (`isMinifyEnabled` e `isShrinkResources`), com as regras de
+`app/proguard-rules.pro`. O `otimizado` é esse mesmo release assinado com a chave de debug, para
+instalar no celular sem a chave de publicação em mãos: `./gradlew installOtimizado`. Serve de
+ensaio do app final — o APK de debug roda o Compose bem mais devagar e não representa o que vai
+para a loja.
+
+A chave de publicação **não vai para o repositório**, e nem o keystore nem as senhas estão aqui.
+Gere a sua uma vez, de preferência fora da pasta do projeto (o repositório é público):
+
+```
+keytool -genkeypair -v -keystore ~/chaves/forja-release.jks -alias forja \
+  -keyalg RSA -keysize 2048 -validity 10000
+```
+
+O `keytool` pergunta uma senha para o keystore, outra para a chave e os seus dados (nome,
+organização, país). Guarde o arquivo e as senhas: **perder a chave impede atualizar o app na
+Play** — o Google exige que toda versão nova venha assinada com a mesma chave.
+
+Depois aponte para ela em `local.properties`, do mesmo jeito que a `YVP_APP_KEY`:
+
+```
+RELEASE_STORE_FILE=/home/voce/chaves/forja-release.jks
+RELEASE_STORE_PASSWORD=a-senha-do-keystore
+RELEASE_KEY_ALIAS=forja
+RELEASE_KEY_PASSWORD=a-senha-da-chave
+```
+
+O caminho pode ser absoluto ou relativo à raiz do projeto. Faltando qualquer uma das quatro
+propriedades, o `release` continua compilando, só sai **sem assinatura** — quem clona o
+repositório apenas para compilar não precisa de chave nenhuma, e o APK sem assinatura não
+instala no aparelho nem sobe para a loja.
+
+Com a chave no lugar, o pacote da Play é o `bundleRelease`:
+
+```
+./gradlew bundleRelease
+```
+
+Antes de publicar, vale rodar a conferência completa:
+
+```
+./gradlew clean testDebugUnitTest assembleDebug lintRelease assembleRelease
+```
+
 ## Testes
 
 Clique com o botão direito em `app/src/test/.../MotorPontuacaoTest.kt` → Run.
