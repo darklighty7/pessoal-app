@@ -67,6 +67,12 @@ O `keytool` pergunta uma senha para o keystore, outra para a chave e os seus dad
 organização, país). Guarde o arquivo e as senhas: **perder a chave impede atualizar o app na
 Play** — o Google exige que toda versão nova venha assinada com a mesma chave.
 
+O `keytool` de hoje cria o keystore no formato PKCS12, que **não guarda uma senha de chave
+separada**: ele avisa que está ignorando a segunda senha e usa a do keystore para as duas. Por
+isso `RELEASE_KEY_PASSWORD` tem que repetir o valor de `RELEASE_STORE_PASSWORD`. Com valores
+diferentes o build vai até o fim e quebra só na assinatura, com
+`Get Key failed: Given final block not properly padded`.
+
 Depois aponte para ela em `local.properties`, do mesmo jeito que a `YVP_APP_KEY`:
 
 ```
