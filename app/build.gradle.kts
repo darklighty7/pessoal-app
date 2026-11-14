@@ -9,6 +9,17 @@ val propriedadesLocais = Properties().apply {
 }
 val chaveYouVersion: String = propriedadesLocais.getProperty("YVP_APP_KEY", "")
 
+// A chave de publicação segue o mesmo caminho da YVP_APP_KEY: fica no local.properties, nunca no
+// Git. O README diz como gerar o keystore e quais propriedades preencher. Faltando qualquer uma
+// delas, o release sai sem assinatura em vez de o build quebrar — quem clona o repositório só
+// para compilar não precisa da chave de ninguém.
+val arquivoAssinatura = propriedadesLocais.getProperty("RELEASE_STORE_FILE")?.let { rootProject.file(it) }
+val senhaAssinatura: String? = propriedadesLocais.getProperty("RELEASE_STORE_PASSWORD")
+val aliasAssinatura: String? = propriedadesLocais.getProperty("RELEASE_KEY_ALIAS")
+val senhaDaChave: String? = propriedadesLocais.getProperty("RELEASE_KEY_PASSWORD")
+val temAssinaturaDeRelease = arquivoAssinatura?.exists() == true &&
+    !senhaAssinatura.isNullOrBlank() && !aliasAssinatura.isNullOrBlank() && !senhaDaChave.isNullOrBlank()
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -30,18 +41,30 @@ android {
         buildConfigField("String", "YVP_APP_KEY", "\"$chaveYouVersion\"")
     }
 
+    signingConfigs {
+        if (temAssinaturaDeRelease) create("release") {
+            storeFile = arquivoAssinatura
+            storePassword = senhaAssinatura
+            keyAlias = aliasAssinatura
+            keyPassword = senhaDaChave
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
-        }
-        // Para medir desempenho de verdade e usar no celular pessoal: release com R8 ligado, assinado com a
-        // chave de debug só para poder instalar. O APK de debug roda o Compose bem mais devagar e não
-        // representa o app final. Instalar com: ./gradlew installOtimizado
-        create("otimizado") {
-            initWith(getByName("release"))
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Nulo quando falta a chave no local.properties: o APK sai sem assinatura.
+            signingConfig = signingConfigs.findByName("release")
+        }
+        // O mesmo release, assinado com a chave de debug só para poder instalar no celular sem a
+        // chave de publicação em mãos. Serve para conferir e medir o app como ele vai para a loja:
+        // o APK de debug roda o Compose bem mais devagar e não representa o app final. Nada aqui
+        // muda além da assinatura — se mudar, deixa de valer como ensaio do release.
+        // Instalar com: ./gradlew installOtimizado
+        create("otimizado") {
+            initWith(getByName("release"))
             signingConfig = signingConfigs.getByName("debug")
         }
     }

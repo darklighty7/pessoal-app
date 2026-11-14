@@ -1,4 +1,5 @@
-# Regras do R8. Valem só para a variante "otimizado", a única que minifica.
+# Regras do R8. Valem para o "release" e para o "otimizado", que é o mesmo release com a
+# assinatura de debug — as duas variantes minificam com estas regras.
 #
 # O que está aqui existe porque o R8 não tem como adivinhar: são classes alcançadas por
 # reflexão ou por nome, e nada disso aparece como erro de compilação. Quebra só em tempo
